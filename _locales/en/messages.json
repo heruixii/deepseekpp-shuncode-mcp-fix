@@ -1,0 +1,14 @@
+{
+  "extension_action_title": {
+    "description": "Toolbar action title",
+    "message": "DeepSeek++ ShunCode MCP Fix 3.2"
+  },
+  "extension_description": {
+    "description": "Extension description shown in browser UI",
+    "message": "Agentic memory, skills, execution, automation, and MCP tools for DeepSeek"
+  },
+  "extension_name": {
+    "description": "Extension name shown in browser UI",
+    "message": "DeepSeek++ ShunCode MCP Fix 3.2"
+  }
+}

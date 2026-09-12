@@ -1,0 +1,110 @@
+{
+  "action": {
+    "default_title": "__MSG_extension_action_title__"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "js": [
+        "content-scripts/content.js"
+      ],
+      "matches": [
+        "*://chat.deepseek.com/*"
+      ],
+      "run_at": "document_start"
+    },
+    {
+      "js": [
+        "content-scripts/floating-chat.js"
+      ],
+      "matches": [
+        "<all_urls>"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "js": [
+        "content-scripts/main-world.js"
+      ],
+      "matches": [
+        "*://chat.deepseek.com/*"
+      ],
+      "run_at": "document_start",
+      "world": "MAIN"
+    }
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'",
+    "sandbox": "sandbox allow-scripts; script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' blob:; worker-src blob:; child-src 'self' blob: data:; frame-src 'self' blob: data:; connect-src 'self' blob:; img-src 'self' blob: data:; style-src 'self' 'unsafe-inline'; media-src 'self' blob: data:; font-src 'self' blob: data:; object-src 'none'"
+  },
+  "default_locale": "en",
+  "description": "__MSG_extension_description__",
+  "host_permissions": [
+    "*://chat.deepseek.com/*",
+    "https://api.deepseek.com/*",
+    "*://cn.bing.com/*",
+    "*://www.bing.com/*",
+    "https://accounts.google.com/*",
+    "https://oauth2.googleapis.com/*",
+    "https://www.googleapis.com/*",
+    "https://login.microsoftonline.com/*",
+    "https://graph.microsoft.com/*"
+  ],
+  "icons": {
+    "128": "icon/128.png",
+    "16": "icon/16.png",
+    "32": "icon/32.png",
+    "48": "icon/48.png",
+    "96": "icon/96.png"
+  },
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAi0CGOfEeelWRNV1UOvy4qmhoXy0nLV6V/E/8vtFEIpLQxpk+RLPdw7DxlSwBinZlGkZnIShXphRz9t8kr93Hla4NTiUFBOZjECDMuhvbHNMTyRAwCIVng8kkuvDhy+DTnLYZnKxKcYmfpD2OBlBvGLuSVun6SFE045g5tl0rR0DTaVGTSMRwdwSxlZ88p1C2+Vs5ujshjWDuLoEytfBsAToWD+4NdRdYv+8H0YXxwprD67tXtVCuKa7Qpz12xz4q1MwZeB5KcmTQhsUVbhXQn2kFtte0uefOH94TCKKdWiRsLnvd8zm+PCbThrF2I/I0Fz1cR3KWGcrpUh6DSssatQIDAQAB",
+  "manifest_version": 3,
+  "name": "__MSG_extension_name__",
+  "optional_host_permissions": [
+    "http://*/*",
+    "https://*/*"
+  ],
+  "permissions": [
+    "storage",
+    "alarms",
+    "nativeMessaging",
+    "contextMenus",
+    "offscreen",
+    "debugger",
+    "tabs",
+    "identity",
+    "sidePanel"
+  ],
+  "sandbox": {
+    "pages": [
+      "sandbox-runner.html"
+    ]
+  },
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
+  "version": "1.14.0",
+  "web_accessible_resources": [
+    {
+      "matches": [
+        "*://chat.deepseek.com/*"
+      ],
+      "resources": [
+        "pet/*.png",
+        "deepseek/*.wasm"
+      ]
+    },
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "resources": [
+        "sidepanel.html",
+        "pet/deepseek-whale-pet-states.png"
+      ]
+    }
+  ],
+  "version_name": "1.14.0 ShunCode MCP Fix 3.2"
+}

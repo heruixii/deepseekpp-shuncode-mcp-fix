@@ -1,0 +1,44 @@
+param([string]$Root = (Split-Path -Parent $PSScriptRoot))
+$ErrorActionPreference='Stop'
+function Fail([string]$m){Write-Host "FAIL $m"; exit 1}
+function Pass([string]$m){Write-Host "PASS $m"}
+if(-not (Test-Path -LiteralPath $Root)){Fail "root missing: $Root"}
+$manifest=Join-Path $Root 'manifest.json'
+& python -c "import json,pathlib,sys; r=pathlib.Path(sys.argv[1]); files=['manifest.json','_locales/en/messages.json','_locales/zh_CN/messages.json']; objs=[json.loads((r/f).read_text(encoding='utf-8-sig')) for f in files]; assert 'Fix 3' in objs[0].get('version_name','')" $Root
+if($LASTEXITCODE -ne 0){Fail 'UTF-8 JSON validation'}else{Pass 'UTF-8 JSON manifest/locales'}
+if(Test-Path -LiteralPath (Join-Path $Root '_metadata')){Fail '_metadata should be absent'}else{Pass '_metadata absent'}
+$js=Get-ChildItem -LiteralPath $Root -Recurse -File -Filter *.js
+foreach($f in $js){& node --check $f.FullName *> $null;if($LASTEXITCODE -ne 0){Fail "JS syntax $($f.FullName)"}}
+Pass "JS syntax $($js.Count) files"
+$tests=@('mcp-repair-selftest.js','mcp-diagnostic-selftest.js','fix3-policy-selftest.js','fix3-web-policy-selftest.js','fix3-continuation-selftest.js','fix31-agent-selftest.js','fix32-capability-selftest.js')
+foreach($t in $tests){$p=Join-Path $Root $t;if(-not(Test-Path $p)){Fail "missing selftest $t"};& node $p;if($LASTEXITCODE -ne 0){Fail "selftest $t"};Pass "selftest $t"}
+$bg=[IO.File]::ReadAllText((Join-Path $Root 'background.js'))
+$content=[IO.File]::ReadAllText((Join-Path $Root 'content-scripts\content.js'))
+$main=[IO.File]::ReadAllText((Join-Path $Root 'content-scripts\main-world.js'))
+$markers=@(
+ @('policy import',$bg,'importScripts(chrome.runtime.getURL(`fix3-policy.js`))'),
+ @('adaptive routing',$bg,'DPP_FIX3?.routeBonus'),
+ @('recent success',$bg,'DPP_FIX3?.recordSuccess'),
+ @('background safe retry',$bg,'DPP_FIX3?.shouldRetry'),
+ @('model-only compaction',$bg,'compactResult?.(e.name,e.result)'),
+ @('health enrichment',$bg,'healthFromCache?.(i)'),
+ @('web safe retry',$content,'DPP_WEB_SAFE_RETRY_3(i,o)'),
+ @('web dynamic result budget',$content,'DPP_MODEL_RESULT_BUDGET_3'),
+ @('web loop guard',$content,'dpp_fix3_no_progress'),
+ @('web dynamic steps',$content,'Ce=Hz(t.originalPrompt)'),
+ @('continuation cues',$content,'DPP_MIDSTEP_CUE_31'),
+ @('nudge hard cap',$content,'y.count>=Ce.maxNudges?[]'),
+ @('progress-sensitive nudge reset',$content,'DPP_HAS_PROGRESS_31(_);'),
+ @('fix31 helper definitions',$content,'function DPP_TOOL_BASE_31'),
+ @('completion gate',$content,'DPP_COMPLETION_GATE_31(g)'),
+ @('ambiguous verify-before-retry',$content,'verify_before_retry'),
+ @('capability window preservation',$content,'DPP_CAPABILITY_WINDOW_32'),
+ @('capability rediscover action',$content,'rediscover_capability'),
+ @('schema compiler content',$content,'working_directory`,'),
+ @('schema compiler main',$main,'working_directory`,')
+)
+foreach($x in $markers){if(-not $x[1].Contains($x[2])){Fail "marker $($x[0])"}else{Pass "marker $($x[0])"}}
+& python -m py_compile (Join-Path $Root 'tools\apply-fix3.py');$pyCompileCode=$LASTEXITCODE; if($pyCompileCode -ne 0){Fail 'apply-fix3.py compile'}else{Pass 'apply-fix3.py compile'}
+& python -m py_compile (Join-Path $Root 'tools\apply-fix31.py');$pyCompile31Code=$LASTEXITCODE; if($pyCompile31Code -ne 0){Fail 'apply-fix31.py compile'}else{Pass 'apply-fix31.py compile'}
+& python -m py_compile (Join-Path $Root 'tools\apply-fix32.py');$pyCompile32Code=$LASTEXITCODE; Get-ChildItem -LiteralPath (Join-Path $Root 'tools') -Recurse -Directory -Filter '__pycache__' -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue; if($pyCompile32Code -ne 0){Fail 'apply-fix32.py compile'}else{Pass 'apply-fix32.py compile'}
+Write-Host "HEALTH_CHECK_PASS root=$Root js=$($js.Count)"

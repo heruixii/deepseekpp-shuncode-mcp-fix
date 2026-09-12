@@ -1,0 +1,22 @@
+function zz(e,t){return e&&(e.length>t?`${e.slice(0,t)}\n...[truncated]`:e)}
+function Rz(e){return e}
+function Fz(e){if(e.length<=4)return e.map(Iz);let t=e.slice(0,-4),n=e.slice(-4);return[...t.map(Lz),...n.map(Iz)]}
+function DPP_MODEL_RESULT_BUDGET_3(e){let t=String(e??``).toLowerCase();return/status|health|check|stat|ping/.test(t)?6e3:/read|list|find|search|grep|snapshot|fetch|get/.test(t)?12e3:/run|exec|shell|build|test/.test(t)?16e3:9e3}
+function DPP_CAPABILITY_WINDOW_32(e){if(!String(e?.name??``).toLowerCase().endsWith(`mcp_discover`))return null;let t=e?.result?.output;if(typeof t==`string`)try{t=JSON.parse(t)}catch{return null}if(!t||typeof t!=`object`||!Array.isArray(t.candidates))return null;let n=t.candidates.slice(0,20).map(e=>({capability:typeof e?.capability==`string`?e.capability:void 0,name:typeof e?.name==`string`?e.name:void 0,expiresAt:Number.isFinite(e?.expiresAt)?e.expiresAt:void 0})).filter(e=>e.capability&&e.name);return{query:typeof t.query==`string`?zz(t.query,300):void 0,totalCandidates:Number.isFinite(t.totalCandidates)?t.totalCandidates:n.length,candidates:n,singleUse:!0,note:`Each capability is single-use for mcp_invoke. After a successful invoke or a replay/expiry error, call mcp_discover again for a fresh handle.`}}function Iz(e){let t=DPP_CAPABILITY_WINDOW_32(e),n=t===null?(e.result.output===void 0?void 0:JSON.stringify(e.result.output)):JSON.stringify(t),r=DPP_MODEL_RESULT_BUDGET_3(e.name);return{tool:e.name,provider:e.provider?.displayName,ok:e.result.ok,summary:e.result.summary,detail:zz(e.result.detail,3500),error:Rz(e.result.error),output:zz(n,r),...t?{capabilityCatalog:!0}:{},contextCompacted:typeof n==`string`&&n.length>r,truncated:e.result.truncated===!0}}function Lz(e){let t=DPP_CAPABILITY_WINDOW_32(e);return{tool:e.name,provider:e.provider?.displayName,ok:e.result.ok,summary:zz(e.result.summary,400),error:Rz(e.result.error),...t?{capabilityWindow:t}:{},windowed:!0,truncated:e.result.truncated===!0}}
+
+let fail=0;function t(n,g,w){let ok=typeof w==='function'?w(g):Object.is(g,w);console.log((ok?'PASS':'FAIL')+' '+n+' got='+JSON.stringify(g));if(!ok)fail++;}
+const disc={name:'mcp_discover',provider:{displayName:'MCP Capability Catalog'},result:{ok:true,summary:'catalog',output:{query:'run command',totalCandidates:2,candidates:[{capability:'mcp_cap_one',name:'run_command',expiresAt:123,description:'VERY LONG SECRET SCHEMA TEXT'},{capability:'mcp_cap_two',name:'read_files',expiresAt:124,description:'LONG'}]}}};
+let cw=DPP_CAPABILITY_WINDOW_32(disc);t('cap-window-count',cw.candidates.length,2);t('cap-window-handle',cw.candidates[0].capability,'mcp_cap_one');t('cap-window-single-use',cw.singleUse,true);t('cap-window-no-description','description' in cw.candidates[0],false);
+let fresh=Iz(disc);t('fresh-catalog-flag',fresh.capabilityCatalog,true);t('fresh-handle-visible',fresh.output.includes('mcp_cap_one'),true);t('fresh-long-description-dropped',fresh.output.includes('VERY LONG'),false);
+let hist=[disc,{name:'x1',provider:{},result:{ok:true,summary:'1'}},{name:'x2',provider:{},result:{ok:true,summary:'2'}},{name:'x3',provider:{},result:{ok:true,summary:'3'}},{name:'x4',provider:{},result:{ok:true,summary:'4'}}];let win=Fz(hist)[0];t('old-windowed',win.windowed,true);t('old-window-handle',win.capabilityWindow.candidates[0].capability,'mcp_cap_one');
+let discString=JSON.parse(JSON.stringify(disc));discString.result.output=JSON.stringify(disc.result.output);t('string-output-handle',DPP_CAPABILITY_WINDOW_32(discString).candidates[1].capability,'mcp_cap_two');
+let bad=JSON.parse(JSON.stringify(disc));bad.result.output='{oops';t('bad-json-safe',DPP_CAPABILITY_WINDOW_32(bad),null);
+let normal={name:'read_files',provider:{},result:{ok:true,summary:'ok',output:{a:1}}};t('normal-window-no-cap',Object.prototype.hasOwnProperty.call(Lz(normal),'capabilityWindow'),false);
+require('./fix3-policy.js');
+let rb=globalThis.DPP_FIX3.routeBonus;
+t('route-cn-command-write',rb({name:'run_command'},'用命令写入文件'),g=>g>=1200);
+t('route-cn-read',rb({name:'read_files'},'读取文件内容'),g=>g>=650);
+t('route-cn-edit',rb({name:'apply_patch'},'修改文件'),g=>g>=800);
+t('route-en-command',rb({name:'run_command'},'run shell command'),g=>g>=900);
+let ce=globalThis.DPP_FIX3.classifyError({code:'mcp_capability_handle_replayed',retryable:false});t('replay-stage',ce.stage,'mcp_capability');t('replay-action',ce.action,'rediscover_capability');
+if(fail)process.exit(1);console.log('FIX32_CAPABILITY_PASS 17');

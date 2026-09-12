@@ -1,0 +1,14 @@
+{
+  "extension_action_title": {
+    "description": "工具栏按钮标题",
+    "message": "DeepSeek++ ShunCode MCP Fix 3.2"
+  },
+  "extension_description": {
+    "description": "浏览器界面中显示的扩展描述",
+    "message": "DeepSeek 的 Agentic 记忆、Skill、执行、自动化和 MCP 工具"
+  },
+  "extension_name": {
+    "description": "浏览器界面中显示的扩展名称",
+    "message": "DeepSeek++ ShunCode MCP Fix 3.2"
+  }
+}

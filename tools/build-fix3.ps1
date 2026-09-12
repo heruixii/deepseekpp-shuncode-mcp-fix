@@ -1,0 +1,51 @@
+param(
+  [Parameter(Mandatory=$true)][string]$Source,
+  [Parameter(Mandatory=$true)][string]$Destination,
+  [string]$ZipPath = '',
+  [switch]$Force
+)
+$ErrorActionPreference='Stop'
+$TemplateRoot=Split-Path -Parent $PSScriptRoot
+$Apply=Join-Path $PSScriptRoot 'apply-fix3.py'
+$Apply31=Join-Path $PSScriptRoot 'apply-fix31.py'
+$Apply32=Join-Path $PSScriptRoot 'apply-fix32.py'
+$Health=Join-Path $PSScriptRoot 'health-check.ps1'
+function Full([string]$p){return [IO.Path]::GetFullPath($p).TrimEnd('\')}
+$src=Full $Source;$dst=Full $Destination
+if($src -eq $dst){throw 'Source and Destination must be different.'}
+if(-not(Test-Path -LiteralPath $src -PathType Container)){throw "Source does not exist: $src"}
+if(Test-Path -LiteralPath $dst){if(-not $Force){throw "Destination already exists: $dst. Use -Force only when intentional."};Remove-Item -LiteralPath $dst -Recurse -Force}
+if($ZipPath){$zip=Full $ZipPath;if(Test-Path $zip){if(-not $Force){throw "Zip already exists: $zip. Use -Force only when intentional."};Remove-Item -LiteralPath $zip -Force}}else{$zip=''}
+$built=$false
+try{
+  Copy-Item -LiteralPath $src -Destination $dst -Recurse
+  & python $Apply $dst
+  if($LASTEXITCODE -ne 0){throw "apply-fix3.py failed with exit $LASTEXITCODE"}
+  & python $Apply31 $dst
+  if($LASTEXITCODE -ne 0){throw "apply-fix31.py failed with exit $LASTEXITCODE"}
+  & python $Apply32 $dst
+  if($LASTEXITCODE -ne 0){throw "apply-fix32.py failed with exit $LASTEXITCODE"}
+  foreach($name in @('mcp-repair-selftest.js','mcp-diagnostic-selftest.js','fix3-policy-selftest.js','fix3-web-policy-selftest.js','fix3-continuation-selftest.js','fix31-agent-selftest.js','fix32-capability-selftest.js')){
+    Copy-Item -LiteralPath (Join-Path $TemplateRoot $name) -Destination (Join-Path $dst $name) -Force
+  }
+  foreach($name in @('README-SHUNCODE-FIX3.md','FIX3-TEST-REPORT.md')){
+    $doc=Join-Path $TemplateRoot $name
+    if(Test-Path -LiteralPath $doc){Copy-Item -LiteralPath $doc -Destination (Join-Path $dst $name) -Force}
+  }
+  $destTools=Join-Path $dst 'tools';New-Item -ItemType Directory -Force -Path $destTools|Out-Null
+  foreach($name in @('apply-fix3.py','apply-fix31.py','apply-fix32.py','health-check.ps1','build-fix3.ps1')){
+    Copy-Item -LiteralPath (Join-Path $PSScriptRoot $name) -Destination (Join-Path $destTools $name) -Force
+  }
+  Get-ChildItem -LiteralPath $dst -Recurse -Directory -Filter '__pycache__' -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+  & powershell.exe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $destTools 'health-check.ps1') -Root $dst
+  if($LASTEXITCODE -ne 0){throw "Fix3 health check failed with exit $LASTEXITCODE"}
+  if($zip){$parent=Split-Path -Parent $zip;if($parent -and -not(Test-Path $parent)){New-Item -ItemType Directory -Force -Path $parent|Out-Null};Compress-Archive -Path (Join-Path $dst '*') -DestinationPath $zip -CompressionLevel Optimal}
+  $built=$true
+  Write-Host "BUILD_FIX3_PASS destination=$dst zip=$zip"
+}catch{
+  if(Test-Path -LiteralPath $dst){Remove-Item -LiteralPath $dst -Recurse -Force -ErrorAction SilentlyContinue}
+  if($zip -and (Test-Path -LiteralPath $zip)){Remove-Item -LiteralPath $zip -Force -ErrorAction SilentlyContinue}
+  Write-Error "BUILD_FIX3_FAILED; incomplete output removed. $($_.Exception.Message)"
+  exit 1
+}
+if(-not $built){exit 1}

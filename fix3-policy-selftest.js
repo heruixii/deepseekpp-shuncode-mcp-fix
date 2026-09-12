@@ -1,0 +1,27 @@
+require('./fix3-policy.js');
+const p=globalThis.DPP_FIX3;
+let failed=0;
+function ok(name,cond,detail=''){console.log(`${cond?'PASS':'FAIL'} ${name}${detail?' '+detail:''}`);if(!cond)failed++}
+let original={ok:true,summary:'ok',detail:'d',output:{text:'x'.repeat(40000),items:Array.from({length:40},(_,i)=>({i,text:'y'.repeat(500)}))}};
+let compact=p.compactResult('read_file',original);
+ok('compact-trigger',compact.dppFix3?.resultCompacted===true);
+ok('compact-no-mutate',original.output.text.length===40000);
+ok('compact-smaller',JSON.stringify(compact).length<JSON.stringify(original).length);
+ok('retry-read',p.shouldRetry({name:'read_file'},{ok:false,error:{retryable:true,code:'net'}})===true);
+ok('no-retry-run',p.shouldRetry({name:'mcp__shuncode_run_command'},{ok:false,error:{retryable:true,code:'net'}})===false);
+ok('no-retry-ambiguous',p.shouldRetry({name:'read_file'},{ok:false,error:{retryable:true,details:{externalOutcome:'ambiguous'}}})===false);
+ok('route-file',p.routeBonus({name:'read_file'},'读取这个文件')>0);
+ok('route-command',p.routeBonus({name:'run_command'},'执行 powershell 命令')>0);
+p.recordSuccess({name:'read_file'},{name:'read_file'},{ok:true});
+ok('recent-bonus',p.recentBonus({name:'read_file'})>0);
+ok('step-default',p.stepLimit('hello')===12);
+ok('step-project',p.stepLimit('继续修复这个项目')===24);
+ok('step-until-done',p.stepLimit('继续直到完成')===36);
+let st=p.newLoopState(), acts=[];for(let i=0;i<6;i++)acts.push(p.beforeCall(st,{name:'read_file',payload:{path:'a'}}).action);
+ok('loop-sequence',acts.join(',')==='allow,allow,allow,block,block,stop',acts.join(','));
+ok('long-command-delegated',p.longCommandInfo({name:'run_command',payload:{command:'x'.repeat(6001)}})?.delegatedToShunCode===true);
+let health=p.healthFromCache({health:{status:'ready'},descriptors:[{name:'run_command',inputSchema:{properties:{command:{type:'string'}}}},{name:'apply_patch',inputSchema:{properties:{patch:{type:'string'}}}}]});
+ok('health-ready',health.ready&&health.hasRunCommand&&health.hasApplyPatch&&health.runCommandSchemaOk);
+let stat=p.status(); ok('status-version',stat.version===3); ok('flags-present',stat.flags.safeRetry===true&&stat.flags.resultCompaction===true);
+let cls=p.classifyError({code:"mcp_http_error",retryable:true}); ok("classify-transport",cls.stage==="mcp_transport"&&cls.action==="safe_retry_if_read_only"); cls=p.classifyError({code:"tool_call_payload_invalid",retryable:false}); ok("classify-format",cls.stage==="format_or_schema");
+if(failed)process.exit(1);console.log(`ALL_PASS ${19}`);
