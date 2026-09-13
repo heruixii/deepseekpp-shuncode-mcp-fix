@@ -1,4 +1,4 @@
-# DeepSeek++ ShunCode MCP Fix 3.3.6
+# DeepSeek++ ShunCode MCP Fix 3.3.7
 
 这是基于 **DeepSeek++ 1.14.0** 的稳定性优化版本，重点改善 DeepSeek 网页端通过 MCP 长时间调用 **ShunCode** 时的工具调用可靠性、连续执行能力和异常恢复行为。
 
@@ -169,15 +169,15 @@ Fix 3.3 针对 2026-09 DeepSeek 网页更新后暴露出的新稳定性问题做
 ## 当前版本
 
 ```text
-DeepSeek++ 1.14.0 ShunCode MCP Fix 3.3.6
+DeepSeek++ 1.14.0 ShunCode MCP Fix 3.3.7
 ```
 
-GitHub Release：[`v1.14.0-fix3.3.6`](https://github.com/heruixii/deepseekpp-shuncode-mcp-fix/releases/tag/v1.14.0-fix3.3.6)
+GitHub Release：[`v1.14.0-fix3.3.7`](https://github.com/heruixii/deepseekpp-shuncode-mcp-fix/releases/tag/v1.14.0-fix3.3.7)
 
 发布 ZIP：
 
 ```text
-DeepSeekPP-1.14.0-ShunCode-MCP-Fix3.3.6.zip
+DeepSeekPP-1.14.0-ShunCode-MCP-Fix3.3.7.zip
 ```
 
 SHA-256：
@@ -351,3 +351,12 @@ Fix 3.3.6 targets a separate long-task failure mode where MCP/Agent execution ca
 - Reasoning streaming is now animation-frame coalesced, matching the already-throttled visible text stream; step/loop completion explicitly flushes pending reasoning so final content is not lost.
 - Long-task capacity is not reduced: no lower step/tool budget was introduced.
 - New regression: **21/21 PASS**, including a synthetic 410-execution block, total/single-block byte budgets, self-mutation filtering, React-removal detection, reasoning flush, startup history migration and real MV3 version bump.
+
+## Fix 3.3.7 uploaded-file continuation / JSON response handling
+
+- Real failure evidence: an Agent turn spawned from a message with one uploaded file returned HTTP 200 with `Content-Type: application/json`, 89 response bytes and one chunk instead of SSE. Fresh-PoW retry had already succeeded at the transport layer.
+- The uploaded file contents were not copied into the Agent trace; the failure path came from the original `ref_file_ids` being preserved into synthetic Agent continuation turns.
+- Synthetic Agent turns now send `ref_file_ids: []`; normal user upload requests are unchanged and still carry their explicit file IDs. Conversation history is inherited through `parent_message_id`.
+- HTTP 200 JSON completion responses are no longer parsed as SSE. Only safe `code/message` fields are surfaced; arbitrary JSON/body fields are not logged.
+- Explicit JSON/business responses are non-retryable and do not consume a second fresh-PoW attempt. True empty-stream/network failures keep the bounded Fix 3.3.5 retry.
+- Regression: 28/28 PASS. Real MV3 version is `1.14.0.2`.

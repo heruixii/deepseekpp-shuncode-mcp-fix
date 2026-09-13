@@ -3,7 +3,7 @@
 ## Build identity
 
 - Base: DeepSeek++ 1.14.0 + ShunCode MCP Fix 2
-- Target: `1.14.0 ShunCode MCP Fix 3.3.6`
+- Target: `1.14.0 ShunCode MCP Fix 3.3.7`
 - Strategy module: `fix3-policy.js`
 - Patch mode: exact-marker, fail-closed
 
@@ -25,6 +25,7 @@
 | Fix 3.3.4 manual-chat tool storm guard | **76/76 PASS** |
 | Fix 3.3.5 empty-stream / fresh-PoW retry | **16/16 PASS** |
 | Fix 3.3.6 long-task page/storage stability | **21/21 PASS** |
+| Fix 3.3.7 uploaded-file continuation / JSON response | **28/28 PASS** |
 | Diagnostic privacy/state test | **PASS** |
 | JavaScript syntax scan | **PASS** |
 | UTF-8 manifest / locale JSON | **PASS** |

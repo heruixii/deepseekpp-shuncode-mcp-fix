@@ -4,13 +4,13 @@ function Fail([string]$m){Write-Host "FAIL $m"; exit 1}
 function Pass([string]$m){Write-Host "PASS $m"}
 if(-not (Test-Path -LiteralPath $Root)){Fail "root missing: $Root"}
 $manifest=Join-Path $Root 'manifest.json'
-& python -c "import json,pathlib,sys; r=pathlib.Path(sys.argv[1]); files=['manifest.json','_locales/en/messages.json','_locales/zh_CN/messages.json']; objs=[json.loads((r/f).read_text(encoding='utf-8-sig')) for f in files]; assert objs[0].get('version_name')=='1.14.0 ShunCode MCP Fix 3.3.6'; assert objs[0].get('version')=='1.14.0.1'" $Root
+& python -c "import json,pathlib,sys; r=pathlib.Path(sys.argv[1]); files=['manifest.json','_locales/en/messages.json','_locales/zh_CN/messages.json']; objs=[json.loads((r/f).read_text(encoding='utf-8-sig')) for f in files]; assert objs[0].get('version_name')=='1.14.0 ShunCode MCP Fix 3.3.7'; assert objs[0].get('version')=='1.14.0.2'" $Root
 if($LASTEXITCODE -ne 0){Fail 'UTF-8 JSON validation'}else{Pass 'UTF-8 JSON manifest/locales'}
 if(Test-Path -LiteralPath (Join-Path $Root '_metadata')){Fail '_metadata should be absent'}else{Pass '_metadata absent'}
 $js=Get-ChildItem -LiteralPath $Root -Recurse -File -Filter *.js
 foreach($f in $js){& node --check $f.FullName *> $null;if($LASTEXITCODE -ne 0){Fail "JS syntax $($f.FullName)"}}
 Pass "JS syntax $($js.Count) files"
-$tests=@('mcp-repair-selftest.js','mcp-diagnostic-selftest.js','fix3-policy-selftest.js','fix3-web-policy-selftest.js','fix3-continuation-selftest.js','fix31-agent-selftest.js','fix32-capability-selftest.js','fix33-known-issues-selftest.js','fix33-stream-integration-selftest.js','fix331-stream-close-selftest.js','fix332-safe-dom-selftest.js','fix333-agent-stability-selftest.js','fix334-tool-storm-selftest.js','fix335-empty-stream-selftest.js','fix336-long-task-stability-selftest.js')
+$tests=@('mcp-repair-selftest.js','mcp-diagnostic-selftest.js','fix3-policy-selftest.js','fix3-web-policy-selftest.js','fix3-continuation-selftest.js','fix31-agent-selftest.js','fix32-capability-selftest.js','fix33-known-issues-selftest.js','fix33-stream-integration-selftest.js','fix331-stream-close-selftest.js','fix332-safe-dom-selftest.js','fix333-agent-stability-selftest.js','fix334-tool-storm-selftest.js','fix335-empty-stream-selftest.js','fix336-long-task-stability-selftest.js','fix337-attachment-json-selftest.js')
 foreach($t in $tests){$p=Join-Path $Root $t;if(-not(Test-Path $p)){Fail "missing selftest $t"};& node $p;if($LASTEXITCODE -ne 0){Fail "selftest $t"};Pass "selftest $t"}
 $bg=[IO.File]::ReadAllText((Join-Path $Root 'background.js'))
 $content=[IO.File]::ReadAllText((Join-Path $Root 'content-scripts\content.js'))
@@ -58,6 +58,9 @@ $markers=@(
  @('fix336 observer self-filter',$content,'DPP_AGENT_OBSERVER_IGNORABLE_336'),
  @('fix336 reasoning throttle',$content,'DPP_REASONING_RAF_336=requestAnimationFrame'),
  @('fix336 history startup trim',$bg,'DPP_TRIM_TOOL_HISTORY_ON_START_336().catch'),
+ @('fix337 synthetic attachment refs',$content,'DPP_AGENT_SYNTHETIC_REF_FILES_337=[]'),
+ @('fix337 json response parser',$content,'DPP_JSON_COMPLETION_ERROR_337'),
+ @('fix337 json no replay',$content,'e?.dppNoRetry337===!0'),
  @('fix33 safe eof retry',$content,'!s.finished&&!a&&s.responseMessageId==null&&s.requestMessageId==null&&n<zR'),
  @('fix33 stream diagnostics',$content,'Last stream markers:'),
  @('fix33 utf8 guard',$content,'function DPP_WINDOWS_ENCODING_GUARD_33'),
@@ -79,4 +82,5 @@ foreach($x in $markers){if(-not $x[1].Contains($x[2])){Fail "marker $($x[0])"}el
 & python -m py_compile (Join-Path $Root 'tools\apply-fix334.py');$pyCompile334Code=$LASTEXITCODE; Get-ChildItem -LiteralPath (Join-Path $Root 'tools') -Recurse -Directory -Filter '__pycache__' -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue; if($pyCompile334Code -ne 0){Fail 'apply-fix334.py compile'}else{Pass 'apply-fix334.py compile'}
 & python -m py_compile (Join-Path $Root 'tools\apply-fix335.py');$pyCompile335Code=$LASTEXITCODE; Get-ChildItem -LiteralPath (Join-Path $Root 'tools') -Recurse -Directory -Filter '__pycache__' -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue; if($pyCompile335Code -ne 0){Fail 'apply-fix335.py compile'}else{Pass 'apply-fix335.py compile'}
 & python -m py_compile (Join-Path $Root 'tools\apply-fix336.py');$pyCompile336Code=$LASTEXITCODE; Get-ChildItem -LiteralPath (Join-Path $Root 'tools') -Recurse -Directory -Filter '__pycache__' -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue; if($pyCompile336Code -ne 0){Fail 'apply-fix336.py compile'}else{Pass 'apply-fix336.py compile'}
+& python -m py_compile (Join-Path $Root 'tools\apply-fix337.py');$pyCompile337Code=$LASTEXITCODE; Get-ChildItem -LiteralPath (Join-Path $Root 'tools') -Recurse -Directory -Filter '__pycache__' -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue; if($pyCompile337Code -ne 0){Fail 'apply-fix337.py compile'}else{Pass 'apply-fix337.py compile'}
 Write-Host "HEALTH_CHECK_PASS root=$Root js=$($js.Count)"

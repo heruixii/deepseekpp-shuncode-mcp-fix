@@ -289,3 +289,11 @@ DeepSeek 新前端会在页面结构被扩展修改后进入自己的错误边�
 - The inline-Agent observer ignores its own subtree mutations, still detects official React removal of the Agent container, and coalesces maintenance to animation frames.
 - Reasoning streaming is animation-frame coalesced and force-flushed at step/loop completion.
 - New suite: 21/21 PASS.
+
+## Fix 3.3.7 uploaded-file continuation
+
+- Synthetic Agent follow-up turns no longer re-attach stale `ref_file_ids` from the original user upload.
+- Normal upload requests still preserve file IDs.
+- HTTP 200 JSON is treated as a business/application response, with privacy-safe code/message extraction instead of SSE parsing.
+- JSON responses do not trigger fresh-PoW replay; true empty streams still do.
+- New suite: 28/28 PASS.
