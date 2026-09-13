@@ -1,4 +1,4 @@
-# DeepSeek++ ShunCode MCP Fix 3.3.1
+# DeepSeek++ ShunCode MCP Fix 3.3.2
 
 这是基于 **DeepSeek++ 1.14.0** 的稳定性优化版本，重点改善 DeepSeek 网页端通过 MCP 长时间调用 **ShunCode** 时的工具调用可靠性、连续执行能力和异常恢复行为。
 
@@ -140,6 +140,8 @@ Fix 2 source
   -> Fix 3.1
   -> Fix 3.2
   -> Fix 3.3
+  -> Fix 3.3.1
+  -> Fix 3.3.2
   -> health check
   -> release
 ```
@@ -163,15 +165,15 @@ Fix 3.3 针对 2026-09 DeepSeek 网页更新后暴露出的新稳定性问题做
 ## 当前版本
 
 ```text
-DeepSeek++ 1.14.0 ShunCode MCP Fix 3.3
+DeepSeek++ 1.14.0 ShunCode MCP Fix 3.3.2
 ```
 
-GitHub Release：[`v1.14.0-fix3.3`](https://github.com/heruixii/deepseekpp-shuncode-mcp-fix/releases/tag/v1.14.0-fix3.3)
+GitHub Release：[`v1.14.0-fix3.3.2`](https://github.com/heruixii/deepseekpp-shuncode-mcp-fix/releases/tag/v1.14.0-fix3.3.2)
 
 发布 ZIP：
 
 ```text
-DeepSeekPP-1.14.0-ShunCode-MCP-Fix3.3.zip
+DeepSeekPP-1.14.0-ShunCode-MCP-Fix3.3.2.zip
 ```
 
 SHA-256：
@@ -212,7 +214,7 @@ Max Tool Count: 32
 
 ## 验证情况
 
-最终 Fix 3.3 已经过以下验证：
+最终 Fix 3.3.2 已经过以下验证：
 
 - MCP parser / schema：**17/17 PASS**
 - Fix 3 policy：**19/19 PASS**
@@ -223,6 +225,8 @@ Max Tool Count: 32
 - Fix 3.2 capability / adaptive：**17/17 PASS**
 - Fix 3.3 已知问题修复：**46/46 PASS**
 - Fix 3.3 真实 SSE parser 集成：**8/8 PASS**
+- Fix 3.3.1 `event: close` compatibility：**12/12 PASS**
+- Fix 3.3.2 Safe DOM compatibility：**21/21 PASS**
 - 全部 JS 语法检查：**PASS**
 - Python overlay 编译：**PASS**
 - fail-closed 验证：**PASS**
@@ -272,3 +276,14 @@ DeepSeek Web
 - Keeps bare EOF incomplete; `FAILED`, `error`, `aborted`, `timeout`, and similar close payloads are not accepted as success.
 - Adds a production-parser regression fixture for the observed `ready -> update_file -> hint -> close` sequence.
 - Keeps Fix 3.3 empty-stream retry, partial-stream safety, MCP behavior, UTF-8 guard, workspace routing, and PTY recovery unchanged.
+
+
+## Fix 3.3.2 Safe DOM compatibility
+
+DeepSeek 2026-09 网页更新新增了页面环境/扩展冲突错误边界。Fix 3.3.2 不改 MCP、Agent continuation、stream parser 或授权语义，只在 content capability 注册层启用安全 DOM 集：
+
+- 保留 `runtime-state`、`main-world-bridge`、`mutation-hub`、`tool`、`inline-agent`、`chat-runtime`。
+- 暂停 `theme`、`token-speed`、`multimodal`、`export`、`history`、`project`、`background`、`pet` 等非核心页面增强，避免直接改写 DeepSeek React 管理的侧栏/对话 DOM。
+- `floating-chat.js` 继续用于其他网站，但通过 manifest `exclude_matches` 不再注入 `chat.deepseek.com`。
+- 3.3.1 的 SSE `event: close` 兼容、Fix 3.3 UTF-8 / workspace / PTY / preflight 保护全部保持不变。
+- 隔离 Edge + DevTools 协议实测：页面刷新后 0 Runtime exception、0 console error/warning，高风险 DPP DOM 节点不存在，扩展 Service Worker 显示 3.3.2。

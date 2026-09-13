@@ -1,0 +1,24 @@
+const fs=require('fs'),path=require('path');
+const root=process.argv[2]||__dirname;
+let pass=0,fail=0;
+function t(name,ok){if(ok){console.log('PASS',name);pass++}else{console.error('FAIL',name);fail++}}
+const src=fs.readFileSync(path.join(root,'content-scripts','content.js'),'utf8');
+const man=JSON.parse(fs.readFileSync(path.join(root,'manifest.json'),'utf8'));
+const en=JSON.parse(fs.readFileSync(path.join(root,'_locales','en','messages.json'),'utf8'));
+const zh=JSON.parse(fs.readFileSync(path.join(root,'_locales','zh_CN','messages.json'),'utf8'));
+const a=src.indexOf('var DPP_SAFE_DOM_332=!0;function UX(){'), b=src.indexOf('function WX(){',a);
+const ux=a>=0&&b>a?src.slice(a,b):'';
+t('marker present',a>=0);
+t('version 3.3.2',man.version_name==='1.14.0 ShunCode MCP Fix 3.3.2');
+t('locale en',en.extension_name.message==='DeepSeek++ ShunCode MCP Fix 3.3.2');
+t('locale zh',zh.extension_name.message==='DeepSeek++ ShunCode MCP Fix 3.3.2');
+for(const id of ['mutation-hub','tool','inline-agent']) t('core capability '+id,ux.includes('GX(`'+id+'`'));
+for(const id of ['theme','token-speed','multimodal','export','history','project','background','pet']) t('risky capability disabled '+id,!ux.includes('GX(`'+id+'`'));
+t('runtime-state retained',ux.includes('[WX(),n,'));
+t('main-world bridge retained',ux.includes('n=nq({handleAugmentRequestBody:bZ'));
+t('chat-runtime retained',/[,\[]e\]}/.test(ux));
+const floats=man.content_scripts.filter(x=>(x.js||[]).includes('content-scripts/floating-chat.js'));
+t('single floating entry',floats.length===1);
+t('floating excluded on deepseek',floats.length===1&&Array.isArray(floats[0].exclude_matches)&&floats[0].exclude_matches.includes('*://chat.deepseek.com/*'));
+t('floating remains all urls elsewhere',floats.length===1&&floats[0].matches.length===1&&floats[0].matches[0]==='<all_urls>');
+console.log(`FIX332_SAFE_DOM_SELFTEST ${pass}/${pass+fail}`); process.exit(fail?1:0);

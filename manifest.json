@@ -22,7 +22,10 @@
       "matches": [
         "<all_urls>"
       ],
-      "run_at": "document_idle"
+      "run_at": "document_idle",
+      "exclude_matches": [
+        "*://chat.deepseek.com/*"
+      ]
     },
     {
       "js": [
@@ -106,5 +109,5 @@
       ]
     }
   ],
-  "version_name": "1.14.0 ShunCode MCP Fix 3.3.1"
+  "version_name": "1.14.0 ShunCode MCP Fix 3.3.2"
 }

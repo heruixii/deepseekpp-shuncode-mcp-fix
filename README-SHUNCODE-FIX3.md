@@ -191,15 +191,17 @@ Fix 3.3 仍采用 exact-marker + SHA-256 compatibility gate，任何目标函数
 
 - Parser / schema：17 项 PASS
 - Fix 3 policy：19 项 PASS
-- DeepSeek 网页主链策略：20 项 PASS
+- DeepSeek 网页主链策略：21 项 PASS
 - 连续任务语义识别：11 项 PASS
 - 连续任务控制流：6 项 PASS
 - Fix 3.1 Agent / completion / retry：31 项 PASS
 - Fix 3.2 Capability / Adaptive：17/17 PASS
 - Fix 3.3 已知问题修复：46/46 PASS
 - Fix 3.3 SSE parser 集成：8/8 PASS
+- Fix 3.3.1 SSE close：12/12 PASS
+- Fix 3.3.2 Safe DOM：21/21 PASS
 - 诊断隐私测试：PASS
-- 全部 JS 语法（58 个 JS）：PASS
+- 全部 JS 语法（60 个 JS）：PASS
 - UTF-8 manifest / EN / ZH locale：PASS
 - 自动重建：PASS
 - 不兼容基线零写入：PASS
@@ -230,3 +232,15 @@ Fix 3.3 仍采用 exact-marker + SHA-256 compatibility gate，任何目标函数
 - Keeps bare EOF incomplete; `FAILED`, `error`, `aborted`, `timeout`, and similar close payloads are not accepted as success.
 - Adds a production-parser regression fixture for the observed `ready -> update_file -> hint -> close` sequence.
 - Keeps Fix 3.3 empty-stream retry, partial-stream safety, MCP behavior, UTF-8 guard, workspace routing, and PTY recovery unchanged.
+
+
+## Fix 3.3.2 Safe DOM compatibility
+
+DeepSeek 新前端会在页面结构被扩展修改后进入自己的错误边界，并提示“页面崩溃可能与浏览器插件对页面内容的修改有关”。本次修复采用 capability-level 降级而不是重写 React/DOM 逻辑：
+
+- 核心链路保留：runtime state、MAIN-world bridge、共享 mutation hub、tool UI、inline Agent、chat runtime。
+- 非核心高风险页面增强暂停：theme、token speed、multimodal、export、history organizer、project sidebar、background、pet。
+- floating chat 对 DeepSeek 域名禁用，对其他网站保持原行为。
+- 不修改 MCP server 配置、工具授权、Direct Exposure、stream terminal、Completion Gate 或 side-effect retry 规则。
+- `tools/apply-fix332.py` 使用 3.3.1 整文件 SHA-256 + UX block SHA-256 双门槛；不匹配时 fail-closed。
+- 独立 3.3.1 -> 3.3.2 重建与 trial **122/122 文件 SHA-256 一致**。

@@ -3,7 +3,7 @@
 ## Build identity
 
 - Base: DeepSeek++ 1.14.0 + ShunCode MCP Fix 2
-- Target: `1.14.0 ShunCode MCP Fix 3.3`
+- Target: `1.14.0 ShunCode MCP Fix 3.3.2`
 - Strategy module: `fix3-policy.js`
 - Patch mode: exact-marker, fail-closed
 
@@ -13,12 +13,14 @@
 |---|---|
 | Parser / schema repair | **17/17 PASS** |
 | Fix 3 strategy policy | **19/19 PASS** |
-| DeepSeek web execution policy | **20/20 PASS** |
+| DeepSeek web execution policy | **21/21 PASS** |
 | Continuation intent / no-tool correction | **16/16 PASS** |
 | Fix 3.1 agent / completion / retry | **31/31 PASS** |
 | Fix 3.2 capability / adaptive routing | **17/17 PASS** |
 | Fix 3.3 known-issue regression | **46/46 PASS** |
 | Fix 3.3 production SSE parser integration | **8/8 PASS** |
+| Fix 3.3.1 SSE close compatibility | **12/12 PASS** |
+| Fix 3.3.2 Safe DOM compatibility | **21/21 PASS** |
 | Diagnostic privacy/state test | **PASS** |
 | JavaScript syntax scan | **PASS** |
 | UTF-8 manifest / locale JSON | **PASS** |
@@ -134,3 +136,15 @@ An isolated Edge profile successfully registered the unpacked extension and expo
 - Keeps bare EOF incomplete; `FAILED`, `error`, `aborted`, `timeout`, and similar close payloads are not accepted as success.
 - Adds a production-parser regression fixture for the observed `ready -> update_file -> hint -> close` sequence.
 - Keeps Fix 3.3 empty-stream retry, partial-stream safety, MCP behavior, UTF-8 guard, workspace routing, and PTY recovery unchanged.
+
+
+## Fix 3.3.2 Safe DOM compatibility
+
+- Root-cause evidence: the displayed crash/plugin warning is embedded in DeepSeek's own current web bundle; Edge produced no new renderer Crashpad dump or Application Error.
+- The highest-risk extension behaviors were optional content capabilities that modify DeepSeek React-managed DOM (history/project/sidebar/background/pet/theme/etc.).
+- Fix 3.3.2 narrows the active content capability list to the MCP/Agent-critical set and excludes floating-chat injection on `chat.deepseek.com`.
+- New regression: **21/21 PASS**.
+- Full prior regression remains PASS; **60 JavaScript files** pass syntax validation.
+- Fail-closed tamper test: patcher exits non-zero and leaves all target files unchanged.
+- Independent reconstruction: **122/122 files byte-identical by SHA-256**.
+- Isolated Edge/CDP smoke: target Service Worker reports `1.14.0 ShunCode MCP Fix 3.3.2`; DeepSeek page reload emits **0 Runtime exceptions** and **0 console error/warning**; risky DPP page nodes are absent.
