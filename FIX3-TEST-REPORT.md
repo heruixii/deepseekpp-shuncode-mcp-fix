@@ -3,7 +3,7 @@
 ## Build identity
 
 - Base: DeepSeek++ 1.14.0 + ShunCode MCP Fix 2
-- Target: `1.14.0 ShunCode MCP Fix 3.3.3`
+- Target: `1.14.0 ShunCode MCP Fix 3.3.4`
 - Strategy module: `fix3-policy.js`
 - Patch mode: exact-marker, fail-closed
 
@@ -22,6 +22,7 @@
 | Fix 3.3.1 SSE close compatibility | **12/12 PASS** |
 | Fix 3.3.2 Safe DOM compatibility | **21/21 PASS** |
 | Fix 3.3.3 Agent stability / storage pressure | **29/29 PASS** |
+| Fix 3.3.4 manual-chat tool storm guard | **76/76 PASS** |
 | Diagnostic privacy/state test | **PASS** |
 | JavaScript syntax scan | **PASS** |
 | UTF-8 manifest / locale JSON | **PASS** |
@@ -162,3 +163,17 @@ An isolated Edge profile successfully registered the unpacked extension and expo
 - Real failing trace offline measurement: 76,691 B -> 51,513 B (-32.8%); combined with checkpoint cadence, estimated write reduction 77.6%.
 - Fail-closed tamper test: non-zero exit with all target hashes unchanged.
 - Independent reconstruction: **124/124 files byte-identical by SHA-256**.
+
+## Fix 3.3.4 manual-chat tool storm guard
+
+- Live storage evidence: one `manual_chat` request generated at least ~228 `run_command` attempts. The latest 100 retained history entries shared one request/message and were all rejected with `tool_authorization_call_limit` in ~11.2 s.
+- The tool XML was complete (`</run_command>` present), so this is a model/tool-batch storm rather than incremental parser replay.
+- Content synchronous breaker: 8 total / 6 per normalized tool name per manual response. A 228-call same-tool replay allows 6 and blocks 222 before execution.
+- `agent_run` bypasses this manual breaker; a 40-call Agent simulation remains fully allowed.
+- Background trigger-aware authorization limits provide independent containment without shrinking Agent/automation capacity.
+- Pathological PowerShell `Out-String/Out-File -Width` values are rejected locally.
+- Authorization call-limit recovery is terminal, not authorization-refresh.
+- Stale >256 KiB trace arrays are migrated on read, and runtime-state startup proactively triggers that read/migration.
+- New regression: **76/76 PASS**; full health and JS syntax scan pass.
+- Fail-closed tamper test: patcher exits non-zero and all target hashes remain unchanged.
+- Independent 3.3.3 -> 3.3.4 reconstruction is byte-identical by SHA-256 before documentation finalization; release rebuild repeats this check.

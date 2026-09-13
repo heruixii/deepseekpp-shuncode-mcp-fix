@@ -9,9 +9,9 @@ const zh=JSON.parse(fs.readFileSync(path.join(root,'_locales','zh_CN','messages.
 const a=src.indexOf('var DPP_SAFE_DOM_332=!0;function UX(){'), b=src.indexOf('function WX(){',a);
 const ux=a>=0&&b>a?src.slice(a,b):'';
 t('marker present',a>=0);
-t('version retains Safe DOM',man.version_name==='1.14.0 ShunCode MCP Fix 3.3.3');
-t('locale en',en.extension_name.message==='DeepSeek++ ShunCode MCP Fix 3.3.3');
-t('locale zh',zh.extension_name.message==='DeepSeek++ ShunCode MCP Fix 3.3.3');
+t('version retains Safe DOM',man.version_name.startsWith('1.14.0 ShunCode MCP Fix 3.3.')&&Number(man.version_name.split('.').at(-1))>=2);
+t('locale en',en.extension_name.message==='DeepSeek++ ShunCode MCP '+man.version_name.replace('1.14.0 ShunCode MCP ',''));
+t('locale zh',zh.extension_name.message==='DeepSeek++ ShunCode MCP '+man.version_name.replace('1.14.0 ShunCode MCP ',''));
 for(const id of ['mutation-hub','tool','inline-agent']) t('core capability '+id,ux.includes('GX(`'+id+'`'));
 for(const id of ['theme','token-speed','multimodal','export','history','project','background','pet']) t('risky capability disabled '+id,!ux.includes('GX(`'+id+'`'));
 t('runtime-state retained',ux.includes('[WX(),n,'));

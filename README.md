@@ -1,4 +1,4 @@
-# DeepSeek++ ShunCode MCP Fix 3.3.3
+# DeepSeek++ ShunCode MCP Fix 3.3.4
 
 这是基于 **DeepSeek++ 1.14.0** 的稳定性优化版本，重点改善 DeepSeek 网页端通过 MCP 长时间调用 **ShunCode** 时的工具调用可靠性、连续执行能力和异常恢复行为。
 
@@ -143,6 +143,7 @@ Fix 2 source
   -> Fix 3.3.1
   -> Fix 3.3.2
   -> Fix 3.3.3
+  -> Fix 3.3.4
   -> health check
   -> release
 ```
@@ -166,15 +167,15 @@ Fix 3.3 针对 2026-09 DeepSeek 网页更新后暴露出的新稳定性问题做
 ## 当前版本
 
 ```text
-DeepSeek++ 1.14.0 ShunCode MCP Fix 3.3.3
+DeepSeek++ 1.14.0 ShunCode MCP Fix 3.3.4
 ```
 
-GitHub Release：[`v1.14.0-fix3.3.3`](https://github.com/heruixii/deepseekpp-shuncode-mcp-fix/releases/tag/v1.14.0-fix3.3.3)
+GitHub Release：[`v1.14.0-fix3.3.4`](https://github.com/heruixii/deepseekpp-shuncode-mcp-fix/releases/tag/v1.14.0-fix3.3.4)
 
 发布 ZIP：
 
 ```text
-DeepSeekPP-1.14.0-ShunCode-MCP-Fix3.3.3.zip
+DeepSeekPP-1.14.0-ShunCode-MCP-Fix3.3.4.zip
 ```
 
 SHA-256：
@@ -215,7 +216,7 @@ Max Tool Count: 32
 
 ## 验证情况
 
-最终 Fix 3.3.3 已经过以下验证：
+最终 Fix 3.3.4 已经过以下验证：
 
 - MCP parser / schema：**17/17 PASS**
 - Fix 3 policy：**19/19 PASS**
@@ -229,7 +230,8 @@ Max Tool Count: 32
 - Fix 3.3.1 `event: close` compatibility：**12/12 PASS**
 - Fix 3.3.2 Safe DOM compatibility：**21/21 PASS**
 - Fix 3.3.3 Agent stability / storage pressure：**29/29 PASS**
-- 全部 JS 语法检查：**61 个 JS PASS**
+- Fix 3.3.4 manual-chat tool storm guard：**76/76 PASS**
+- 全部 JS 语法检查：**62 个 JS PASS**
 - Python overlay 编译：**PASS**
 - fail-closed 验证：**PASS**
 - 从干净基线重建后文件哈希完全一致：**PASS**
@@ -302,3 +304,17 @@ DeepSeek 2026-09 网页更新新增了页面环境/扩展冲突错误边界。Fi
 - Agent continuation 增加 Obsidian/vault 配置优先发现规则：Windows 下先读取 `%APPDATA%\obsidian\obsidian.json` / `.obsidian`，避免先递归扫描整盘。
 - 真实失败 trace 离线测量：19 个工具结果从 76,691 B 降至约 51,513 B（-32.8%）；结合 checkpoint cadence，该故障链的 trace 写放大估算下降约 77.6%。
 - 不改变 capability anti-replay、MCP 授权、mutation retry、Completion Gate、Fix 3.3.1 stream terminal 和 Fix 3.3.2 Safe DOM 语义。
+
+## Fix 3.3.4 Manual-chat tool storm guard
+
+针对一次真实 `manual_chat` 回复在约 11 秒内疯狂生成 `run_command` 的问题，Fix 3.3.4 增加同步熔断与后台安全网。Edge LevelDB 证据显示，最新保留的 100 条调用全部来自同一 request/message，均因 `tool_authorization_call_limit` 被拒；由于单授权 hard limit 为 128，这一回复实际至少尝试了约 228 次工具调用。命令不是半截流式误解析，而是完整闭合的 `</run_command>`，并出现 `Out-String -Width` 数值指数级膨胀。
+
+- `manual_chat` 单回复最多 8 个工具、同一种工具最多 6 个；第 7 个同类或第 9 个混合工具同步熔断，后续调用不进入授权、MCP、history 或 DOM。
+- 熔断后的回复不会自动接续 inline Agent，避免“异常回复 -> Agent 再继续”的二次风暴。
+- 重复 call id 会被本地丢弃；已允许调用的 chunk 可以完成，新的 blocked call chunk 不再进入 external-payload 路径。
+- 后台授权再加独立安全网：`manual_chat/sidepanel_chat=24`、`test=8`，`agent_run/automation` 保持既有 128，不削弱正常长 Agent。
+- `tool_authorization_call_limit` 被归类为终止型 tool-storm 错误，不再建议 refresh authorization。
+- `run_command` 本地 sanity guard 会阻止明显失控的 PowerShell `Out-String/Out-File -Width` 超大值；合理值保持正常。
+- 3.3.3 的 256 KiB trace 预算增加 read-time migration，并由 runtime-state 启动主动触发：旧超限 trace 不再等待下一次 Agent 才清理。
+- 合成 228-call 真实形态回放：前 6 个同类调用允许、后 222 个在执行层之前阻断；40 个 `agent_run` 连续调用模拟全部不受影响。
+- 不改变 MCP server 配置、capability anti-replay、Completion Gate、mutation retry、SSE close 兼容和 Safe DOM 语义。

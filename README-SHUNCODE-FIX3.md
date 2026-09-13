@@ -201,8 +201,9 @@ Fix 3.3 仍采用 exact-marker + SHA-256 compatibility gate，任何目标函数
 - Fix 3.3.1 SSE close：12/12 PASS
 - Fix 3.3.2 Safe DOM：21/21 PASS
 - Fix 3.3.3 Agent stability / storage pressure：29/29 PASS
+- Fix 3.3.4 Manual-chat tool storm：76/76 PASS
 - 诊断隐私测试：PASS
-- 全部 JS 语法（61 个 JS）：PASS
+- 全部 JS 语法（62 个 JS）：PASS
 - UTF-8 manifest / EN / ZH locale：PASS
 - 自动重建：PASS
 - 不兼容基线零写入：PASS
@@ -256,3 +257,14 @@ DeepSeek 新前端会在页面结构被扩展修改后进入自己的错误边�
 - 真实失败 trace：76,691 B -> 51,513 B（-32.8%）；结合 6 次 -> 2 次 checkpoint/error 写入，估算写放大下降 77.6%。
 - `tools/apply-fix333.py` 对 3.3.2 content/background/manifest/locale 使用整文件 SHA-256 门槛，任何不匹配均 fail-closed。
 - 当前 3.3.2 -> 3.3.3 独立 rebuild 与 trial：124/124 文件 SHA-256 一致。
+
+## Fix 3.3.4 Manual-chat tool storm guard
+
+- Live LevelDB evidence: one `manual_chat` request produced at least ~228 `run_command` attempts; the newest 100 retained history rows were all `tool_authorization_call_limit` within ~11.2 s.
+- The calls were complete XML tool blocks, not partial-stream replays. Their PowerShell commands alternated D-drive enumeration variants while `Out-String -Width` exploded to pathological values.
+- Content-side synchronous circuit breaker: max 8 tools per manual response / max 6 per tool name, before `x1/i2`, authorization, MCP execution, history, or DOM.
+- Background defense-in-depth: manual/sidepanel grants max 24 call ids, test grants 8, agent/automation remain at 128.
+- Stormed responses do not auto-start inline Agent. `tool_authorization_call_limit` is terminal (`stop_tool_calls_and_summarize`) rather than `refresh_authorization`.
+- PowerShell `-Width` sanity guard blocks absurd values while allowing normal widths.
+- Oversized legacy inline-agent trace arrays are trimmed under the existing storage lock, and runtime-state startup proactively triggers the migration.
+- New regression: 76/76 PASS. Full prior regressions remain PASS.
