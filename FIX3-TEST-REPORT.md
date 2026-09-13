@@ -1,3 +1,5 @@
+> Current release: **Fix 3.3.9** — hardens DeepSeek response message-ID selection and adds one bounded recovery for explicit `code=0 / invalid message id`, while preserving Fix 3.3.8 Agent budgets.
+
 # DeepSeek++ ShunCode MCP Fix 3 — Test Report
 
 ## Build identity

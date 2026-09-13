@@ -1,0 +1,18 @@
+const fs=require('fs'), path=require('path'), vm=require('vm');
+const root=__dirname; const src=fs.readFileSync(path.join(root,'content-scripts','content.js'),'utf8');
+let pass=0, fail=0; function ok(cond,name,detail=''){if(cond){console.log('PASS',name,detail);pass++}else{console.log('FAIL',name,detail);fail++}}
+function slice(a,b){const i=src.indexOf(a);if(i<0)throw Error('missing '+a);const j=src.indexOf(b,i);if(j<0)throw Error('missing '+b);return src.slice(i,j)}
+const ctx={console,setTimeout,clearTimeout,AbortController,Promise};
+ctx.Wc=(e)=>{if(e==null||e==='')return null;if(typeof e==='number'&&Number.isInteger(e)&&e>=0&&e<=4294967295)return e;if(typeof e!=='string')return null;let t=e.trim();if(!/^\d+$/.test(t))return null;let n=Number(t);return Number.isInteger(n)&&n>=0&&n<=4294967295?n:null};
+vm.createContext(ctx);
+vm.runInContext(slice('function hI()','function gI()'),ctx);
+vm.runInContext(slice('function DPP_MESSAGE_ID_SET_339','var $I=class'),ctx);
+vm.runInContext(slice('function DPP_JSON_FIELD_337','async function WL'),ctx);
+vm.runInContext(slice('function DPP_RETRY_INVALID_MESSAGE_339','async function HR'),ctx);
+let s=ctx.hI(); ctx.ZI({response_message_id:100, request_message_id:99, nested:{response_message_id:90}},s); ok(s.responseMessageId===100,'top-level response wins nested old',String(s.responseMessageId)); ok(s.requestMessageId===99,'top-level request id',String(s.requestMessageId));
+s=ctx.hI(); ctx.ZI({o:'BATCH',v:[{response_message_id:101},{response_message_id:99}]},s); ok(s.responseMessageId===101,'same-rank monotonic id keeps newer',String(s.responseMessageId));
+s=ctx.hI(); ctx.ZI({response:{response_message_id:105}},s); ctx.ZI({p:'response/response_message_id',v:106},s); ctx.ZI({v:{response_message_id:999}},s); ok(s.responseMessageId===106,'explicit response path beats deep nested id',String(s.responseMessageId)); ok(String(s.dppResponseMessageIdSource).includes('p:response/response_message_id'),'source diagnostic records explicit path',s.dppResponseMessageIdSource); ok(s.dppResponseMessageIdCandidates===3,'candidate count bounded/accurate',String(s.dppResponseMessageIdCandidates));
+const meta=ctx.DPP_JSON_COMPLETION_META_339('{"code":0,"message":" invalid   message id "}'); ok(meta.code==='0'&&meta.message==='invalid message id','json meta normalized'); ok(ctx.DPP_INVALID_MESSAGE_ID_339(meta)===true,'exact invalid message id recognized'); ok(ctx.DPP_INVALID_MESSAGE_ID_339({code:'1',message:'invalid message id'})===false,'wrong code not retried'); ok(ctx.DPP_INVALID_MESSAGE_ID_339({code:'0',message:'other'})===false,'other json message not retried');
+let e={dppInvalidMessageId339:true}; ok(ctx.DPP_RETRY_INVALID_MESSAGE_339(e,false,false,1,2)===true,'first no-output invalid-id may retry'); ok(ctx.DPP_RETRY_INVALID_MESSAGE_339(e,true,false,1,2)===false,'partial output blocks replay'); ok(ctx.DPP_RETRY_INVALID_MESSAGE_339(e,false,true,1,2)===false,'second invalid-id blocked'); ok(ctx.DPP_RETRY_INVALID_MESSAGE_339(e,false,false,2,2)===false,'attempt cap blocks retry');
+ok(src.includes('RR(7e3,12e3)'),'dedicated backoff is 7-12s'); const inlineRetry='if(e?.dppInvalidMessageId339===!0&&!a&&!c339&&n<zR)'; const ri=src.indexOf(inlineRetry), ni=src.indexOf('if(e?.dppNoRetry337===!0)throw e'); ok(ri>=0&&ni>=0&&ri<ni,'invalid-id exception handled before generic JSON no-retry'); ok(src.includes('n>1&&typeof r==`function`&&(e=await r())'),'retry rebuilds request with fresh auth/PoW'); ok(src.includes('invalidMessageRetry:c339'),'diagnostic exposes recovery');
+console.log(`FIX339_MESSAGE_ID_PASS ${pass}/${pass+fail}`); if(fail)process.exit(1);

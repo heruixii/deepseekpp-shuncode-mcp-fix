@@ -1,3 +1,5 @@
+> Current release: **Fix 3.3.9** — hardens DeepSeek response message-ID selection and adds one bounded recovery for explicit `code=0 / invalid message id`, while preserving Fix 3.3.8 Agent budgets.
+
 # DeepSeek++ 1.14.0 — ShunCode MCP Fix 3
 
 Fix 3 基于 `DeepSeek++ 1.14.0 ShunCode MCP Fix 2`，目标是提高 DeepSeek 网页端连续调用同一套 ShunCode MCP 的可靠性，同时把新增逻辑控制在低耦合、可回退、可测试的边界内。
