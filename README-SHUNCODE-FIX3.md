@@ -172,6 +172,21 @@ ShunCode 当前只有 12 个工具。对于需要持续读/改/测/命令执行�
 
 新增 `fix32-capability-selftest.js`，覆盖 capability window、string/object discover output、坏 JSON fail-safe、中文/英文路由、replay 恢复动作。
 
+## Fix 3.3 DeepSeek Stream / UTF-8 / Workspace 稳定性修复
+
+Fix 3.3 保持在独立 `apply-fix33.py` overlay 中，不重写 Fix 3/3.1/3.2 的策略模块。主要修复：
+
+- DeepSeek SSE `FINISHED` 递归兼容，支持状态事件嵌套在 BATCH/对象中；只接受精确 status path + `FINISHED`，防止正文误判。
+- 空流 EOF 的单次安全重试；任何部分正文、reasoning 或 response/request id 都禁止自动重试。
+- 最近 8 个 stream 结构事件的隐私受限诊断，不持久化正文。
+- 公共工具执行入口 + Agent wrapper 双层 schema preflight，阻止 `{}` 参数先进入 MCP。
+- Windows PowerShell 5.1 UTF-8 round-trip guard，阻止裸 `Get-Content -Raw` + 文本写回组合。
+- `FILE_NOT_FOUND` 的 workspace-scope 恢复提示。
+- PTY `exit 0 + output 0` 只对 verification 类命令安全切 `direct` 重试；mutation 类严格禁止。
+- `WriteAllText/WriteAllLines/AppendAllText/...` 纳入 mutation 分类，避免安全重试误伤。
+
+Fix 3.3 仍采用 exact-marker + SHA-256 compatibility gate，任何目标函数不匹配都会 fail-closed，且不会留下部分修改。
+
 ## 当前自动测试
 
 - Parser / schema：17 项 PASS
@@ -181,8 +196,10 @@ ShunCode 当前只有 12 个工具。对于需要持续读/改/测/命令执行�
 - 连续任务控制流：6 项 PASS
 - Fix 3.1 Agent / completion / retry：31 项 PASS
 - Fix 3.2 Capability / Adaptive：17/17 PASS
+- Fix 3.3 已知问题修复：46/46 PASS
+- Fix 3.3 SSE parser 集成：8/8 PASS
 - 诊断隐私测试：PASS
-- 全部 JS 语法（56 个 JS）：PASS
+- 全部 JS 语法（58 个 JS）：PASS
 - UTF-8 manifest / EN / ZH locale：PASS
 - 自动重建：PASS
 - 不兼容基线零写入：PASS
@@ -205,4 +222,4 @@ ShunCode 当前只有 12 个工具。对于需要持续读/改/测/命令执行�
 
 ## 当前验证边界
 
-自动测试和静态/重建测试已完成。由于 Edge headless 对 unpacked extension 的加载记录此前不可靠，**正常 Edge 图形界面中的真实网页运行仍需要一次人工加载冒烟测试**；本报告不把 headless 的不确定结果冒充为已验证。
+自动测试和静态/重建测试已完成。Fix 3.3 已使用独立 Edge profile + remote debugging 验证 unpacked 扩展真实注册并启动目标扩展 Service Worker，结果 **PASS**。仍无法在隔离 profile 中自动完成需要用户 DeepSeek 登录态的真实网页 Agent 会话，因此“已登录 chat.deepseek.com 的最终 E2E”保留为人工冒烟边界。

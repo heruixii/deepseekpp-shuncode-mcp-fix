@@ -9,6 +9,7 @@ $TemplateRoot=Split-Path -Parent $PSScriptRoot
 $Apply=Join-Path $PSScriptRoot 'apply-fix3.py'
 $Apply31=Join-Path $PSScriptRoot 'apply-fix31.py'
 $Apply32=Join-Path $PSScriptRoot 'apply-fix32.py'
+$Apply33=Join-Path $PSScriptRoot 'apply-fix33.py'
 $Health=Join-Path $PSScriptRoot 'health-check.ps1'
 function Full([string]$p){return [IO.Path]::GetFullPath($p).TrimEnd('\')}
 $src=Full $Source;$dst=Full $Destination
@@ -25,7 +26,9 @@ try{
   if($LASTEXITCODE -ne 0){throw "apply-fix31.py failed with exit $LASTEXITCODE"}
   & python $Apply32 $dst
   if($LASTEXITCODE -ne 0){throw "apply-fix32.py failed with exit $LASTEXITCODE"}
-  foreach($name in @('mcp-repair-selftest.js','mcp-diagnostic-selftest.js','fix3-policy-selftest.js','fix3-web-policy-selftest.js','fix3-continuation-selftest.js','fix31-agent-selftest.js','fix32-capability-selftest.js')){
+  & python $Apply33 $dst
+  if($LASTEXITCODE -ne 0){throw "apply-fix33.py failed with exit $LASTEXITCODE"}
+  foreach($name in @('mcp-repair-selftest.js','mcp-diagnostic-selftest.js','fix3-policy-selftest.js','fix3-web-policy-selftest.js','fix3-continuation-selftest.js','fix31-agent-selftest.js','fix32-capability-selftest.js','fix33-known-issues-selftest.js','fix33-stream-integration-selftest.js')){
     Copy-Item -LiteralPath (Join-Path $TemplateRoot $name) -Destination (Join-Path $dst $name) -Force
   }
   foreach($name in @('README-SHUNCODE-FIX3.md','FIX3-TEST-REPORT.md')){
@@ -33,7 +36,7 @@ try{
     if(Test-Path -LiteralPath $doc){Copy-Item -LiteralPath $doc -Destination (Join-Path $dst $name) -Force}
   }
   $destTools=Join-Path $dst 'tools';New-Item -ItemType Directory -Force -Path $destTools|Out-Null
-  foreach($name in @('apply-fix3.py','apply-fix31.py','apply-fix32.py','health-check.ps1','build-fix3.ps1')){
+  foreach($name in @('apply-fix3.py','apply-fix31.py','apply-fix32.py','apply-fix33.py','health-check.ps1','build-fix3.ps1')){
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot $name) -Destination (Join-Path $destTools $name) -Force
   }
   Get-ChildItem -LiteralPath $dst -Recurse -Directory -Filter '__pycache__' -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue

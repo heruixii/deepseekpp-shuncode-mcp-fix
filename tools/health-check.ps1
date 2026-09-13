@@ -10,7 +10,7 @@ if(Test-Path -LiteralPath (Join-Path $Root '_metadata')){Fail '_metadata should 
 $js=Get-ChildItem -LiteralPath $Root -Recurse -File -Filter *.js
 foreach($f in $js){& node --check $f.FullName *> $null;if($LASTEXITCODE -ne 0){Fail "JS syntax $($f.FullName)"}}
 Pass "JS syntax $($js.Count) files"
-$tests=@('mcp-repair-selftest.js','mcp-diagnostic-selftest.js','fix3-policy-selftest.js','fix3-web-policy-selftest.js','fix3-continuation-selftest.js','fix31-agent-selftest.js','fix32-capability-selftest.js')
+$tests=@('mcp-repair-selftest.js','mcp-diagnostic-selftest.js','fix3-policy-selftest.js','fix3-web-policy-selftest.js','fix3-continuation-selftest.js','fix31-agent-selftest.js','fix32-capability-selftest.js','fix33-known-issues-selftest.js','fix33-stream-integration-selftest.js')
 foreach($t in $tests){$p=Join-Path $Root $t;if(-not(Test-Path $p)){Fail "missing selftest $t"};& node $p;if($LASTEXITCODE -ne 0){Fail "selftest $t"};Pass "selftest $t"}
 $bg=[IO.File]::ReadAllText((Join-Path $Root 'background.js'))
 $content=[IO.File]::ReadAllText((Join-Path $Root 'content-scripts\content.js'))
@@ -34,11 +34,20 @@ $markers=@(
  @('ambiguous verify-before-retry',$content,'verify_before_retry'),
  @('capability window preservation',$content,'DPP_CAPABILITY_WINDOW_32'),
  @('capability rediscover action',$content,'rediscover_capability'),
+ @('fix33 recursive stream finish',$content,'function DPP_STREAM_FINISHED_33'),
+ @('fix33 safe eof retry',$content,'s=!o.finished&&!i&&o.responseMessageId==null&&o.requestMessageId==null&&n<zR'),
+ @('fix33 stream diagnostics',$content,'Last stream markers:'),
+ @('fix33 utf8 guard',$content,'function DPP_WINDOWS_ENCODING_GUARD_33'),
+ @('fix33 common preflight',$content,'DPP_COMMON_PREFLIGHT_33(e)'),
+ @('fix33 pty direct recovery',$content,'DPP_SHOULD_DIRECT_RETRY_33'),
+ @('fix33 workspace hint',$content,'function DPP_RESULT_HINT_33'),
+ @('fix33 prompt safety rules',$content,'DPP_AGENT_RULES_33'),
  @('schema compiler content',$content,'working_directory`,'),
  @('schema compiler main',$main,'working_directory`,')
 )
 foreach($x in $markers){if(-not $x[1].Contains($x[2])){Fail "marker $($x[0])"}else{Pass "marker $($x[0])"}}
 & python -m py_compile (Join-Path $Root 'tools\apply-fix3.py');$pyCompileCode=$LASTEXITCODE; if($pyCompileCode -ne 0){Fail 'apply-fix3.py compile'}else{Pass 'apply-fix3.py compile'}
 & python -m py_compile (Join-Path $Root 'tools\apply-fix31.py');$pyCompile31Code=$LASTEXITCODE; if($pyCompile31Code -ne 0){Fail 'apply-fix31.py compile'}else{Pass 'apply-fix31.py compile'}
-& python -m py_compile (Join-Path $Root 'tools\apply-fix32.py');$pyCompile32Code=$LASTEXITCODE; Get-ChildItem -LiteralPath (Join-Path $Root 'tools') -Recurse -Directory -Filter '__pycache__' -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue; if($pyCompile32Code -ne 0){Fail 'apply-fix32.py compile'}else{Pass 'apply-fix32.py compile'}
+& python -m py_compile (Join-Path $Root 'tools\apply-fix32.py');$pyCompile32Code=$LASTEXITCODE; if($pyCompile32Code -ne 0){Fail 'apply-fix32.py compile'}else{Pass 'apply-fix32.py compile'}
+& python -m py_compile (Join-Path $Root 'tools\apply-fix33.py');$pyCompile33Code=$LASTEXITCODE; Get-ChildItem -LiteralPath (Join-Path $Root 'tools') -Recurse -Directory -Filter '__pycache__' -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue; if($pyCompile33Code -ne 0){Fail 'apply-fix33.py compile'}else{Pass 'apply-fix33.py compile'}
 Write-Host "HEALTH_CHECK_PASS root=$Root js=$($js.Count)"

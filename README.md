@@ -1,4 +1,4 @@
-# DeepSeek++ ShunCode MCP Fix 3.2
+# DeepSeek++ ShunCode MCP Fix 3.3
 
 这是基于 **DeepSeek++ 1.14.0** 的稳定性优化版本，重点改善 DeepSeek 网页端通过 MCP 长时间调用 **ShunCode** 时的工具调用可靠性、连续执行能力和异常恢复行为。
 
@@ -139,30 +139,45 @@ Fix 2 source
   -> Fix 3
   -> Fix 3.1
   -> Fix 3.2
+  -> Fix 3.3
   -> health check
   -> release
 ```
 
 每个补丁都采用 fail-closed 设计：如果目标 marker 不唯一或目标版本不兼容，构建直接失败，不进行模糊替换，也不留下半成品。
 
+### 10. Fix 3.3：DeepSeek 流兼容与本地执行安全
+
+Fix 3.3 针对 2026-09 DeepSeek 网页更新后暴露出的新稳定性问题做窄修复：
+
+- **DeepSeek stream completion 兼容**：递归识别嵌套 `response/status=FINISHED` 与既有 `quasi_status=FINISHED`，但不会把普通正文里的 `FINISHED` 当成完成。
+- **安全 EOF 恢复**：只有在没有正文、没有 reasoning、没有 response/request message id 的空 EOF 才允许额外重试一次；已经出现部分输出时绝不自动拼接或重试。
+- **隐私受限的 stream 诊断**：异常只记录最近少量 SSE 结构字段（event / p / o / status），不保存正文内容。
+- **UTF-8 数据完整性保护**：Windows PowerShell 5.1 下，阻止“裸 `Get-Content -Raw` 读取 UTF-8 无 BOM 文件后再写回”的危险组合，避免中文被 ANSI/GBK 误解码后永久写坏。
+- **公共工具 preflight**：第一轮工具调用和 Agent 后续调用都会检查 schema 必填参数；空 `{}` 不再先发往 MCP。
+- **workspace 范围恢复提示**：ShunCode 文件工具遇到 `FILE_NOT_FOUND` 时明确提示当前 workspace 边界，外部绝对路径改走 `run_command`，减少无意义重试。
+- **PTY 空输出恢复**：仅对已分类为只读/验证的 `run_command`，当 PTY 明确 `exit_code=0` 且 `total_output_bytes=0` 时用 `execution=direct` 补做一次读取；修改/写入/提交类命令绝不因此重放。
+
+这些修复不改变 capability 单次使用规则、不修改 MCP 授权语义、不复制 ShunCode `script_bridge`，也不把“流 EOF”粗暴视为成功。
+
 ## 当前版本
 
 ```text
-DeepSeek++ 1.14.0 ShunCode MCP Fix 3.2
+DeepSeek++ 1.14.0 ShunCode MCP Fix 3.3
 ```
 
-GitHub Release：[`v1.14.0-fix3.2`](https://github.com/heruixii/deepseekpp-shuncode-mcp-fix/releases/tag/v1.14.0-fix3.2)
+GitHub Release：[`v1.14.0-fix3.3`](https://github.com/heruixii/deepseekpp-shuncode-mcp-fix/releases/tag/v1.14.0-fix3.3)
 
 发布 ZIP：
 
 ```text
-DeepSeekPP-1.14.0-ShunCode-MCP-Fix3.2.zip
+DeepSeekPP-1.14.0-ShunCode-MCP-Fix3.3.zip
 ```
 
 SHA-256：
 
 ```text
-97BE61D876D35B7F3D3A3E1A93A4FE18BA9ACB9236CD12E80B3735B51077C9F3
+See GitHub Release asset digest / local Get-FileHash output
 ```
 
 ## 推荐 ShunCode MCP 配置
@@ -197,7 +212,7 @@ Max Tool Count: 32
 
 ## 验证情况
 
-最终 Fix 3.2 已经过以下验证：
+最终 Fix 3.3 已经过以下验证：
 
 - MCP parser / schema：**17/17 PASS**
 - Fix 3 policy：**19/19 PASS**
@@ -206,10 +221,13 @@ Max Tool Count: 32
 - continuation flow：**6/6 PASS**
 - Fix 3.1 Agent / completion / retry：**31/31 PASS**
 - Fix 3.2 capability / adaptive：**17/17 PASS**
+- Fix 3.3 已知问题修复：**46/46 PASS**
+- Fix 3.3 真实 SSE parser 集成：**8/8 PASS**
 - 全部 JS 语法检查：**PASS**
 - Python overlay 编译：**PASS**
 - fail-closed 验证：**PASS**
 - 从干净基线重建后文件哈希完全一致：**PASS**
+- 隔离 Edge unpacked 扩展加载 / Service Worker：**PASS**
 
 更详细的测试记录见 [`FIX3-TEST-REPORT.md`](./FIX3-TEST-REPORT.md)。
 

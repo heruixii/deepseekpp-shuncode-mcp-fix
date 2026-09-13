@@ -3,7 +3,7 @@
 ## Build identity
 
 - Base: DeepSeek++ 1.14.0 + ShunCode MCP Fix 2
-- Target: `1.14.0 ShunCode MCP Fix 3`
+- Target: `1.14.0 ShunCode MCP Fix 3.3`
 - Strategy module: `fix3-policy.js`
 - Patch mode: exact-marker, fail-closed
 
@@ -17,12 +17,15 @@
 | Continuation intent / no-tool correction | **16/16 PASS** |
 | Fix 3.1 agent / completion / retry | **31/31 PASS** |
 | Fix 3.2 capability / adaptive routing | **17/17 PASS** |
+| Fix 3.3 known-issue regression | **46/46 PASS** |
+| Fix 3.3 production SSE parser integration | **8/8 PASS** |
 | Diagnostic privacy/state test | **PASS** |
 | JavaScript syntax scan | **PASS** |
 | UTF-8 manifest / locale JSON | **PASS** |
 | `_metadata` absent | **PASS** |
 | Python patcher compile | **PASS** |
 | `__pycache__` cleanup | **PASS** |
+| Isolated Edge unpacked load / Service Worker | **PASS** |
 
 ### Parser/schema coverage
 
@@ -56,6 +59,12 @@ Fix 3.1 is applied by a separate fail-closed `tools/apply-fix31.py` overlay afte
 The production `mcp_discover` output now keeps a compact capability window even after ordinary tool-result windowing. Tests verify fresh and old discover results, object/string outputs, malformed-output fail-safe behavior, single-use handle guidance, capability replay classification, and repaired Chinese adaptive-routing terms.
 
 A replay against the current cached 12-tool ShunCode descriptor set using a Chinese “write seven files with one command” intent placed `run_command` first and inside the 5-tool / 14 KB direct set. For this 12-tool ShunCode server, `Direct` exposure is recommended for maximum reliability; Adaptive remains supported.
+
+### Fix 3.3 stream and local-execution safety coverage
+
+The Fix 3.3 regression layer covers recursive-but-strict DeepSeek `FINISHED` detection, real SSE byte-stream parsing, abrupt EOF preservation, empty/no-id EOF one-shot retry, partial-output non-retry, privacy-limited stream diagnostics, schema-required preflight at both initial and Agent execution paths, Windows PowerShell 5.1 UTF-8 corruption blocking, workspace-scope recovery hints, and read-only PTY-empty direct fallback.
+
+The tests explicitly prove that mutating commands are not retried because PTY output is empty, dangerous encoding commands are blocked before MCP dispatch, and stream retries do not occur after partial model output.
 
 ## Rebuild tests
 
@@ -96,6 +105,13 @@ Manifest and EN/ZH locale files were semantically equal; after normalizing them 
 
 Result: **PASS**.
 
+
+### Fix 3.3 overlay reproducibility
+
+A frozen Fix 3.2 tree was independently copied and patched with `apply-fix33.py`; the release tests/docs/tools overlay was then applied. The resulting **118-file** tree matched the formal Fix 3.3 trial tree byte-for-byte by SHA-256, with no missing, extra, or differing files.
+
+Result: **PASS**.
+
 ## Safety decisions
 
 - No automatic retry of run_command/apply_patch/write/delete/update/commit/push class operations.
@@ -104,7 +120,10 @@ Result: **PASS**.
 - No new persistence of large tool output solely for model compaction; existing result/history flow remains authoritative.
 - No rewrite of minified React MCP settings UI solely to display Fix 3 diagnostics; existing MCP test backend is enriched and offline health tooling is provided.
 - All future-version patching requires exact compatibility markers; no fuzzy minified-code replacement.
+- DeepSeek stream EOF is never treated as success merely because HTTP closed; only strict completion markers or a safe empty-turn retry are accepted.
+- PTY empty-output recovery is restricted to verification commands; mutations are never replayed by this rule.
+- Windows PowerShell text round-trips that can corrupt UTF-8 no-BOM files are blocked before tool dispatch.
 
 ## Remaining manual validation
 
-Normal Edge UI unpacked-extension loading and an end-to-end `chat.deepseek.com -> DeepSeek++ -> ShunCode MCP` smoke run remain manual. Previous headless Edge loading was inconclusive and is not counted as runtime validation.
+An isolated Edge profile successfully registered the unpacked extension and exposed `chrome-extension://kdmpkkahkhdmdhfkdihkopikgcocbpbf/background.js` as a live Service Worker target. The remaining manual boundary is an authenticated `chat.deepseek.com -> DeepSeek++ -> ShunCode MCP` smoke run in the user's normal profile, because the isolated profile intentionally has no user login state.
