@@ -1,4 +1,4 @@
-# DeepSeek++ ShunCode MCP Fix 3.3.7
+# DeepSeek++ ShunCode MCP Fix 3.3.8
 
 这是基于 **DeepSeek++ 1.14.0** 的稳定性优化版本，重点改善 DeepSeek 网页端通过 MCP 长时间调用 **ShunCode** 时的工具调用可靠性、连续执行能力和异常恢复行为。
 

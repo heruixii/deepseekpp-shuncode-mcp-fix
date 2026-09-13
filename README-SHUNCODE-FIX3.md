@@ -297,3 +297,8 @@ DeepSeek 新前端会在页面结构被扩展修改后进入自己的错误边�
 - HTTP 200 JSON is treated as a business/application response, with privacy-safe code/message extraction instead of SSE parsing.
 - JSON responses do not trigger fresh-PoW replay; true empty streams still do.
 - New suite: 28/28 PASS.
+
+## Fix 3.3.8 long Agent budget
+
+- Automated continuation budgets are now 88 steps minimum, 96 for project/file/fix tasks, and 128 for explicit continue/until-done tasks.
+- The nudge cap remains 8 and existing tool-storm / authorization safety limits are unchanged.

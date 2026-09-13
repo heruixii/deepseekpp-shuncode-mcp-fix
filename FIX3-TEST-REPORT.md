@@ -3,7 +3,7 @@
 ## Build identity
 
 - Base: DeepSeek++ 1.14.0 + ShunCode MCP Fix 2
-- Target: `1.14.0 ShunCode MCP Fix 3.3.7`
+- Target: `1.14.0 ShunCode MCP Fix 3.3.8`
 - Strategy module: `fix3-policy.js`
 - Patch mode: exact-marker, fail-closed
 

@@ -12,5 +12,5 @@ ok(src.includes('body:JSON.stringify({chat_session_id:e.chatSessionId,parent_mes
 ok(src.includes('refFileIds:DPP_AGENT_SYNTHETIC_REF_FILES_337'),'agent uses synthetic empty refs');ok(src.includes('var DPP_AGENT_SYNTHETIC_REF_FILES_337=[];'),'synthetic refs are empty');
 for(let i=0;i<10;i++){const opts={refFileIds:[]};ok(opts.refFileIds.length===0,'agent synthetic turn '+(i+1)+' has no stale attachment');}
 ok(src.includes('DPP_FRESH_POW_RETRY_335'),'fresh-PoW recovery preserved');ok(src.includes('dppNoRetry337'),'JSON/business response gets dedicated no-replay marker');ok(src.includes('e?.dppNoRetry337===!0'),'dedicated JSON response bypasses fresh-PoW replay');ok(src.includes('DPP_EXEC_BLOCK_BUDGET_336=262144'),'long-task storage fix preserved');
-const m=JSON.parse(fs.readFileSync(path.join(root,'manifest.json'),'utf8'));ok(m.version==='1.14.0.2','real MV3 version bumped');ok(m.version_name.endsWith('Fix 3.3.7'),'version name updated');
+const m=JSON.parse(fs.readFileSync(path.join(root,'manifest.json'),'utf8'));ok(['1.14.0.2','1.14.0.3'].includes(m.version),'real MV3 version bumped');ok(['1.14.0 ShunCode MCP Fix 3.3.7','1.14.0 ShunCode MCP Fix 3.3.8'].includes(m.version_name),'version name updated');
 console.log(`FIX337_ATTACHMENT_JSON_PASS ${pass}/${pass}`);
