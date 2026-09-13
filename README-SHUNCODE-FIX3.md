@@ -202,8 +202,9 @@ Fix 3.3 仍采用 exact-marker + SHA-256 compatibility gate，任何目标函数
 - Fix 3.3.2 Safe DOM：21/21 PASS
 - Fix 3.3.3 Agent stability / storage pressure：29/29 PASS
 - Fix 3.3.4 Manual-chat tool storm：76/76 PASS
+- Fix 3.3.5 Empty-stream / fresh-PoW retry：16/16 PASS
 - 诊断隐私测试：PASS
-- 全部 JS 语法（62 个 JS）：PASS
+- 全部 JS 语法（63 个 JS）：PASS
 - UTF-8 manifest / EN / ZH locale：PASS
 - 自动重建：PASS
 - 不兼容基线零写入：PASS
@@ -268,3 +269,12 @@ DeepSeek 新前端会在页面结构被扩展修改后进入自己的错误边�
 - PowerShell `-Width` sanity guard blocks absurd values while allowing normal widths.
 - Oversized legacy inline-agent trace arrays are trimmed under the existing storage lock, and runtime-state startup proactively triggers the migration.
 - New regression: 76/76 PASS. Full prior regressions remain PASS.
+
+## Fix 3.3.5 Empty-stream recovery / fresh PoW retry
+
+- 历史上 `event: close` 误判（17:42）与真正无 marker 的空 SSE（17:52、18:51、20:00–20:02）是两类问题；前者继续由 3.3.1 处理。
+- 20:00–20:02 连续三次失败均发生在成功的初始工具之后，continuation 仍为 0 text / 0 reasoning / no message id；三个 anchor assistant message 分别为 24 / 28 / 32。
+- 旧 BR/HR 流只创建一次 auth + PoW，再在两次 HTTP attempt 间复用。3.3.5 的第二次 attempt 重新生成当前 auth 与 PoW request material。
+- Partial-output transport failure 不再自动 retry；只有完全无输出、无 request/response message id 的请求可进入一次有界恢复。
+- 增加 privacy-safe stream diagnostics：attempt/httpStatus/contentType/bytes/chunks/freshPow。
+- 16/16 专项回放 PASS；两次空流上限不增加，不会形成新的请求风暴。

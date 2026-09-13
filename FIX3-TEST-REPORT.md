@@ -3,7 +3,7 @@
 ## Build identity
 
 - Base: DeepSeek++ 1.14.0 + ShunCode MCP Fix 2
-- Target: `1.14.0 ShunCode MCP Fix 3.3.4`
+- Target: `1.14.0 ShunCode MCP Fix 3.3.5`
 - Strategy module: `fix3-policy.js`
 - Patch mode: exact-marker, fail-closed
 
@@ -23,6 +23,7 @@
 | Fix 3.3.2 Safe DOM compatibility | **21/21 PASS** |
 | Fix 3.3.3 Agent stability / storage pressure | **29/29 PASS** |
 | Fix 3.3.4 manual-chat tool storm guard | **76/76 PASS** |
+| Fix 3.3.5 empty-stream / fresh-PoW retry | **16/16 PASS** |
 | Diagnostic privacy/state test | **PASS** |
 | JavaScript syntax scan | **PASS** |
 | UTF-8 manifest / locale JSON | **PASS** |
@@ -177,3 +178,13 @@ An isolated Edge profile successfully registered the unpacked extension and expo
 - New regression: **76/76 PASS**; full health and JS syntax scan pass.
 - Fail-closed tamper test: patcher exits non-zero and all target hashes remain unchanged.
 - Independent 3.3.3 -> 3.3.4 reconstruction is byte-identical by SHA-256 before documentation finalization; release rebuild repeats this check.
+
+## Fix 3.3.5 empty-stream / fresh-PoW retry
+
+- Historical split: the 17:42 `ready/update_file/hint/close` failure was the 3.3.1 terminal-event bug; later no-marker EOFs are a separate empty-stream class.
+- Current reproduction evidence: three consecutive failures at 20:00, 20:01 and 20:02, each after one successful initial `run_command`, with step 0 receiving no text, reasoning or message id. Fresh anchors 24, 28 and 32 rule out a single reused stale anchor.
+- Recovery flaw: the 3.3.4 `BR()` generated auth + PoW once while `HR()` could issue two HTTP attempts with the same request material.
+- Fix: keep a strict maximum of two attempts, but rebuild auth + PoW before the second attempt.
+- Safety: any text/reasoning already emitted makes a transport exception non-replayable. Bare EOF is never promoted to success.
+- Diagnostics are structure-only: attempt, status, content type, raw byte count, chunk count, fresh-PoW flag; no prompt/auth/token/PoW body.
+- New regression: **16/16 PASS**. All prior regression suites remain PASS.

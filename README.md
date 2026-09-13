@@ -1,4 +1,4 @@
-# DeepSeek++ ShunCode MCP Fix 3.3.4
+# DeepSeek++ ShunCode MCP Fix 3.3.5
 
 这是基于 **DeepSeek++ 1.14.0** 的稳定性优化版本，重点改善 DeepSeek 网页端通过 MCP 长时间调用 **ShunCode** 时的工具调用可靠性、连续执行能力和异常恢复行为。
 
@@ -144,6 +144,7 @@ Fix 2 source
   -> Fix 3.3.2
   -> Fix 3.3.3
   -> Fix 3.3.4
+  -> Fix 3.3.5
   -> health check
   -> release
 ```
@@ -167,15 +168,15 @@ Fix 3.3 针对 2026-09 DeepSeek 网页更新后暴露出的新稳定性问题做
 ## 当前版本
 
 ```text
-DeepSeek++ 1.14.0 ShunCode MCP Fix 3.3.4
+DeepSeek++ 1.14.0 ShunCode MCP Fix 3.3.5
 ```
 
-GitHub Release：[`v1.14.0-fix3.3.4`](https://github.com/heruixii/deepseekpp-shuncode-mcp-fix/releases/tag/v1.14.0-fix3.3.4)
+GitHub Release：[`v1.14.0-fix3.3.5`](https://github.com/heruixii/deepseekpp-shuncode-mcp-fix/releases/tag/v1.14.0-fix3.3.5)
 
 发布 ZIP：
 
 ```text
-DeepSeekPP-1.14.0-ShunCode-MCP-Fix3.3.4.zip
+DeepSeekPP-1.14.0-ShunCode-MCP-Fix3.3.5.zip
 ```
 
 SHA-256：
@@ -216,7 +217,7 @@ Max Tool Count: 32
 
 ## 验证情况
 
-最终 Fix 3.3.4 已经过以下验证：
+最终 Fix 3.3.5 已经过以下验证：
 
 - MCP parser / schema：**17/17 PASS**
 - Fix 3 policy：**19/19 PASS**
@@ -231,7 +232,8 @@ Max Tool Count: 32
 - Fix 3.3.2 Safe DOM compatibility：**21/21 PASS**
 - Fix 3.3.3 Agent stability / storage pressure：**29/29 PASS**
 - Fix 3.3.4 manual-chat tool storm guard：**76/76 PASS**
-- 全部 JS 语法检查：**62 个 JS PASS**
+- Fix 3.3.5 empty-stream / fresh-PoW retry：**16/16 PASS**
+- 全部 JS 语法检查：**63 个 JS PASS**
 - Python overlay 编译：**PASS**
 - fail-closed 验证：**PASS**
 - 从干净基线重建后文件哈希完全一致：**PASS**
@@ -318,3 +320,17 @@ DeepSeek 2026-09 网页更新新增了页面环境/扩展冲突错误边界。Fi
 - 3.3.3 的 256 KiB trace 预算增加 read-time migration，并由 runtime-state 启动主动触发：旧超限 trace 不再等待下一次 Agent 才清理。
 - 合成 228-call 真实形态回放：前 6 个同类调用允许、后 222 个在执行层之前阻断；40 个 `agent_run` 连续调用模拟全部不受影响。
 - 不改变 MCP server 配置、capability anti-replay、Completion Gate、mutation retry、SSE close 兼容和 Safe DOM 语义。
+
+## Fix 3.3.5 Empty-stream recovery / fresh PoW retry
+
+针对 `DeepSeek response stream ended before completion (the response was interrupted).` 的剩余真实空流问题，Fix 3.3.5 把历史记录按终止形态拆开处理，而不是把所有 SSE EOF 当成同一问题。
+
+- 17:42 的 `ready -> update_file -> hint -> close` 属于旧的 `event: close` 终止识别问题，已由 Fix 3.3.1 修复。
+- 17:52、18:51 以及 20:00–20:02 的记录没有可解析的终止 marker；其中 20:00–20:02 连续三次均为“一个初始 `run_command` 成功后，第 0 个 continuation 收到 0 文本、0 reasoning、0 message id，然后 EOF”。这是真正的 empty-stream recovery 类问题。
+- 这三次失败使用不同的新 anchor assistant message（24 / 28 / 32），因此不是简单复用同一个 stale parent。
+- 旧实现只在 `BR()` 外层创建一次 auth + PoW header，随后 `HR()` 的第二次 HTTP 恢复尝试复用同一请求对象。3.3.5 保留最多两次尝试，但第二次会重新读取当前 auth 并重新创建 PoW challenge/answer/header。
+- 如果首轮已经收到正文或 reasoning 后发生网络异常，不再自动重放，避免重复提交部分回复。
+- 增加隐私安全的 stream diagnostics：attempt、HTTP status、content-type、raw bytes、chunk count、fresh-PoW；不记录 prompt、Authorization、token 或 PoW 内容。
+- 如果两次仍为空，继续 fail closed，仍报告 interrupted，不把裸 EOF 当成功。
+- 新专项回放：**16/16 PASS**；包括空流重试成功、网络错误前置恢复、partial stream 禁止重放、两次空流有界失败及诊断隐私检查。
+- `event: close`、Safe DOM、Agent storage、tool-storm guard、UTF-8、PTY、Completion Gate 和 capability anti-replay 行为全部保持。

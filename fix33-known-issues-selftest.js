@@ -97,7 +97,7 @@ async function runHr(sequence){let calls=0;const ctx=load(hrCode,['HR'],{
  t('prompt-workspace-rule',source.includes('[Fix 3.3 workspace]'),true);
  t('stream-error-has-markers',source.includes('Last stream markers:'),true);
  t('stream-finish-helper-hook',source.includes('function UI(e,t){return DPP_STREAM_TERMINAL_331(e,t)}'),true);
- t('safe-eof-retry-hook',source.includes('s=!o.finished&&!i&&o.responseMessageId==null&&o.requestMessageId==null&&n<zR'),true);
+ t('safe-eof-retry-hook',source.includes('!s.finished&&!a&&s.responseMessageId==null&&s.requestMessageId==null&&n<zR')&&source.includes('DPP_FRESH_POW_RETRY_335'),true);
  t('common-preflight-hook',source.includes('let d=DPP_COMMON_PREFLIGHT_33(e);if(d)return d;'),true);
 
  if(fail){console.error(`FIX33_KNOWN_ISSUES_FAIL pass=${pass} fail=${fail}`);process.exit(1)}
