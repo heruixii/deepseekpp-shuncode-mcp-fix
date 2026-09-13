@@ -3,7 +3,7 @@
 ## Build identity
 
 - Base: DeepSeek++ 1.14.0 + ShunCode MCP Fix 2
-- Target: `1.14.0 ShunCode MCP Fix 3.3.5`
+- Target: `1.14.0 ShunCode MCP Fix 3.3.6`
 - Strategy module: `fix3-policy.js`
 - Patch mode: exact-marker, fail-closed
 
@@ -24,6 +24,7 @@
 | Fix 3.3.3 Agent stability / storage pressure | **29/29 PASS** |
 | Fix 3.3.4 manual-chat tool storm guard | **76/76 PASS** |
 | Fix 3.3.5 empty-stream / fresh-PoW retry | **16/16 PASS** |
+| Fix 3.3.6 long-task page/storage stability | **21/21 PASS** |
 | Diagnostic privacy/state test | **PASS** |
 | JavaScript syntax scan | **PASS** |
 | UTF-8 manifest / locale JSON | **PASS** |
@@ -188,3 +189,13 @@ An isolated Edge profile successfully registered the unpacked extension and expo
 - Safety: any text/reasoning already emitted makes a transport exception non-replayable. Bare EOF is never promoted to success.
 - Diagnostics are structure-only: attempt, status, content type, raw byte count, chunk count, fresh-PoW flag; no prompt/auth/token/PoW body.
 - New regression: **16/16 PASS**. All prior regression suites remain PASS.
+
+## Fix 3.3.6 long-task page/storage stability
+
+- Real run evidence: 12 steps / 21 tools (~130 s) and 6 steps / 6 tools (~65 s) both completed; no new renderer crash.
+- Trace sizes: ~97 KB for the 12-step run, ~32 KB for the 6-step run; not an Agent-trace OOM.
+- Tool history runtime value reached ~555 KB / 100 records despite a 256 KiB source cap, consistent with stale MV3 background code risk while `manifest.version` remained unchanged.
+- Tool execution block store reached ~729 KB, with one historical 410-execution block at ~543 KB.
+- Fix 3.3.6 bumps the real manifest version to `1.14.0.1`, adds background startup history migration, and enforces execution-block byte/execution budgets.
+- DOM pressure reduction: self-generated Agent subtree mutations are ignored; relevant observer work and reasoning streaming are RAF-coalesced; final reasoning is force-flushed.
+- New regression: **21/21 PASS**. All prior suites remain PASS.

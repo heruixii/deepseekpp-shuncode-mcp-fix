@@ -203,8 +203,9 @@ Fix 3.3 仍采用 exact-marker + SHA-256 compatibility gate，任何目标函数
 - Fix 3.3.3 Agent stability / storage pressure：29/29 PASS
 - Fix 3.3.4 Manual-chat tool storm：76/76 PASS
 - Fix 3.3.5 Empty-stream / fresh-PoW retry：16/16 PASS
+- Fix 3.3.6 Long-task page/storage stability：21/21 PASS
 - 诊断隐私测试：PASS
-- 全部 JS 语法（63 个 JS）：PASS
+- 全部 JS 语法（64 个 JS）：PASS
 - UTF-8 manifest / EN / ZH locale：PASS
 - 自动重建：PASS
 - 不兼容基线零写入：PASS
@@ -278,3 +279,13 @@ DeepSeek 新前端会在页面结构被扩展修改后进入自己的错误边�
 - Partial-output transport failure 不再自动 retry；只有完全无输出、无 request/response message id 的请求可进入一次有界恢复。
 - 增加 privacy-safe stream diagnostics：attempt/httpStatus/contentType/bytes/chunks/freshPow。
 - 16/16 专项回放 PASS；两次空流上限不增加，不会形成新的请求风暴。
+
+## Fix 3.3.6 Long-task page/storage stability
+
+- Real logs show long Agent runs can complete normally (12 steps / 21 tools; 6 steps / 6 tools) while the page UI becomes unstable, with no new Edge renderer crash.
+- `manifest.version` is now `1.14.0.1` (not only a `version_name` change), so MV3 background code is forced through a real update cycle.
+- Background startup trims legacy tool history to the existing 256 KiB budget.
+- Tool execution block persistence adds 256 KiB total / 64 KiB per block / 64 executions per block and migrates legacy oversized blocks on read.
+- The inline-Agent observer ignores its own subtree mutations, still detects official React removal of the Agent container, and coalesces maintenance to animation frames.
+- Reasoning streaming is animation-frame coalesced and force-flushed at step/loop completion.
+- New suite: 21/21 PASS.

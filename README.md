@@ -1,4 +1,4 @@
-# DeepSeek++ ShunCode MCP Fix 3.3.5
+# DeepSeek++ ShunCode MCP Fix 3.3.6
 
 这是基于 **DeepSeek++ 1.14.0** 的稳定性优化版本，重点改善 DeepSeek 网页端通过 MCP 长时间调用 **ShunCode** 时的工具调用可靠性、连续执行能力和异常恢复行为。
 
@@ -145,6 +145,7 @@ Fix 2 source
   -> Fix 3.3.3
   -> Fix 3.3.4
   -> Fix 3.3.5
+  -> Fix 3.3.6
   -> health check
   -> release
 ```
@@ -168,15 +169,15 @@ Fix 3.3 针对 2026-09 DeepSeek 网页更新后暴露出的新稳定性问题做
 ## 当前版本
 
 ```text
-DeepSeek++ 1.14.0 ShunCode MCP Fix 3.3.5
+DeepSeek++ 1.14.0 ShunCode MCP Fix 3.3.6
 ```
 
-GitHub Release：[`v1.14.0-fix3.3.5`](https://github.com/heruixii/deepseekpp-shuncode-mcp-fix/releases/tag/v1.14.0-fix3.3.5)
+GitHub Release：[`v1.14.0-fix3.3.6`](https://github.com/heruixii/deepseekpp-shuncode-mcp-fix/releases/tag/v1.14.0-fix3.3.6)
 
 发布 ZIP：
 
 ```text
-DeepSeekPP-1.14.0-ShunCode-MCP-Fix3.3.5.zip
+DeepSeekPP-1.14.0-ShunCode-MCP-Fix3.3.6.zip
 ```
 
 SHA-256：
@@ -217,7 +218,7 @@ Max Tool Count: 32
 
 ## 验证情况
 
-最终 Fix 3.3.5 已经过以下验证：
+最终 Fix 3.3.6 已经过以下验证：
 
 - MCP parser / schema：**17/17 PASS**
 - Fix 3 policy：**19/19 PASS**
@@ -233,7 +234,8 @@ Max Tool Count: 32
 - Fix 3.3.3 Agent stability / storage pressure：**29/29 PASS**
 - Fix 3.3.4 manual-chat tool storm guard：**76/76 PASS**
 - Fix 3.3.5 empty-stream / fresh-PoW retry：**16/16 PASS**
-- 全部 JS 语法检查：**63 个 JS PASS**
+- Fix 3.3.6 long-task page/storage stability：**21/21 PASS**
+- 全部 JS 语法检查：**64 个 JS PASS**
 - Python overlay 编译：**PASS**
 - fail-closed 验证：**PASS**
 - 从干净基线重建后文件哈希完全一致：**PASS**
@@ -334,3 +336,18 @@ DeepSeek 2026-09 网页更新新增了页面环境/扩展冲突错误边界。Fi
 - 如果两次仍为空，继续 fail closed，仍报告 interrupted，不把裸 EOF 当成功。
 - 新专项回放：**16/16 PASS**；包括空流重试成功、网络错误前置恢复、partial stream 禁止重放、两次空流有界失败及诊断隐私检查。
 - `event: close`、Safe DOM、Agent storage、tool-storm guard、UTF-8、PTY、Completion Gate 和 capability anti-replay 行为全部保持。
+
+## Fix 3.3.6 Long-task page / storage stability
+
+Fix 3.3.6 targets a separate long-task failure mode where MCP/Agent execution can finish successfully while the DeepSeek page itself becomes unstable. The diagnosis came from real Edge extension LevelDB and browser process state.
+
+- A real long run completed **12 steps / 21 tools in ~130 seconds**, followed by another **6 steps / 6 tools in ~65 seconds**. Both Agent traces were `complete`; there was no new renderer Crashpad dump and Edge processes remained responsive.
+- The 12-step trace itself was only about **97 KB** (largest step about **15 KB**), so current Agent trace compaction is not the dominant failure source.
+- `deepseek_pp_tool_history` had grown to about **555 KB / 100 records**, even though the current source contains a 256 KiB trim path. This exposed an MV3 update risk because previous Fix releases changed only `version_name` while `manifest.version` remained `1.14.0`. Fix 3.3.6 bumps the real package version to **`1.14.0.1`**, forcing Edge to replace the background service worker.
+- `dpp_tool_execution_blocks` was about **729 KB**, including one historical block with **410 executions / ~543 KB** from the old tool-storm incident. Previous code had only a 30-day / 100-block limit and no byte budget.
+- Tool execution blocks now have a **256 KiB total budget**, **64 KiB per block**, and **64 executions per block**. Oversized legacy records are compacted on read and newly written blocks are compacted before persistence.
+- Background startup now explicitly migrates old tool history through the existing 256 KiB budget.
+- The inline-Agent MutationObserver still watches the official DeepSeek message so it can recover if React removes/replaces the Agent container, but it now ignores mutations generated inside `.dpp-agent-container` itself and coalesces relevant maintenance to one animation frame.
+- Reasoning streaming is now animation-frame coalesced, matching the already-throttled visible text stream; step/loop completion explicitly flushes pending reasoning so final content is not lost.
+- Long-task capacity is not reduced: no lower step/tool budget was introduced.
+- New regression: **21/21 PASS**, including a synthetic 410-execution block, total/single-block byte budgets, self-mutation filtering, React-removal detection, reasoning flush, startup history migration and real MV3 version bump.
