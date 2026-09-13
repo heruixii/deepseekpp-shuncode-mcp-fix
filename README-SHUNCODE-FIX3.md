@@ -223,3 +223,10 @@ Fix 3.3 仍采用 exact-marker + SHA-256 compatibility gate，任何目标函数
 ## 当前验证边界
 
 自动测试和静态/重建测试已完成。Fix 3.3 已使用独立 Edge profile + remote debugging 验证 unpacked 扩展真实注册并启动目标扩展 Service Worker，结果 **PASS**。仍无法在隔离 profile 中自动完成需要用户 DeepSeek 登录态的真实网页 Agent 会话，因此“已登录 chat.deepseek.com 的最终 E2E”保留为人工冒烟边界。
+
+## Fix 3.3.1 SSE close compatibility
+
+- Recognizes DeepSeek Web `event: close` as a normal terminal event only when the associated payload contains no explicit failure evidence.
+- Keeps bare EOF incomplete; `FAILED`, `error`, `aborted`, `timeout`, and similar close payloads are not accepted as success.
+- Adds a production-parser regression fixture for the observed `ready -> update_file -> hint -> close` sequence.
+- Keeps Fix 3.3 empty-stream retry, partial-stream safety, MCP behavior, UTF-8 guard, workspace routing, and PTY recovery unchanged.

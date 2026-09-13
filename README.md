@@ -1,4 +1,4 @@
-# DeepSeek++ ShunCode MCP Fix 3.3
+# DeepSeek++ ShunCode MCP Fix 3.3.1
 
 这是基于 **DeepSeek++ 1.14.0** 的稳定性优化版本，重点改善 DeepSeek 网页端通过 MCP 长时间调用 **ShunCode** 时的工具调用可靠性、连续执行能力和异常恢复行为。
 
@@ -264,3 +264,11 @@ DeepSeek Web
 本仓库基于采用 **Apache License 2.0** 的 DeepSeek++ 项目修改。
 
 详见 [`LICENSE`](./LICENSE)。
+
+
+## Fix 3.3.1 SSE close compatibility
+
+- Recognizes DeepSeek Web `event: close` as a normal terminal event only when the associated payload contains no explicit failure evidence.
+- Keeps bare EOF incomplete; `FAILED`, `error`, `aborted`, `timeout`, and similar close payloads are not accepted as success.
+- Adds a production-parser regression fixture for the observed `ready -> update_file -> hint -> close` sequence.
+- Keeps Fix 3.3 empty-stream retry, partial-stream safety, MCP behavior, UTF-8 guard, workspace routing, and PTY recovery unchanged.

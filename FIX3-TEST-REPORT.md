@@ -127,3 +127,10 @@ Result: **PASS**.
 ## Remaining manual validation
 
 An isolated Edge profile successfully registered the unpacked extension and exposed `chrome-extension://kdmpkkahkhdmdhfkdihkopikgcocbpbf/background.js` as a live Service Worker target. The remaining manual boundary is an authenticated `chat.deepseek.com -> DeepSeek++ -> ShunCode MCP` smoke run in the user's normal profile, because the isolated profile intentionally has no user login state.
+
+## Fix 3.3.1 SSE close compatibility
+
+- Recognizes DeepSeek Web `event: close` as a normal terminal event only when the associated payload contains no explicit failure evidence.
+- Keeps bare EOF incomplete; `FAILED`, `error`, `aborted`, `timeout`, and similar close payloads are not accepted as success.
+- Adds a production-parser regression fixture for the observed `ready -> update_file -> hint -> close` sequence.
+- Keeps Fix 3.3 empty-stream retry, partial-stream safety, MCP behavior, UTF-8 guard, workspace routing, and PTY recovery unchanged.

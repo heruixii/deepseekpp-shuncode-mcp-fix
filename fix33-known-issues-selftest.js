@@ -96,7 +96,7 @@ async function runHr(sequence){let calls=0;const ctx=load(hrCode,['HR'],{
  t('prompt-utf8-rule',source.includes('[Fix 3.3 UTF-8 safety]'),true);
  t('prompt-workspace-rule',source.includes('[Fix 3.3 workspace]'),true);
  t('stream-error-has-markers',source.includes('Last stream markers:'),true);
- t('stream-finish-helper-hook',source.includes('function UI(e){return DPP_STREAM_FINISHED_33(e)}'),true);
+ t('stream-finish-helper-hook',source.includes('function UI(e,t){return DPP_STREAM_TERMINAL_331(e,t)}'),true);
  t('safe-eof-retry-hook',source.includes('s=!o.finished&&!i&&o.responseMessageId==null&&o.requestMessageId==null&&n<zR'),true);
  t('common-preflight-hook',source.includes('let d=DPP_COMMON_PREFLIGHT_33(e);if(d)return d;'),true);
 
