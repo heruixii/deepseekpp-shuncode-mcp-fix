@@ -200,8 +200,9 @@ Fix 3.3 仍采用 exact-marker + SHA-256 compatibility gate，任何目标函数
 - Fix 3.3 SSE parser 集成：8/8 PASS
 - Fix 3.3.1 SSE close：12/12 PASS
 - Fix 3.3.2 Safe DOM：21/21 PASS
+- Fix 3.3.3 Agent stability / storage pressure：29/29 PASS
 - 诊断隐私测试：PASS
-- 全部 JS 语法（60 个 JS）：PASS
+- 全部 JS 语法（61 个 JS）：PASS
 - UTF-8 manifest / EN / ZH locale：PASS
 - 自动重建：PASS
 - 不兼容基线零写入：PASS
@@ -244,3 +245,14 @@ DeepSeek 新前端会在页面结构被扩展修改后进入自己的错误边�
 - 不修改 MCP server 配置、工具授权、Direct Exposure、stream terminal、Completion Gate 或 side-effect retry 规则。
 - `tools/apply-fix332.py` 使用 3.3.1 整文件 SHA-256 + UX block SHA-256 双门槛；不匹配时 fail-closed。
 - 独立 3.3.1 -> 3.3.2 重建与 trial **122/122 文件 SHA-256 一致**。
+
+## Fix 3.3.3 Agent stability / storage pressure
+
+- 直接解析 Edge LevelDB WAL 证实：长 Agent 任务会反复整块写入约 360–385 KiB 的 `dpp_inline_agent_traces` 与约 385–403 KiB 的 `deepseek_pp_tool_history`。
+- Streaming / reasoning / tool-detected 中间态改为 memory-only；step checkpoint 每 4 步一次，final/error/stop 仍强制落盘。
+- Agent trace 与 tool history 分别使用 256 KiB 软预算，保留最新状态并优先淘汰最旧历史。
+- 对 ShunCode text-wrapper 的 `detail` / `output` 做严格等价去重，同时用于 trace、Agent DOM、模型 continuation 和后台 tool history；结构化输出保留。
+- Obsidian/vault 定位优先读取 `%APPDATA%\obsidian\obsidian.json`，再进入已确认 vault，避免整盘递归发现工具风暴。
+- 真实失败 trace：76,691 B -> 51,513 B（-32.8%）；结合 6 次 -> 2 次 checkpoint/error 写入，估算写放大下降 77.6%。
+- `tools/apply-fix333.py` 对 3.3.2 content/background/manifest/locale 使用整文件 SHA-256 门槛，任何不匹配均 fail-closed。
+- 当前 3.3.2 -> 3.3.3 独立 rebuild 与 trial：124/124 文件 SHA-256 一致。

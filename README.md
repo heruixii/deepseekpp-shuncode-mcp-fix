@@ -1,4 +1,4 @@
-# DeepSeek++ ShunCode MCP Fix 3.3.2
+# DeepSeek++ ShunCode MCP Fix 3.3.3
 
 这是基于 **DeepSeek++ 1.14.0** 的稳定性优化版本，重点改善 DeepSeek 网页端通过 MCP 长时间调用 **ShunCode** 时的工具调用可靠性、连续执行能力和异常恢复行为。
 
@@ -142,6 +142,7 @@ Fix 2 source
   -> Fix 3.3
   -> Fix 3.3.1
   -> Fix 3.3.2
+  -> Fix 3.3.3
   -> health check
   -> release
 ```
@@ -165,15 +166,15 @@ Fix 3.3 针对 2026-09 DeepSeek 网页更新后暴露出的新稳定性问题做
 ## 当前版本
 
 ```text
-DeepSeek++ 1.14.0 ShunCode MCP Fix 3.3.2
+DeepSeek++ 1.14.0 ShunCode MCP Fix 3.3.3
 ```
 
-GitHub Release：[`v1.14.0-fix3.3.2`](https://github.com/heruixii/deepseekpp-shuncode-mcp-fix/releases/tag/v1.14.0-fix3.3.2)
+GitHub Release：[`v1.14.0-fix3.3.3`](https://github.com/heruixii/deepseekpp-shuncode-mcp-fix/releases/tag/v1.14.0-fix3.3.3)
 
 发布 ZIP：
 
 ```text
-DeepSeekPP-1.14.0-ShunCode-MCP-Fix3.3.2.zip
+DeepSeekPP-1.14.0-ShunCode-MCP-Fix3.3.3.zip
 ```
 
 SHA-256：
@@ -214,7 +215,7 @@ Max Tool Count: 32
 
 ## 验证情况
 
-最终 Fix 3.3.2 已经过以下验证：
+最终 Fix 3.3.3 已经过以下验证：
 
 - MCP parser / schema：**17/17 PASS**
 - Fix 3 policy：**19/19 PASS**
@@ -227,7 +228,8 @@ Max Tool Count: 32
 - Fix 3.3 真实 SSE parser 集成：**8/8 PASS**
 - Fix 3.3.1 `event: close` compatibility：**12/12 PASS**
 - Fix 3.3.2 Safe DOM compatibility：**21/21 PASS**
-- 全部 JS 语法检查：**PASS**
+- Fix 3.3.3 Agent stability / storage pressure：**29/29 PASS**
+- 全部 JS 语法检查：**61 个 JS PASS**
 - Python overlay 编译：**PASS**
 - fail-closed 验证：**PASS**
 - 从干净基线重建后文件哈希完全一致：**PASS**
@@ -287,3 +289,16 @@ DeepSeek 2026-09 网页更新新增了页面环境/扩展冲突错误边界。Fi
 - `floating-chat.js` 继续用于其他网站，但通过 manifest `exclude_matches` 不再注入 `chat.deepseek.com`。
 - 3.3.1 的 SSE `event: close` 兼容、Fix 3.3 UTF-8 / workspace / PTY / preflight 保护全部保持不变。
 - 隔离 Edge + DevTools 协议实测：页面刷新后 0 Runtime exception、0 console error/warning，高风险 DPP DOM 节点不存在，扩展 Service Worker 显示 3.3.2。
+
+## Fix 3.3.3 Agent stability / storage pressure
+
+针对长工具链任务（特别是“读取 Obsidian 笔记并继承任务状态”）出现的页面失稳，3.3.3 修复了已由 Edge LevelDB WAL 直接证实的状态放大问题：
+
+- Agent streaming / reasoning / tool-detected 中间态仅更新内存与 UI，不再持续写整份 trace 历史。
+- 完成 step 每 4 步保存一次恢复 checkpoint；最终完成、错误、手动停止仍强制持久化。
+- `dpp_inline_agent_traces` 采用 256 KiB 软预算，始终保留最新 trace，超预算时优先淘汰最旧记录。
+- `deepseek_pp_tool_history` 保持逐工具审计持久化，但历史总预算收紧到 256 KiB。
+- ShunCode `detail` 与 `output` 如果严格解析为同一 text payload，只保存/展示/回传模型一次；结构化 artifact / skill / memory 输出不会被折叠。
+- Agent continuation 增加 Obsidian/vault 配置优先发现规则：Windows 下先读取 `%APPDATA%\obsidian\obsidian.json` / `.obsidian`，避免先递归扫描整盘。
+- 真实失败 trace 离线测量：19 个工具结果从 76,691 B 降至约 51,513 B（-32.8%）；结合 checkpoint cadence，该故障链的 trace 写放大估算下降约 77.6%。
+- 不改变 capability anti-replay、MCP 授权、mutation retry、Completion Gate、Fix 3.3.1 stream terminal 和 Fix 3.3.2 Safe DOM 语义。

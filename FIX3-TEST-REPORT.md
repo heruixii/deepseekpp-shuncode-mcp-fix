@@ -3,7 +3,7 @@
 ## Build identity
 
 - Base: DeepSeek++ 1.14.0 + ShunCode MCP Fix 2
-- Target: `1.14.0 ShunCode MCP Fix 3.3.2`
+- Target: `1.14.0 ShunCode MCP Fix 3.3.3`
 - Strategy module: `fix3-policy.js`
 - Patch mode: exact-marker, fail-closed
 
@@ -21,6 +21,7 @@
 | Fix 3.3 production SSE parser integration | **8/8 PASS** |
 | Fix 3.3.1 SSE close compatibility | **12/12 PASS** |
 | Fix 3.3.2 Safe DOM compatibility | **21/21 PASS** |
+| Fix 3.3.3 Agent stability / storage pressure | **29/29 PASS** |
 | Diagnostic privacy/state test | **PASS** |
 | JavaScript syntax scan | **PASS** |
 | UTF-8 manifest / locale JSON | **PASS** |
@@ -148,3 +149,16 @@ An isolated Edge profile successfully registered the unpacked extension and expo
 - Fail-closed tamper test: patcher exits non-zero and leaves all target files unchanged.
 - Independent reconstruction: **122/122 files byte-identical by SHA-256**.
 - Isolated Edge/CDP smoke: target Service Worker reports `1.14.0 ShunCode MCP Fix 3.3.2`; DeepSeek page reload emits **0 Runtime exceptions** and **0 console error/warning**; risky DPP page nodes are absent.
+
+## Fix 3.3.3 Agent stability / storage pressure
+
+- Root-cause evidence came from the live Edge LevelDB WAL, not raw string occurrence counts: repeated full-array writes were ~360–385 KiB for inline-agent traces and ~385–403 KiB for tool history during the failing long task.
+- Transient Agent states are memory-only; completed-step recovery checkpoints are persisted every 4 steps, with final/error/stop persistence unchanged.
+- Inline-agent trace and background tool-history stores use 256 KiB soft budgets while preserving the newest/current record.
+- Strict text-only `detail` / `output` dedupe is applied to persistence, Agent DOM, model continuation and history; structured artifact-like output is preserved.
+- Obsidian/vault discovery guidance is config-first and bounded, preventing the observed repeated whole-drive searches.
+- New regression: **29/29 PASS**.
+- Stress fixture: 19-tool trace 86,944 B -> 44,299 B; estimated trace-write amplification reduced by >75%.
+- Real failing trace offline measurement: 76,691 B -> 51,513 B (-32.8%); combined with checkpoint cadence, estimated write reduction 77.6%.
+- Fail-closed tamper test: non-zero exit with all target hashes unchanged.
+- Independent reconstruction: **124/124 files byte-identical by SHA-256**.
