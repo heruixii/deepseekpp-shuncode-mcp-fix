@@ -88,7 +88,7 @@
   "side_panel": {
     "default_path": "sidepanel.html"
   },
-  "version": "1.14.0.7",
+  "version": "1.14.0.8",
   "web_accessible_resources": [
     {
       "matches": [
@@ -109,5 +109,5 @@
       ]
     }
   ],
-  "version_name": "1.14.0 ShunCode MCP Fix 3.3.10.2"
+  "version_name": "1.14.0 ShunCode MCP Fix 3.3.10.3"
 }

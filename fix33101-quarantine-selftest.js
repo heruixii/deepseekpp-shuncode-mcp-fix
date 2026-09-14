@@ -10,7 +10,7 @@ ok(src.includes('DPPControlQuarantine=!1'),'quarantine state declared');
 ok(src.includes('if(DPPControlQuarantine)return;'),'post-threshold chunks ignored by UI/tool layer');
 ok(src.includes('if(DPPNoise.isStorm())DPPControlQuarantine=!0,S=!0,x=``'),'storm switches to quarantine without throw');
 ok(!src.includes('if(DPPNoise.isStorm())throw Error(`DeepSeek emitted repeated malformed tool-control markup; stopped this turn to prevent a continuation loop.`)'),'old fatal throw removed');
-ok(src.includes('n.setParentMessageId(ie.responseMessageId)'),'parent message update retained after stream completion');
+ok(src.includes('n.setParentMessageId(ie.responseMessageId,l.parentMessageId)'),'parent message update retained after stream completion');
 ok(src.includes('!DPPControlQuarantine&&!S&&x'),'fallback disabled for quarantined turn');
 ok(src.includes('re(h.flush())'),'already-started tool parser still flushes safely');
 ok(src.includes('f.stopReason=f.content.some(e=>e.type===`toolCall`)?`toolUse`:`stop`'),'normal done path retained');
