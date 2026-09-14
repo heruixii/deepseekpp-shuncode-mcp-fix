@@ -1,4 +1,6 @@
-> Current release: **Fix 3.3.10.9** — globally retires expired unclaimed Agent traces while protecting live work in other DeepSeek tabs, repairs terminal traces that retained streaming steps, and injects deterministic `list_directory` facts so the model cannot estimate unsupported totals.
+> Current release: **Fix 3.3.10.10** — fixes false-positive `run_command` success and blank-final “complete” states, classifies ambiguous 120-second MCP disconnects safely, and adds a live Agent status strip showing current activity, tool counts, elapsed/inactive time, and clearly labelled continuation capacity rather than invented task progress.
+
+> Previous release: **Fix 3.3.10.9** — globally retires expired unclaimed Agent traces while protecting live work in other DeepSeek tabs, repairs terminal traces that retained streaming steps, and injects deterministic `list_directory` facts so the model cannot estimate unsupported totals.
 
 > Previous release: **Fix 3.3.10.8** — closes abnormal inline-Agent lifecycles with an inactivity watchdog, terminal-state fallback, page-unload/overlap cleanup, and durable stale-trace recovery. It also aligns `run_command` with ShunCode's native Bash schema and treats command-level failure as failure instead of transport success.
 
@@ -23,7 +25,7 @@
 ## Build identity
 
 - Base: DeepSeek++ 1.14.0 + ShunCode MCP Fix 2
-- Target: `1.14.0 ShunCode MCP Fix 3.3.10.9`
+- Target: `1.14.0 ShunCode MCP Fix 3.3.10.10`
 - Strategy module: `fix3-policy.js`
 - Patch mode: exact-marker, fail-closed
 
@@ -231,3 +233,13 @@ An isolated Edge profile successfully registered the unpacked extension and expo
 - New regression: **30/30 PASS**. All 30 regression suites pass; **79 JavaScript files** pass syntax validation.
 - Reproducibility: the 3.3.10.8 upgrade build and the 3.3.10.9 self-rebuild each match all **158 files** in the release directory.
 - Core SHA-256: `content.js` `6A3F72E316265ED33A1CEA974E6048A79DBD7F124D135128F1934557827C5ECB`; `manifest.json` `7CAE4EEC1486D6E8FDEEB9152A5AD954B082C25320661AA5CF867EA105451C79`.
+
+## Fix 3.3.10.10 observable lifecycle and error integrity
+
+- Edge structured logs exposed three ambiguous `run_command` disconnects at roughly 120 seconds, one real `exit_code=1` result stored as `ok:true`, one terminal trace marked complete with empty final text, and older image-scope/result-size failures.
+- `run_command` outcome normalization now reads the real invocation object and treats non-zero exit codes, failed status values, and explicit command failure as failures even when the MCP transport itself succeeded.
+- Generic MCP SSE/network/timeout failures are classified as transport uncertainty. Mutating calls are not blindly replayed; the recovery instruction reconnects first and uses read-only verification to establish the external outcome.
+- Empty terminal output is fail-closed as `失败·未完成` instead of being persisted as a misleading successful completion.
+- Agent status now exposes `准备中 / 运行中 / 已完成 / 已暂停 / 失败·未完成`, the current wait/reasoning/tool/response phase, settled/running/failed/interrupted tool counts, elapsed time, and inactivity age.
+- The only remaining count shown is explicitly labelled `自动续跑安全额度` and `不是任务剩余量`; unplanned future work is described as dynamically planned rather than converted into an invented percentage.
+- Tool rows settle as soon as their tool-completion event arrives, so users no longer need to wait for the entire model step to discover whether a command is still running.
