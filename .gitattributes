@@ -1,0 +1,8 @@
+# Keep repository diffs readable while reproducing patcher-validated bytes on checkout.
+*.js text eol=lf
+*.md text eol=lf
+*.ps1 text eol=lf
+*.py text eol=lf
+manifest.json text eol=crlf
+_locales/en/messages.json text eol=crlf
+_locales/zh_CN/messages.json text eol=crlf

@@ -1,4 +1,10 @@
-> Current release: **Fix 3.3.10.6** — safely salvages EOF-truncated DeepSeek DSML tool calls only when every parameter is complete and schema-safe, then supplies a synthetic FINISHED status so the official page does not mislabel that recovered tool turn as server unavailable.
+> Current release: **Fix 3.3.10.9** — globally retires expired unclaimed Agent traces while protecting live work in other DeepSeek tabs, repairs terminal traces that retained streaming steps, and injects deterministic `list_directory` facts so the model cannot estimate unsupported totals.
+
+> Previous release: **Fix 3.3.10.8** — closes abnormal inline-Agent lifecycles with an inactivity watchdog, terminal-state fallback, page-unload/overlap cleanup, and durable stale-trace recovery. It also aligns `run_command` with ShunCode's native Bash schema and treats command-level failure as failure instead of transport success.
+
+> Previous release: **Fix 3.3.10.7** — stops active inline Agents before a new manual DeepSeek turn can fork the same parent-message chain, and performs one abortable retry for transient MCP HTTP 502/503/504 only on read-only verification tools; mutating commands are never replayed automatically.
+
+> Previous release: **Fix 3.3.10.6** — safely salvages EOF-truncated DeepSeek DSML tool calls only when every parameter is complete and schema-safe, then supplies a synthetic FINISHED status so the official page does not mislabel that recovered tool turn as server unavailable.
 
 > Current release: **Fix 3.3.10.3** — invalid-message-id recovery now performs one bounded fallback to the previous successfully used parent after the existing same-parent retry is exhausted.
 
@@ -10,7 +16,7 @@
 
 > Current release: **Fix 3.3.9** — hardens DeepSeek response message-ID selection and adds one bounded recovery for explicit `code=0 / invalid message id`, while preserving Fix 3.3.8 Agent budgets.
 
-# DeepSeek++ ShunCode MCP Fix 3.3.8
+# DeepSeek++ ShunCode MCP Fix 3.3.10.9
 
 这是基于 **DeepSeek++ 1.14.0** 的稳定性优化版本，重点改善 DeepSeek 网页端通过 MCP 长时间调用 **ShunCode** 时的工具调用可靠性、连续执行能力和异常恢复行为。
 

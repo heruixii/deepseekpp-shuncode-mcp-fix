@@ -1,4 +1,12 @@
-> Current release: **Fix 3.3.10.6** — safely salvages EOF-truncated DeepSeek DSML tool calls only when every parameter is complete and schema-safe, then supplies a synthetic FINISHED status so the official page does not mislabel that recovered tool turn as server unavailable.
+> Current release: **Fix 3.3.10.9** — globally retires expired unclaimed Agent traces while protecting live work in other DeepSeek tabs, repairs terminal traces that retained streaming steps, and injects deterministic `list_directory` facts so the model cannot estimate unsupported totals.
+
+> Previous release: **Fix 3.3.10.8** — closes abnormal inline-Agent lifecycles with an inactivity watchdog, terminal-state fallback, page-unload/overlap cleanup, and durable stale-trace recovery. It also aligns `run_command` with ShunCode's native Bash schema and treats command-level failure as failure instead of transport success.
+
+> Previous release: **Fix 3.3.10.7** — stops active inline Agents before a new manual DeepSeek turn can fork the same parent-message chain, and performs one abortable retry for transient MCP HTTP 502/503/504 only on read-only verification tools; mutating commands are never replayed automatically.
+
+> Previous release: **Fix 3.3.10.6** — safely salvages EOF-truncated DeepSeek DSML tool calls only when every parameter is complete and schema-safe, then supplies a synthetic FINISHED status so the official page does not mislabel that recovered tool turn as server unavailable.
+
+> Fix 3.3.10.9 validation: dedicated global-trace/statistics self-test **30/30**, all 30 self-test files pass, health-check passes with **79 JS files**, and both 3.3.10.8→3.3.10.9 rebuild and 3.3.10.9 self-rebuild reproduce all 158 files byte-for-byte.
 
 > Current release: **Fix 3.3.10.3** — invalid-message-id recovery now performs one bounded fallback to the previous successfully used parent after the existing same-parent retry is exhausted.
 
@@ -15,7 +23,7 @@
 ## Build identity
 
 - Base: DeepSeek++ 1.14.0 + ShunCode MCP Fix 2
-- Target: `1.14.0 ShunCode MCP Fix 3.3.8`
+- Target: `1.14.0 ShunCode MCP Fix 3.3.10.9`
 - Strategy module: `fix3-policy.js`
 - Patch mode: exact-marker, fail-closed
 
@@ -212,3 +220,14 @@ An isolated Edge profile successfully registered the unpacked extension and expo
 - Fix 3.3.6 bumps the real manifest version to `1.14.0.1`, adds background startup history migration, and enforces execution-block byte/execution budgets.
 - DOM pressure reduction: self-generated Agent subtree mutations are ignored; relevant observer work and reasoning streaming are RAF-coalesced; final reasoning is force-flushed.
 - New regression: **21/21 PASS**. All prior suites remain PASS.
+
+## Fix 3.3.10.9 global trace/statistics integrity
+
+- Global stale-trace recovery now checks every stored `running` trace, not only the current conversation.
+- A 5-minute expiry gate and two cross-tab liveness probes protect active Agents in other DeepSeek tabs. If the probe channel is unavailable, foreign-trace cleanup fails closed.
+- Restored terminal traces can no longer retain a misleading `streaming` step; inconsistent historical terminal records are repaired durably.
+- Successful `list_directory` results inject machine-verified `returnedEntries`, `directoryEntries`, `fileEntries`, and truncation state into both full and compacted model context.
+- The Agent prompt prohibits estimated totals. A deterministic completion gate rejects contradictory directory/file/entry counts and asks the model to rewrite from verified facts; unrelated counts such as number of tool calls are not blocked.
+- New regression: **30/30 PASS**. All 30 regression suites pass; **79 JavaScript files** pass syntax validation.
+- Reproducibility: the 3.3.10.8 upgrade build and the 3.3.10.9 self-rebuild each match all **158 files** in the release directory.
+- Core SHA-256: `content.js` `6A3F72E316265ED33A1CEA974E6048A79DBD7F124D135128F1934557827C5ECB`; `manifest.json` `7CAE4EEC1486D6E8FDEEB9152A5AD954B082C25320661AA5CF867EA105451C79`.
