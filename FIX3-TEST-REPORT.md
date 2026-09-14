@@ -1,3 +1,5 @@
+> Current release: **Fix 3.3.10.4** — assistant history replay is sanitized on fetch/XHR/IndexedDB restore so orphan tool/DSML closing tags do not reappear after page reload. User-authored text and fenced-code examples are preserved.
+
 > Current release: **Fix 3.3.10.3** — invalid-message-id recovery now performs one bounded fallback to the previous successfully used parent after the existing same-parent retry is exhausted.
 
 > Current release: **Fix 3.3.10.2** — manual-chat page streaming now hides orphan tool/DSML closing tags before DeepSeek React renders them, while raw stream data remains available to the tool parser.
