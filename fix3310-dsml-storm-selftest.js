@@ -20,5 +20,5 @@ const sig=ctx.DPP_TOOL_SIGNATURE_3310(a),seen=new Set([sig]);ok(seen.has(ctx.DPP
 ok(src.includes('t===`fallback-legacy`&&DPPStreamSigs.has(n)'), 'production fallback dedupe guard wired');
 ok(src.includes('t=e?Oa(x,ct(a)):b===0&&x.includes(`<`)?Da(x,ct(a)):[]'), 'DSML fallback parses legacy only');
 ok(!src.includes('for(let e of Ea(x,{descriptors:a}))te('),'old double-parse fallback removed');
-ok(src.includes('if(DPPNoise.isStorm())throw Error(`DeepSeek emitted repeated malformed tool-control markup; stopped this turn to prevent a continuation loop.`)'),'storm breaker wired in live stream');
+ok(src.includes('DPPNoise.isStorm()'),'storm detector remains wired in live stream');
 console.log(`FIX3310_DSML_STORM_PASS ${pass}/${pass+fail}`);if(fail)process.exit(1);

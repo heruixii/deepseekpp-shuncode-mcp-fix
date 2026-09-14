@@ -1,7 +1,7 @@
 {
   "extension_action_title": {
     "description": "Toolbar action title",
-    "message": "DeepSeek++ ShunCode MCP Fix 3.3.10"
+    "message": "DeepSeek++ ShunCode MCP Fix 3.3.10.1"
   },
   "extension_description": {
     "description": "Extension description shown in browser UI",
@@ -9,6 +9,6 @@
   },
   "extension_name": {
     "description": "Extension name shown in browser UI",
-    "message": "DeepSeek++ ShunCode MCP Fix 3.3.10"
+    "message": "DeepSeek++ ShunCode MCP Fix 3.3.10.1"
   }
 }
