@@ -21,6 +21,7 @@ $Apply338=Join-Path $PSScriptRoot 'apply-fix338.py'
 $Apply339=Join-Path $PSScriptRoot 'apply-fix339.py'
 $Apply3310=Join-Path $PSScriptRoot 'apply-fix3310.py'
 $Apply33101=Join-Path $PSScriptRoot 'apply-fix33101.py'
+$Apply33102=Join-Path $PSScriptRoot 'apply-fix33102.py'
 $Health=Join-Path $PSScriptRoot 'health-check.ps1'
 function Full([string]$p){return [IO.Path]::GetFullPath($p).TrimEnd('\')}
 $src=Full $Source;$dst=Full $Destination
@@ -33,7 +34,7 @@ try{
   Copy-Item -LiteralPath $src -Destination $dst -Recurse
   $sourceManifest=Get-Content -LiteralPath (Join-Path $src 'manifest.json') -Raw | ConvertFrom-Json
   $sourceVersion=[string]$sourceManifest.version_name
-  $currentOverlaySource=$sourceVersion -in @('1.14.0 ShunCode MCP Fix 3.3.2','1.14.0 ShunCode MCP Fix 3.3.3','1.14.0 ShunCode MCP Fix 3.3.4','1.14.0 ShunCode MCP Fix 3.3.5','1.14.0 ShunCode MCP Fix 3.3.6','1.14.0 ShunCode MCP Fix 3.3.7','1.14.0 ShunCode MCP Fix 3.3.8','1.14.0 ShunCode MCP Fix 3.3.9','1.14.0 ShunCode MCP Fix 3.3.10','1.14.0 ShunCode MCP Fix 3.3.10.1')
+  $currentOverlaySource=$sourceVersion -in @('1.14.0 ShunCode MCP Fix 3.3.2','1.14.0 ShunCode MCP Fix 3.3.3','1.14.0 ShunCode MCP Fix 3.3.4','1.14.0 ShunCode MCP Fix 3.3.5','1.14.0 ShunCode MCP Fix 3.3.6','1.14.0 ShunCode MCP Fix 3.3.7','1.14.0 ShunCode MCP Fix 3.3.8','1.14.0 ShunCode MCP Fix 3.3.9','1.14.0 ShunCode MCP Fix 3.3.10','1.14.0 ShunCode MCP Fix 3.3.10.1','1.14.0 ShunCode MCP Fix 3.3.10.2')
   if(-not $currentOverlaySource){
     & python $Apply $dst
     if($LASTEXITCODE -ne 0){throw "apply-fix3.py failed with exit $LASTEXITCODE"}
@@ -54,37 +55,41 @@ try{
     & python $Apply333 $dst
     if($LASTEXITCODE -ne 0){throw "apply-fix333.py failed with exit $LASTEXITCODE"}
   }
-  if($sourceVersion -notin @('1.14.0 ShunCode MCP Fix 3.3.5','1.14.0 ShunCode MCP Fix 3.3.6','1.14.0 ShunCode MCP Fix 3.3.7','1.14.0 ShunCode MCP Fix 3.3.8','1.14.0 ShunCode MCP Fix 3.3.9','1.14.0 ShunCode MCP Fix 3.3.10','1.14.0 ShunCode MCP Fix 3.3.10.1')){
+  if($sourceVersion -notin @('1.14.0 ShunCode MCP Fix 3.3.5','1.14.0 ShunCode MCP Fix 3.3.6','1.14.0 ShunCode MCP Fix 3.3.7','1.14.0 ShunCode MCP Fix 3.3.8','1.14.0 ShunCode MCP Fix 3.3.9','1.14.0 ShunCode MCP Fix 3.3.10','1.14.0 ShunCode MCP Fix 3.3.10.1','1.14.0 ShunCode MCP Fix 3.3.10.2')){
     & python $Apply334 $dst
     if($LASTEXITCODE -ne 0){throw "apply-fix334.py failed with exit $LASTEXITCODE"}
     & python $Apply335 $dst
     if($LASTEXITCODE -ne 0){throw "apply-fix335.py failed with exit $LASTEXITCODE"}
   }
-  if($sourceVersion -notin @('1.14.0 ShunCode MCP Fix 3.3.6','1.14.0 ShunCode MCP Fix 3.3.7','1.14.0 ShunCode MCP Fix 3.3.8','1.14.0 ShunCode MCP Fix 3.3.9','1.14.0 ShunCode MCP Fix 3.3.10','1.14.0 ShunCode MCP Fix 3.3.10.1')){
+  if($sourceVersion -notin @('1.14.0 ShunCode MCP Fix 3.3.6','1.14.0 ShunCode MCP Fix 3.3.7','1.14.0 ShunCode MCP Fix 3.3.8','1.14.0 ShunCode MCP Fix 3.3.9','1.14.0 ShunCode MCP Fix 3.3.10','1.14.0 ShunCode MCP Fix 3.3.10.1','1.14.0 ShunCode MCP Fix 3.3.10.2')){
     & python $Apply336 $dst
     if($LASTEXITCODE -ne 0){throw "apply-fix336.py failed with exit $LASTEXITCODE"}
   }
-  if($sourceVersion -notin @('1.14.0 ShunCode MCP Fix 3.3.7','1.14.0 ShunCode MCP Fix 3.3.8','1.14.0 ShunCode MCP Fix 3.3.9','1.14.0 ShunCode MCP Fix 3.3.10','1.14.0 ShunCode MCP Fix 3.3.10.1')){
+  if($sourceVersion -notin @('1.14.0 ShunCode MCP Fix 3.3.7','1.14.0 ShunCode MCP Fix 3.3.8','1.14.0 ShunCode MCP Fix 3.3.9','1.14.0 ShunCode MCP Fix 3.3.10','1.14.0 ShunCode MCP Fix 3.3.10.1','1.14.0 ShunCode MCP Fix 3.3.10.2')){
     & python $Apply337 $dst
     if($LASTEXITCODE -ne 0){throw "apply-fix337.py failed with exit $LASTEXITCODE"}
   }else{Write-Host 'BUILD_FIX3 Fix 3.3.7+ source detected; Fix 3.3.7 overlay skipped'}
-  if($sourceVersion -notin @('1.14.0 ShunCode MCP Fix 3.3.8','1.14.0 ShunCode MCP Fix 3.3.9','1.14.0 ShunCode MCP Fix 3.3.10','1.14.0 ShunCode MCP Fix 3.3.10.1')){
+  if($sourceVersion -notin @('1.14.0 ShunCode MCP Fix 3.3.8','1.14.0 ShunCode MCP Fix 3.3.9','1.14.0 ShunCode MCP Fix 3.3.10','1.14.0 ShunCode MCP Fix 3.3.10.1','1.14.0 ShunCode MCP Fix 3.3.10.2')){
     & python $Apply338 $dst
     if($LASTEXITCODE -ne 0){throw "apply-fix338.py failed with exit $LASTEXITCODE"}
   }else{Write-Host 'BUILD_FIX3 Fix 3.3.8+ source detected; Fix 3.3.8 overlay skipped'}
-  if($sourceVersion -notin @('1.14.0 ShunCode MCP Fix 3.3.9','1.14.0 ShunCode MCP Fix 3.3.10','1.14.0 ShunCode MCP Fix 3.3.10.1')){
+  if($sourceVersion -notin @('1.14.0 ShunCode MCP Fix 3.3.9','1.14.0 ShunCode MCP Fix 3.3.10','1.14.0 ShunCode MCP Fix 3.3.10.1','1.14.0 ShunCode MCP Fix 3.3.10.2')){
     & python $Apply339 $dst
     if($LASTEXITCODE -ne 0){throw "apply-fix339.py failed with exit $LASTEXITCODE"}
   }else{Write-Host 'BUILD_FIX3 Fix 3.3.9+ source detected; Fix 3.3.9 overlay skipped'}
-  if($sourceVersion -notin @('1.14.0 ShunCode MCP Fix 3.3.10','1.14.0 ShunCode MCP Fix 3.3.10.1')){
+  if($sourceVersion -notin @('1.14.0 ShunCode MCP Fix 3.3.10','1.14.0 ShunCode MCP Fix 3.3.10.1','1.14.0 ShunCode MCP Fix 3.3.10.2')){
     & python $Apply3310 $dst
     if($LASTEXITCODE -ne 0){throw "apply-fix3310.py failed with exit $LASTEXITCODE"}
   }else{Write-Host 'BUILD_FIX3 Fix 3.3.10+ source detected; Fix 3.3.10 overlay skipped'}
-  if($sourceVersion -ne '1.14.0 ShunCode MCP Fix 3.3.10.1'){
+  if($sourceVersion -notin @('1.14.0 ShunCode MCP Fix 3.3.10.1','1.14.0 ShunCode MCP Fix 3.3.10.2')){
     & python $Apply33101 $dst
     if($LASTEXITCODE -ne 0){throw "apply-fix33101.py failed with exit $LASTEXITCODE"}
-  }else{Write-Host 'BUILD_FIX3 Fix 3.3.10.1 source detected; current overlay skipped'}
-  foreach($name in @('mcp-repair-selftest.js','mcp-diagnostic-selftest.js','fix3-policy-selftest.js','fix3-web-policy-selftest.js','fix3-continuation-selftest.js','fix31-agent-selftest.js','fix32-capability-selftest.js','fix33-known-issues-selftest.js','fix33-stream-integration-selftest.js','fix331-stream-close-selftest.js','fix332-safe-dom-selftest.js','fix333-agent-stability-selftest.js','fix334-tool-storm-selftest.js','fix335-empty-stream-selftest.js','fix336-long-task-stability-selftest.js','fix337-attachment-json-selftest.js','fix338-agent-budget-selftest.js','fix339-message-id-selftest.js','fix339-hr-sim-selftest.js','fix3310-dsml-storm-selftest.js','fix33101-quarantine-selftest.js')){
+  }else{Write-Host 'BUILD_FIX3 Fix 3.3.10.1+ source detected; Fix 3.3.10.1 overlay skipped'}
+  if($sourceVersion -ne '1.14.0 ShunCode MCP Fix 3.3.10.2'){
+    & python $Apply33102 $dst
+    if($LASTEXITCODE -ne 0){throw "apply-fix33102.py failed with exit $LASTEXITCODE"}
+  }else{Write-Host 'BUILD_FIX3 Fix 3.3.10.2 source detected; current overlay skipped'}
+  foreach($name in @('mcp-repair-selftest.js','mcp-diagnostic-selftest.js','fix3-policy-selftest.js','fix3-web-policy-selftest.js','fix3-continuation-selftest.js','fix31-agent-selftest.js','fix32-capability-selftest.js','fix33-known-issues-selftest.js','fix33-stream-integration-selftest.js','fix331-stream-close-selftest.js','fix332-safe-dom-selftest.js','fix333-agent-stability-selftest.js','fix334-tool-storm-selftest.js','fix335-empty-stream-selftest.js','fix336-long-task-stability-selftest.js','fix337-attachment-json-selftest.js','fix338-agent-budget-selftest.js','fix339-message-id-selftest.js','fix339-hr-sim-selftest.js','fix3310-dsml-storm-selftest.js','fix33101-quarantine-selftest.js','fix33102-manual-page-filter-selftest.js')){
     Copy-Item -LiteralPath (Join-Path $TemplateRoot $name) -Destination (Join-Path $dst $name) -Force
   }
   foreach($name in @('README.md','README-SHUNCODE-FIX3.md','FIX3-TEST-REPORT.md')){
@@ -92,7 +97,7 @@ try{
     if(Test-Path -LiteralPath $doc){Copy-Item -LiteralPath $doc -Destination (Join-Path $dst $name) -Force}
   }
   $destTools=Join-Path $dst 'tools';New-Item -ItemType Directory -Force -Path $destTools|Out-Null
-  foreach($name in @('apply-fix3.py','apply-fix31.py','apply-fix32.py','apply-fix33.py','apply-fix331.py','apply-fix332.py','apply-fix333.py','apply-fix334.py','apply-fix335.py','apply-fix336.py','apply-fix337.py','apply-fix338.py','apply-fix339.py','apply-fix3310.py','apply-fix33101.py','health-check.ps1','build-fix3.ps1')){
+  foreach($name in @('apply-fix3.py','apply-fix31.py','apply-fix32.py','apply-fix33.py','apply-fix331.py','apply-fix332.py','apply-fix333.py','apply-fix334.py','apply-fix335.py','apply-fix336.py','apply-fix337.py','apply-fix338.py','apply-fix339.py','apply-fix3310.py','apply-fix33101.py','apply-fix33102.py','health-check.ps1','build-fix3.ps1')){
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot $name) -Destination (Join-Path $destTools $name) -Force
   }
   Get-ChildItem -LiteralPath $dst -Recurse -Directory -Filter '__pycache__' -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
