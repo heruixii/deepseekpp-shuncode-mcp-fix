@@ -1,4 +1,4 @@
-> Current release: **Fix 3.3.10.4** — assistant history replay is sanitized on fetch/XHR/IndexedDB restore so orphan tool/DSML closing tags do not reappear after page reload. User-authored text and fenced-code examples are preserved.
+> Current release: **Fix 3.3.10.6** — safely salvages EOF-truncated DeepSeek DSML tool calls only when every parameter is complete and schema-safe, then supplies a synthetic FINISHED status so the official page does not mislabel that recovered tool turn as server unavailable.
 
 > Current release: **Fix 3.3.10.3** — invalid-message-id recovery now performs one bounded fallback to the previous successfully used parent after the existing same-parent retry is exhausted.
 
