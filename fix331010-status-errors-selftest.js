@@ -209,11 +209,11 @@ test('resume chaining does not merge distant unrelated failures', resumeContext.
 resumeContext.KY.set(prior.id, prior);
 resumeContext.KY.set(restarted.id, restarted);
 test('manual DeepSeek turn receives the checkpoint before its first tool call', resumeContext.manualPrompt(current.originalPrompt, current.chatSessionId).includes('Daub 编译成功'));
-test('Agent launch reads durable traces before starting', src.includes('DPP_AGENT_RESUME_PREPARE_331010(e,n,await k0())'));
+test('Agent launch reads durable traces before starting', src.includes('DPP_AGENT_RESUME_PREPARE_331011(e,n,await k0())'));
 test('resumed prompt is persisted into the new trace', src.includes('BY=b0(DPPAgentRequest,r,t,p,s)'));
 test('resumed history is passed to the continuation loop', src.includes('toolExecutions:DPPResume?.toolExecutions??n'));
 const requestAugmenter = between('function Zc(e,t)', 'function Qc(e)');
-test('manual request prompt is checkpoint-aware', requestAugmenter.includes('DPP_MANUAL_RESUME_PROMPT_331010(r,t.chatSessionId)'));
+test('manual request prompt is checkpoint-aware', requestAugmenter.includes('DPP_MANUAL_RESUME_PROMPT_SAFE_331011(r,t.chatSessionId)'));
 test('manual request keeps the raw user continuation for Agent history injection', requestAugmenter.includes('agentTaskPrompt:DPPOriginalPrompt331010'));
 test('manual request augmenter receives the active chat id', src.includes('d=Zc(l,{chatSessionId:AZ(l),memories:XY'));
 

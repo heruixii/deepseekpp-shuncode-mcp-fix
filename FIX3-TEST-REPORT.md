@@ -1,4 +1,6 @@
-> Current release: **Fix 3.3.10.10** — restores interrupted Agent checkpoints instead of restarting completed work, fixes false-positive `run_command` success and blank-final “complete” states, classifies ambiguous 120-second MCP disconnects safely, and adds an honest live status strip.
+> Current release: **Fix 3.3.10.11** — prevents “continue task” from destabilizing the DeepSeek page by using a fail-open, DSML-sanitized resume gateway, a 2,400-character checkpoint ceiling, and deduplicated Agent history capped at 12 calls / 24 KiB.
+
+> Previous release: **Fix 3.3.10.10** — restores interrupted Agent checkpoints instead of restarting completed work, fixes false-positive `run_command` success and blank-final “complete” states, classifies ambiguous 120-second MCP disconnects safely, and adds an honest live status strip.
 
 > Previous release: **Fix 3.3.10.9** — globally retires expired unclaimed Agent traces while protecting live work in other DeepSeek tabs, repairs terminal traces that retained streaming steps, and injects deterministic `list_directory` facts so the model cannot estimate unsupported totals.
 
@@ -25,7 +27,7 @@
 ## Build identity
 
 - Base: DeepSeek++ 1.14.0 + ShunCode MCP Fix 2
-- Target: `1.14.0 ShunCode MCP Fix 3.3.10.10`
+- Target: `1.14.0 ShunCode MCP Fix 3.3.10.11`
 - Strategy module: `fix3-policy.js`
 - Patch mode: exact-marker, fail-closed
 
@@ -247,4 +249,14 @@ An isolated Edge profile successfully registered the unpacked extension and expo
 - Tool rows settle as soon as their tool-completion event arrives, so users no longer need to wait for the entire model step to discover whether a command is still running.
 - New Fix 3.3.10.10 regression: **60/60 PASS**. All **31** regression suites pass; **80 JavaScript files** pass syntax validation.
 - Reproducibility: both the 3.3.10.9 upgrade build and the 3.3.10.10 self-rebuild reproduce all **160 files** byte-for-byte.
-- Core SHA-256: `content.js` `27B177F9CFCD75295E4B23B670E226091EF320DBB5AFF968356CBFE425BD6A6B`; `manifest.json` `F3D4AA1874514FF792DFAB720C1B7281F17186C5911C42A3F396EDC347AFA66F`.
+- Fix 3.3.10.10 core SHA-256: `content.js` `27B177F9CFCD75295E4B23B670E226091EF320DBB5AFF968356CBFE425BD6A6B`; `manifest.json` `F3D4AA1874514FF792DFAB720C1B7281F17186C5911C42A3F396EDC347AFA66F`.
+
+## Fix 3.3.10.11 safe resume gateway
+
+- Edge storage showed the last normal Agent trace ending at 13:29, while the following “continue task” request produced no new trace. No new native Edge crash dump or Windows application crash event was created, placing the failure before Agent trace creation in the web request/render path.
+- Manual resume augmentation is now fail-open: corrupt or unexpected history can no longer abort the normal DeepSeek request.
+- The synchronous request checkpoint is plain text, strips raw DSML/tool-control markup, and is capped at 2,400 characters.
+- Reused Agent tool history is deduplicated and capped at 12 calls, 24 KiB total, and 8 KiB per entry. Circular or unserializable records are skipped.
+- Dedicated crash regression: **18/18 PASS**, including oversized histories, repeated executions, raw DSML, corrupt runtime state, and circular tool results.
+- All **32** self-test suites pass; **81 JavaScript files** pass syntax validation. The clean 3.3.10.10 upgrade build and 3.3.10.11 self-rebuild reproduce all **162 files** byte-for-byte.
+- Fix 3.3.10.11 core SHA-256: `content.js` `5A91E6EECAD2BF6A7C3266EA43E89BEC22392F7DDCAE691C6185F04B7437FAA2`; `manifest.json` `8BE4F258F1BAD887A691044C2329DD980E4907E5B89CAD4D9633110E5956BFF7`.

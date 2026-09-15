@@ -1,4 +1,6 @@
-> Current release: **Fix 3.3.10.10** — restores interrupted Agent checkpoints instead of restarting completed work, fixes false-positive `run_command` success and blank-final “complete” states, classifies ambiguous 120-second MCP disconnects safely, and adds an honest live status strip.
+> Current release: **Fix 3.3.10.11** — prevents “continue task” from destabilizing the DeepSeek page by using a fail-open, DSML-sanitized resume gateway, a 2,400-character checkpoint ceiling, and deduplicated Agent history capped at 12 calls / 24 KiB.
+
+> Previous release: **Fix 3.3.10.10** — restores interrupted Agent checkpoints instead of restarting completed work, fixes false-positive `run_command` success and blank-final “complete” states, classifies ambiguous 120-second MCP disconnects safely, and adds an honest live status strip.
 
 > Previous release: **Fix 3.3.10.9** — globally retires expired unclaimed Agent traces while protecting live work in other DeepSeek tabs, repairs terminal traces that retained streaming steps, and injects deterministic `list_directory` facts so the model cannot estimate unsupported totals.
 
@@ -18,7 +20,7 @@
 
 > Current release: **Fix 3.3.9** — hardens DeepSeek response message-ID selection and adds one bounded recovery for explicit `code=0 / invalid message id`, while preserving Fix 3.3.8 Agent budgets.
 
-# DeepSeek++ ShunCode MCP Fix 3.3.10.10
+# DeepSeek++ ShunCode MCP Fix 3.3.10.11
 
 这是基于 **DeepSeek++ 1.14.0** 的稳定性优化版本，重点改善 DeepSeek 网页端通过 MCP 长时间调用 **ShunCode** 时的工具调用可靠性、连续执行能力和异常恢复行为。
 
