@@ -1,4 +1,4 @@
-> Current release: **Fix 3.3.10.10** — fixes false-positive `run_command` success and blank-final “complete” states, classifies ambiguous 120-second MCP disconnects safely, and adds a live Agent status strip showing current activity, tool counts, elapsed/inactive time, and clearly labelled continuation capacity rather than invented task progress.
+> Current release: **Fix 3.3.10.10** — restores interrupted Agent checkpoints instead of restarting completed work, fixes false-positive `run_command` success and blank-final “complete” states, classifies ambiguous 120-second MCP disconnects safely, and adds an honest live status strip.
 
 > Previous release: **Fix 3.3.10.9** — globally retires expired unclaimed Agent traces while protecting live work in other DeepSeek tabs, repairs terminal traces that retained streaming steps, and injects deterministic `list_directory` facts so the model cannot estimate unsupported totals.
 

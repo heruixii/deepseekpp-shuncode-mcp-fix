@@ -23,7 +23,7 @@ EXPECTED = {
 # Filled after the first audited build. Keeping these hashes in the patcher makes
 # both accidental double-patching and a drifting upstream bundle fail closed.
 OUTPUT_EXPECTED = {
-    "content-scripts/content.js": "6AB9B93EEF0028880DAC2FE5140757AB75C5A2D3AFD03F8C1334A529C29D65A8",
+    "content-scripts/content.js": "27B177F9CFCD75295E4B23B670E226091EF320DBB5AFF968356CBFE425BD6A6B",
     "manifest.json": "F3D4AA1874514FF792DFAB720C1B7281F17186C5911C42A3F396EDC347AFA66F",
     "_locales/en/messages.json": "C2AC07E4D1BCE5AC829E52239927A9B4FD49EB2AE5FE756DDA693739AEE1BB1E",
     "_locales/zh_CN/messages.json": "BEAFDC1783D3402E2FF44A8DDE7D379BCEC2848E540E7161BE60E799AC0C93CC",
@@ -89,6 +89,61 @@ def main(root_arg: str) -> None:
     old_hint = "function DPP_RESULT_HINT_33(e){let t=String(e?.result?.error?.code??``).toUpperCase(),n=DPP_TOOL_NAME_33(e?.name);return t===`FILE_NOT_FOUND`&&/^(read_files|find_files|search_files|list_directory)$/.test(n)?{recoveryHint:`ShunCode file tools are workspace-scoped. If the intended file is outside the current ShunCode workspace, use run_command with its explicit absolute path instead of retrying a workspace-relative path.`}:{}}"
     new_hint = "function DPP_RESULT_HINT_33(e){let t=String(e?.result?.error?.code??``).toUpperCase(),n=DPP_TOOL_NAME_33(e?.name),r=String(e?.result?.error?.message??e?.result?.detail??``);if((t===`FILE_NOT_FOUND`||t===`PATH_OUTSIDE_WORKSPACE`)&&/^(read_files|find_files|search_files|list_directory|read_image)$/.test(n))return{recoveryHint:n===`read_image`?`ShunCode image reads are workspace-scoped. Copy the image into the current workspace with run_command, then call read_image on that workspace-relative copy.`:`ShunCode file tools are workspace-scoped. If the intended file is outside the current ShunCode workspace, use run_command with its explicit absolute path instead of retrying a workspace-relative path.`};if(t===`MCP_TOOL_CALL_FAILED`&&/(?:SSE stream ended|network error|timed? out|timeout)/i.test(r))return{recoveryHint:e?.result?.error?.details?.externalOutcome===`ambiguous`?`The MCP connection ended after execution may have started, so the external outcome is unknown. Do not blindly repeat a mutating command. Reconnect ShunCode and verify the intended effect with a read-only command first.`:`The ShunCode MCP transport failed before a confirmed result. Reconnect the server and retry only when the operation is safe.`};if(t===`MCP_TOOL_CALL_FAILED`&&/exceeded\\s+\\d+\\s+bytes/i.test(r))return{recoveryHint:`The MCP result exceeded the configured size limit. Request a smaller range, reduce command output, or copy/downsample large images before reading them.`};return{}}"
     content = replace_one(content, old_hint, new_hint, "actionable MCP recovery hints")
+
+    resume_helpers = r'''function DPP_RESUME_INTENT_331010(e){let t=String(e??``).trim();return t.length>0&&t.length<=120&&(/^(?:继续|接着|恢复|从中断处继续)[\s\S]{0,100}$/i.test(t)||/^(?:continue|resume|go\s+on|carry\s+on)\b[\s\S]{0,100}$/i.test(t))}function DPP_RESUME_TRACE_CHAIN_331010(e,t,n=Date.now()){if(!DPP_RESUME_INTENT_331010(e?.originalPrompt)||!e?.chatSessionId||!Array.isArray(t))return[];let r=t.filter(t=>t?.chatSessionId===e.chatSessionId&&(t.status===`error`||t.status===`stopping`||t.status===`running`&&DPP_TRACE_EXPIRED_33109(t,n))&&n-Number(t.updatedAt??t.createdAt??0)<=864e5).sort((e,t)=>Number(t.updatedAt??t.createdAt??0)-Number(e.updatedAt??e.createdAt??0));if(r.length===0)return[];let i=[r[0]];for(let e=1;e<r.length&&i.length<3&&DPP_RESUME_INTENT_331010(i[i.length-1]?.originalPrompt);e++){i.push(r[e]);if(!DPP_RESUME_INTENT_331010(r[e]?.originalPrompt))break}return i.reverse()}function DPP_RESUME_EXECUTIONS_331010(e){let t=[];for(let n of e){Array.isArray(n?.initialExecutions)&&t.push(...n.initialExecutions);for(let e of n?.steps??[])Array.isArray(e?.toolExecutions)&&t.push(...e.toolExecutions)}return t.filter(e=>e&&typeof e==`object`&&e.result&&typeof e.result==`object`).slice(-64)}function DPP_RESUME_TRACE_SNAPSHOT_331010(e){return{id:e.id,status:e.status,originalTask:zz(e.originalPrompt,500),anchorContext:zz(e.anchorContent,800),error:zz(e.error,500),completedSteps:(e.steps??[]).filter(e=>e?.status!==`streaming`).slice(-10).map(e=>({index:e.index,status:e.status,text:zz(e.text,360),reasoning:zz(e.reasoning,240),tools:(e.toolExecutions??[]).map(e=>({name:e.name,ok:e.result?.ok,summary:zz(e.result?.summary,160),errorCode:e.result?.error?.code}))}))}}function DPP_RESUME_PROMPT_331010(e,t){let n=t.map(DPP_RESUME_TRACE_SNAPSHOT_331010),r=zz(JSON.stringify(n,null,2),6500);return[`[Fix 3.3.10.10 resume checkpoint] Continue the interrupted task until complete. This is a resume, not a new task.`,`Do not restart discovery, installation, builds, writes, or tests that the checkpoint already confirms successful. Inspect the existing ShunCode todo/progress state before replacing it. For an ambiguous mutation outcome, verify the external state read-only before deciding whether to repeat it.`,``,`<current_user_request>`,zz(e.originalPrompt,500),`</current_user_request>`,``,`<interrupted_run_checkpoint>`,r,`</interrupted_run_checkpoint>`].join(`\n`)}function DPP_AGENT_RESUME_PREPARE_331010(e,t,n){let r=DPP_RESUME_TRACE_CHAIN_331010(e,n);if(r.length===0)return null;let i=DPP_RESUME_PROMPT_331010(e,r),a=DPP_RESUME_EXECUTIONS_331010(r);return{prompt:i,toolExecutions:[...a,...t],sourceTraceIds:r.map(e=>e.id)}}'''
+    resume_helpers = resume_helpers.replace(
+        "let r=t.filter(t=>t?.chatSessionId===e.chatSessionId&&(t.status===`error`||t.status===`stopping`||t.status===`running`&&DPP_TRACE_EXPIRED_33109(t,n))&&n-Number(t.updatedAt??t.createdAt??0)<=864e5).sort",
+        "let a=Math.max(0,...t.filter(t=>t?.chatSessionId===e.chatSessionId&&t.status===`complete`).map(e=>Number(e.updatedAt??e.createdAt??0)||0)),r=t.filter(t=>t?.chatSessionId===e.chatSessionId&&(t.status===`error`||t.status===`stopping`||t.status===`running`&&DPP_TRACE_EXPIRED_33109(t,n))&&Number(t.updatedAt??t.createdAt??0)>a&&n-Number(t.updatedAt??t.createdAt??0)<=864e5).sort",
+    ).replace(
+        "e<r.length&&i.length<3&&DPP_RESUME_INTENT_331010(i[i.length-1]?.originalPrompt)",
+        "e<r.length&&i.length<3&&DPP_RESUME_INTENT_331010(i[i.length-1]?.originalPrompt)&&Number(i[i.length-1]?.updatedAt??0)-Number(r[e]?.updatedAt??0)<=72e5",
+    ).replace(
+        "Do not restart discovery, installation, builds, writes, or tests that the checkpoint already confirms successful. Inspect the existing ShunCode todo/progress state before replacing it.",
+        "Merge duplicate attempts across the checkpoint into one progress state and keep the furthest verified result. Do not restart discovery, installation, builds, writes, or tests that the checkpoint already confirms successful. Inspect the existing ShunCode todo/progress state before replacing it; never reset completed todos to pending.",
+    )
+    resume_helpers += "function DPP_MANUAL_RESUME_PROMPT_331010(e,t){if(!t)return null;let n=DPP_AGENT_RESUME_PREPARE_331010({originalPrompt:e,chatSessionId:t},[],[...KY.values()]);return n?.prompt??null}"
+    content = replace_one(
+        content,
+        "var DPP_AGENT_SYNTHETIC_REF_FILES_337=[];",
+        resume_helpers + "var DPP_AGENT_SYNTHETIC_REF_FILES_337=[];",
+        "resume checkpoint helpers",
+    )
+    content = replace_one(
+        content,
+        "let n=aB(t);if(n.length===0||!e.chatSessionId||e.assistantMessageId==null)return;let r=crypto.randomUUID()",
+        "let n=aB(t);if(n.length===0||!e.chatSessionId||e.assistantMessageId==null)return;let DPPResume=null;try{DPPResume=DPP_AGENT_RESUME_PREPARE_331010(e,n,await k0())}catch(e){console.error(`[DeepSeek++] failed to prepare interrupted Agent checkpoint`,e)}let DPPAgentRequest=DPPResume?{...e,originalPrompt:DPPResume.prompt,agentTaskPrompt:DPPResume.prompt}:e,r=crypto.randomUUID()",
+        "resume checkpoint lookup",
+    )
+    content = replace_one(
+        content,
+        "originalPrompt:e.agentTaskPrompt||e.originalPrompt,agentTaskPrompt:e.agentTaskPrompt||e.originalPrompt,toolExecutions:n,promptOptions:",
+        "originalPrompt:DPPAgentRequest.agentTaskPrompt||DPPAgentRequest.originalPrompt,agentTaskPrompt:DPPAgentRequest.agentTaskPrompt||DPPAgentRequest.originalPrompt,toolExecutions:DPPResume?.toolExecutions??n,promptOptions:",
+        "resume prompt and tool history injection",
+    )
+    content = replace_one(
+        content,
+        "LY=r,BY=b0(e,r,t,p,s),JX(O0(BY))",
+        "LY=r,BY=b0(DPPAgentRequest,r,t,p,s),JX(O0(BY))",
+        "persist resumed checkpoint prompt",
+    )
+    content = replace_one(
+        content,
+        "function Zc(e,t){let n={...e},r=n.prompt,i=t.locale??`zh-CN`",
+        "function Zc(e,t){let n={...e},r=n.prompt,DPPOriginalPrompt331010=r,DPPManualResume331010=DPP_MANUAL_RESUME_PROMPT_331010(r,t.chatSessionId);DPPManualResume331010&&(r=DPPManualResume331010,n.prompt=r);let i=t.locale??`zh-CN`",
+        "manual continuation checkpoint injection",
+    )
+    content = replace_one(
+        content,
+        "return n.prompt=h,{body:JSON.stringify(n),agentTaskPrompt:r,usedMemoryIds:g,messageCount:s,activeLocalSkillDir:m}",
+        "return n.prompt=h,{body:JSON.stringify(n),agentTaskPrompt:DPPOriginalPrompt331010,usedMemoryIds:g,messageCount:s,activeLocalSkillDir:m}",
+        "preserve visible continuation request for Agent resume",
+    )
+    content = replace_one(
+        content,
+        "let u=await kZ(l),d=Zc(l,{memories:XY,skills:ZY",
+        "let u=await kZ(l),d=Zc(l,{chatSessionId:AZ(l),memories:XY,skills:ZY",
+        "manual resume chat binding",
+    )
 
     css_marker = "    @media (prefers-reduced-motion: reduce) {\n      .dpp-agent-starting::before,"
     css_insert = """    /* Fix 3.3.10.10: make liveness and honest remaining capacity visible. */

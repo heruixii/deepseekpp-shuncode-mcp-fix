@@ -1,4 +1,4 @@
-> Current release: **Fix 3.3.10.10** — fixes false-positive `run_command` success and blank-final “complete” states, classifies ambiguous 120-second MCP disconnects safely, and adds a live Agent status strip showing current activity, tool counts, elapsed/inactive time, and clearly labelled continuation capacity rather than invented task progress.
+> Current release: **Fix 3.3.10.10** — restores interrupted Agent checkpoints instead of restarting completed work, fixes false-positive `run_command` success and blank-final “complete” states, classifies ambiguous 120-second MCP disconnects safely, and adds an honest live status strip.
 
 > Previous release: **Fix 3.3.10.9** — globally retires expired unclaimed Agent traces while protecting live work in other DeepSeek tabs, repairs terminal traces that retained streaming steps, and injects deterministic `list_directory` facts so the model cannot estimate unsupported totals.
 
@@ -237,9 +237,14 @@ An isolated Edge profile successfully registered the unpacked extension and expo
 ## Fix 3.3.10.10 observable lifecycle and error integrity
 
 - Edge structured logs exposed three ambiguous `run_command` disconnects at roughly 120 seconds, one real `exit_code=1` result stored as `ok:true`, one terminal trace marked complete with empty final text, and older image-scope/result-size failures.
+- A later reproduction showed the original Agent had already installed Rust, compiled Daub, rendered a real plan, and verified deterministic output before interruption. Sending “继续中断的任务” created a new trace, reset ShunCode todos to `0/6`, and repeated environment discovery even though both interrupted traces and their settled tool results remained in durable storage.
+- Short continuation requests now select the latest incomplete trace in the same chat, follow bounded continuation chains back to the source run, inject prior settled tool results, and persist a compact checkpoint into the new trace. The resume contract forbids repeating already-confirmed discovery/build/write/test work and requires inspecting existing ShunCode progress before replacing it.
 - `run_command` outcome normalization now reads the real invocation object and treats non-zero exit codes, failed status values, and explicit command failure as failures even when the MCP transport itself succeeded.
 - Generic MCP SSE/network/timeout failures are classified as transport uncertainty. Mutating calls are not blindly replayed; the recovery instruction reconnects first and uses read-only verification to establish the external outcome.
 - Empty terminal output is fail-closed as `失败·未完成` instead of being persisted as a misleading successful completion.
 - Agent status now exposes `准备中 / 运行中 / 已完成 / 已暂停 / 失败·未完成`, the current wait/reasoning/tool/response phase, settled/running/failed/interrupted tool counts, elapsed time, and inactivity age.
 - The only remaining count shown is explicitly labelled `自动续跑安全额度` and `不是任务剩余量`; unplanned future work is described as dynamically planned rather than converted into an invented percentage.
 - Tool rows settle as soon as their tool-completion event arrives, so users no longer need to wait for the entire model step to discover whether a command is still running.
+- New Fix 3.3.10.10 regression: **60/60 PASS**. All **31** regression suites pass; **80 JavaScript files** pass syntax validation.
+- Reproducibility: both the 3.3.10.9 upgrade build and the 3.3.10.10 self-rebuild reproduce all **160 files** byte-for-byte.
+- Core SHA-256: `content.js` `27B177F9CFCD75295E4B23B670E226091EF320DBB5AFF968356CBFE425BD6A6B`; `manifest.json` `F3D4AA1874514FF792DFAB720C1B7281F17186C5911C42A3F396EDC347AFA66F`.

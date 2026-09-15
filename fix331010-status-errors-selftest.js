@@ -162,6 +162,61 @@ test('runtime reset derives the correct safety budget', src.includes('DPP_AGENT_
 test('stream activity updates visible liveness', src.includes('DPP_AGENT_STATUS_TOUCH_331010(`responding`)'));
 test('reasoning activity updates visible liveness', src.includes('DPP_AGENT_STATUS_TOUCH_331010(`thinking`)'));
 
+const resumeHelpers = between('function DPP_RESUME_INTENT_331010', 'var DPP_AGENT_SYNTHETIC_REF_FILES_337');
+const resumeContext = { Date, Number, String, JSON };
+resumeContext.zz = (value, limit) => value && value.length > limit ? `${value.slice(0, limit)}\n...[truncated]` : value;
+resumeContext.DPP_TRACE_EXPIRED_33109 = (trace, now) => now - Number(trace.updatedAt || trace.createdAt || 0) >= 300000;
+resumeContext.KY = new Map();
+vm.createContext(resumeContext);
+vm.runInContext(
+  `${resumeHelpers};Object.assign(globalThis,{intent:DPP_RESUME_INTENT_331010,chain:DPP_RESUME_TRACE_CHAIN_331010,prepare:DPP_AGENT_RESUME_PREPARE_331010,manualPrompt:DPP_MANUAL_RESUME_PROMPT_331010});`,
+  resumeContext,
+);
+const now = Date.now();
+const prior = {
+  id: 'original-run', chatSessionId: 'chat-1', status: 'error', originalPrompt: 'A',
+  anchorContent: '选择 A：安装 Rust，编译并验证 Daub。', error: 'interrupted before timelapse',
+  createdAt: now - 50_000, updatedAt: now - 40_000,
+  initialExecutions: [{ name: 'run_command', result: { ok: true, summary: 'Rust installed' } }],
+  steps: [{ index: 7, status: 'complete', text: 'Daub 编译成功，真实渲染和确定性校验通过；下一步验证 timelapse。', reasoning: '', toolExecutions: [{ name: 'run_command', result: { ok: true, summary: 'build and render passed' } }] }],
+};
+const restarted = {
+  id: 'bad-restart', chatSessionId: 'chat-1', status: 'stopping', originalPrompt: '继续中断的任务',
+  anchorContent: '重新探测环境', error: 'stopped', createdAt: now - 20_000, updatedAt: now - 10_000,
+  initialExecutions: [], steps: [{ index: 0, status: 'complete', text: '重复进行了环境探测', reasoning: '', toolExecutions: [] }],
+};
+const complete = { ...prior, id: 'complete-run', status: 'complete', updatedAt: now - 60_000 };
+const foreign = { ...prior, id: 'foreign-run', chatSessionId: 'chat-2', updatedAt: now - 1_000 };
+const current = { originalPrompt: '继续中断的任务', chatSessionId: 'chat-1' };
+test('Chinese interrupted-task request is recognized', resumeContext.intent(current.originalPrompt));
+test('ordinary new task does not trigger resume', !resumeContext.intent('重新安装另一个项目'));
+const chain = resumeContext.chain(current, [prior, restarted, complete, foreign], now);
+test('resume chain follows the latest interrupted run back to its source', chain.map(x => x.id).join(',') === 'original-run,bad-restart');
+const prepared = resumeContext.prepare(current, [{ name: 'set_todos', result: { ok: true, summary: 'current' } }], [prior, restarted, complete, foreign]);
+test('resume prompt says this is not a new task', prepared.prompt.includes('This is a resume, not a new task'));
+test('resume prompt carries verified prior progress', prepared.prompt.includes('Daub 编译成功'));
+test('resume prompt retains the unfinished next action', prepared.prompt.includes('timelapse'));
+test('resume rules prohibit redoing confirmed work', prepared.prompt.includes('Do not restart discovery'));
+test('resume rules preserve existing ShunCode progress', prepared.prompt.includes('todo/progress state before replacing it'));
+test('resume rules merge repeated attempts at the furthest progress', prepared.prompt.includes('Merge duplicate attempts') && prepared.prompt.includes('furthest verified result'));
+test('resume rules never reset completed todos', prepared.prompt.includes('never reset completed todos to pending'));
+test('prior tool results are injected before current results', prepared.toolExecutions.map(x => x.result.summary).join(',') === 'Rust installed,build and render passed,current');
+test('complete and foreign traces are excluded', !prepared.sourceTraceIds.includes('complete-run') && !prepared.sourceTraceIds.includes('foreign-run'));
+const laterComplete = { ...prior, id: 'later-complete', status: 'complete', updatedAt: now - 5_000 };
+test('a newer completed task blocks resurrection of older failures', resumeContext.chain(current, [prior, restarted, laterComplete], now).length === 0);
+const distantSource = { ...prior, id: 'distant-source', updatedAt: now - 8 * 60 * 60 * 1000 };
+test('resume chaining does not merge distant unrelated failures', resumeContext.chain(current, [distantSource, restarted], now).map(x => x.id).join(',') === 'bad-restart');
+resumeContext.KY.set(prior.id, prior);
+resumeContext.KY.set(restarted.id, restarted);
+test('manual DeepSeek turn receives the checkpoint before its first tool call', resumeContext.manualPrompt(current.originalPrompt, current.chatSessionId).includes('Daub 编译成功'));
+test('Agent launch reads durable traces before starting', src.includes('DPP_AGENT_RESUME_PREPARE_331010(e,n,await k0())'));
+test('resumed prompt is persisted into the new trace', src.includes('BY=b0(DPPAgentRequest,r,t,p,s)'));
+test('resumed history is passed to the continuation loop', src.includes('toolExecutions:DPPResume?.toolExecutions??n'));
+const requestAugmenter = between('function Zc(e,t)', 'function Qc(e)');
+test('manual request prompt is checkpoint-aware', requestAugmenter.includes('DPP_MANUAL_RESUME_PROMPT_331010(r,t.chatSessionId)'));
+test('manual request keeps the raw user continuation for Agent history injection', requestAugmenter.includes('agentTaskPrompt:DPPOriginalPrompt331010'));
+test('manual request augmenter receives the active chat id', src.includes('d=Zc(l,{chatSessionId:AZ(l),memories:XY'));
+
 if (failed) {
   console.error(`FIX331010_FAIL pass=${passed} fail=${failed}`);
   process.exit(1);
