@@ -443,3 +443,59 @@ release tree exactly (missing=0 / extra=0 / diff=0, 201 files). Only
 `content.js`, `manifest.json`, two locale files and the version-gated suites
 changed.
 
+
+## Fix 3.3.10.32 - announced-but-unemitted tool call promoted to a final answer
+
+### Symptom
+After a task was interrupted, sending "continue" / "retry" produced a short
+verbal acknowledgement and the run ended with zero tool calls. Sometimes the
+page visibly reloaded immediately afterwards and everything stopped.
+
+### Root cause (verified by executing the shipped predicates)
+The failing turn (loop 098021bb, 25-char visible text, 435-char reasoning) was
+replayed through the real functions extracted from content.js:
+
+  DPP_TOOL_INTENT_TEXT_331021(reasoning)  = true   (intent IS visible there)
+  DPP_TOOL_INTENT_331021(text, reasoning) = false  (but the combiner drops it)
+  DPP_SAFE_FINAL_CANDIDATE_331021(...)    != null  (so it became the answer)
+
+DPP_TOOL_INTENT_331021 only consults the reasoning channel when the visible
+text is empty or already carries a cue. The stub text scored
+midstep=false / strict=false / Mz=false, so the model's explicit plan to run
+run_command again was discarded, no tool_intent steering fired, and Ee()
+promoted the stub to a terminal answer with totalTools:0.
+
+A second, independent defect kept this invisible: the batched diagnostics key
+dpp_agent_turn_diag_331021 is flushed only from a non-awaited `pagehide`
+listener, while the inline agent loop deliberately calls
+window.location.reload() (u&&_1()) once a run completes with a continuable
+response message id. The reload raced the 650 ms batch and destroyed the
+evidence, which is why the .31 field failure looked like "the gate never ran".
+
+### Mechanism of the fix
+Fix C  DPP_SAFE_FINAL_CANDIDATE_331021 refuses to promote a terminal answer
+       when the reasoning announces a tool action, there is no <task_complete>,
+       and the run has no successful tool execution to stand on. The turn then
+       falls through to AGENT_LOOP_ERROR, the trace is stored as `error`
+       (a resume candidate) and, because the error path returns no truthy
+       value, the loop-end reload does not fire either.
+Fix D  DPP_DIAG_BATCH_FLUSH_ALL_331022 now returns a promise and is awaited
+       before the reload, so failing turns remain diagnosable.
+
+Deliberately NOT changed: the loop-end reload itself is retained, per release
+decision, because it predates .30 and is not the trigger of this fault.
+
+### Why the obvious fix was rejected
+Making DPP_TOOL_INTENT_331021 always fall back to the reasoning channel was
+tried first and reverted: fix331025 and fix331027 both pin the opposite rule,
+"a visible concrete final takes precedence over stale reasoning". The shipped
+fix therefore acts only at the promotion site, where no proper terminal
+decision was reached, so both rules hold at once.
+
+### Verification
+- fix331032-reasoning-intent-selftest.js: 12/12
+- full regression: 51/51 (.31 baseline 50/50)
+- the real failing trace flips safeFinalPromoted true -> false, while the
+  unrelated transport-failure trace d1e59b46 is untouched
+- tampered input and re-patching both fail closed with no output written
+- independent rebuild from the frozen .31: 203/203 files, byte-identical

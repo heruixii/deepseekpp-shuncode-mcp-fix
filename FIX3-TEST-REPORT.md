@@ -431,3 +431,25 @@ Patcher: `tools/apply-fix331031.py`, hash-locked to the five `.30` core files.
 Clean input upgrades exactly; tampered input and already-patched input both
 fail closed without writing an output tree. Independent rebuild from the frozen
 `.30` reproduced the release tree byte for byte (201 files, 0 differences).
+
+
+## Fix 3.3.10.32 test record
+
+| item | result |
+|---|---|
+| version / version_name | 1.14.0.37 / 1.14.0 ShunCode MCP Fix 3.3.10.32 |
+| dedicated suite fix331032 | 12/12 |
+| full regression | 51/51 (.31 baseline 50/50) |
+| node --check on 4 core scripts | pass |
+| real trace 098021bb promoted | .31 true -> .32 false (fixed) |
+| real trace d1e59b46 promoted | true -> true (unchanged, as intended) |
+| .25/.27 precedence rule | still enforced (asserted in the new suite) |
+| tampered source | FAIL-CLOSED, no output |
+| re-patching a patched tree | FAIL-CLOSED, no output |
+| independent rebuild vs release tree | 203/203, missing=0 extra=0 diff=0 |
+| rollback point | D:\tmp\DeepSeekPP-Fix331031-pre331032-20260916 (202 files) |
+
+Regression note: an earlier attempt that made the tool-intent combiner always
+consult the reasoning channel broke fix331025 and fix331027 (both assert that a
+visible concrete final overrides stale reasoning). It was reverted in favour of
+a guard at the promotion site only.
