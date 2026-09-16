@@ -4,7 +4,7 @@ let pass=0,total=0;function t(n,c,d=''){total++;if(c){pass++;console.log('PASS',
 function between(s,a,b){const i=s.indexOf(a),j=s.indexOf(b,i);if(i<0||j<0)throw Error(`missing ${a} -> ${b}`);return s.slice(i,j)}
 function clone(x){return x===undefined?undefined:JSON.parse(JSON.stringify(x))}
 (async()=>{
-t('version',['1.14.0.34','1.14.0.35','1.14.0.36','1.14.0.37'].includes(mf.version));t('version name',['1.14.0 ShunCode MCP Fix 3.3.10.29','1.14.0 ShunCode MCP Fix 3.3.10.30','1.14.0 ShunCode MCP Fix 3.3.10.31','1.14.0 ShunCode MCP Fix 3.3.10.32'].includes(mf.version_name));
+t('version',['1.14.0.34','1.14.0.35','1.14.0.36','1.14.0.37','1.14.0.38'].includes(mf.version));t('version name',['1.14.0 ShunCode MCP Fix 3.3.10.29','1.14.0 ShunCode MCP Fix 3.3.10.30','1.14.0 ShunCode MCP Fix 3.3.10.31','1.14.0 ShunCode MCP Fix 3.3.10.32','1.14.0 ShunCode MCP Fix 3.3.10.33'].includes(mf.version_name));
 t('v2 meta marker',bg.includes('deepseek_pp_usage_turns_v2_meta'));
 t('v2 day prefix marker',bg.includes('deepseek_pp_usage_turns_v2_day_'));
 t('hot batch writes v2 helper',bg.includes('return await DPP_USAGE_V2_WRITE_BATCH_331029(t),t'));
