@@ -5,7 +5,7 @@ const bg=fs.readFileSync(path.join(root,'background.js'),'utf8');
 let pass=0; function ok(v,m){if(!v){console.error('FAIL',m);process.exit(1)}pass++;console.log('PASS',m)}
 function between(s,a,b){const i=s.indexOf(a);if(i<0)throw Error('missing '+a);const j=s.indexOf(b,i);if(j<0)throw Error('missing '+b);return s.slice(i,j)}
 const manual=between(content,'var DPP_MANUAL_TOOL_LIMIT_334=8','async function _Z(');
-const ctx={Map,Set,String,Date,Number};ctx.DPP_TOOL_NAME_33=e=>String(e??'').toLowerCase().split(/[.:/]/).pop().replace(/^mcp_+[^_]+_/,'');vm.createContext(ctx);vm.runInContext(manual+';globalThis.g=DPP_MANUAL_GATE_334;globalThis.s=DPP_MANUAL_STARTED_334;globalThis.c=DPP_MANUAL_CHUNK_334;globalThis.f=DPP_MANUAL_FINISH_334;globalThis.state=DPP_MANUAL_TOOL_STATE_334;',ctx);
+const ctx={Map,Set,String,Date,Number,Promise,Object,Array,console,window:{addEventListener(){}},setTimeout(){return 1},clearTimeout(){}};ctx.DPP_TOOL_NAME_33=e=>String(e??'').toLowerCase().split(/[.:/]/).pop().replace(/^mcp_+[^_]+_/,'');vm.createContext(ctx);vm.runInContext(manual+';globalThis.g=DPP_MANUAL_GATE_334;globalThis.s=DPP_MANUAL_STARTED_334;globalThis.c=DPP_MANUAL_CHUNK_334;globalThis.f=DPP_MANUAL_FINISH_334;globalThis.state=DPP_MANUAL_TOOL_STATE_334;',ctx);
 function call(id,name='run_command',req='r1',trigger='manual_chat'){return{id,name,invocationName:name,payload:{command:'echo '+id,background:false},source:{trigger,requestId:req}}}
 let allowed=0,blocked=0,first=0;
 for(let i=0;i<228;i++){const r=ctx.g(call('c'+i)); if(r.allow)allowed++; else{blocked++; if(r.first)first++;}}
@@ -41,7 +41,7 @@ ok(bctx2.l({trigger:'agent_run'})===128,'agent_run keeps 128-call capacity');
 // Wiring/static invariants.
 ok(content.includes('case`TOOL_CALL`:{let t=S1(e.data),n=DPP_MANUAL_GATE_334(t);if(!n.allow){DPP_MANUAL_DROP_334(t,n);break}'),'gate runs before x1 execution');
 ok(content.includes('a?.blocked||J$(t,i)'),'stormed response cannot auto-start inline agent');
-ok(content.includes('case`REQUEST_TERMINAL`:{let t=e.payload?.requestId;if(typeof t!=`string`)break;DPP_MANUAL_FINISH_334(t)'),'terminal path clears breaker');
+ok(content.includes('case`REQUEST_TERMINAL`:{let t=e.payload?.requestId;if(typeof t!=`string`)break;')&&content.includes('DPP_MANUAL_FINISH_334(t),jJ.has(t)||MJ.has(t)'),'terminal path clears breaker');
 ok(bg.split('Object.keys(a.calls).length>=DPP_AUTH_CALL_LIMIT_334(a)').length-1===2,'both authorization reservation paths use trigger-aware safety net');
 ok(content.includes('dpp_tool_storm_blocked')&&content.includes('dpp_tool_parameter_unsafe'),'new errors classified explicitly');
 // Hard-limit recovery must not recommend re-authorization.

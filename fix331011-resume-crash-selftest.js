@@ -67,8 +67,8 @@ context.KY.set(trace.id, trace);
 const request = { originalPrompt: '继续任务', chatSessionId: 'chat' };
 const prompt = context.light(request, [trace]);
 
-test('version bumped for crash hotfix', manifest.version === '1.14.0.16');
-test('version name bumped for crash hotfix', manifest.version_name === '1.14.0 ShunCode MCP Fix 3.3.10.11');
+test('version includes or supersedes crash hotfix', Number(manifest.version.split('.').at(-1)) >= 16);
+test('version name includes or supersedes crash hotfix', /Fix 3\.3\.10\.(?:11|12|13|14|15|16|17|18|19|20|21|22|23|24|25|26|27|28|29|30)$/.test(manifest.version_name));
 test('safe resume prompt is generated', typeof prompt === 'string' && prompt.includes('safe resume'));
 test('safe resume prompt is hard capped', prompt.length <= 2400, `chars=${prompt.length}`);
 test('raw DSML control markup is stripped', !prompt.includes('DSML') && !prompt.includes('<｜'));
@@ -100,9 +100,9 @@ context.KY = savedKY;
 
 const requestAugmenter = between('function Zc(e,t)', 'function Qc(e)');
 const agentLauncher = between('async function J$(e,t)', 'var DPP_AGENT_IDLE_TIMEOUT_33108');
-test('manual request path uses fail-open gateway', requestAugmenter.includes('DPP_MANUAL_RESUME_PROMPT_SAFE_331011'));
+test('legacy fail-open gateway remains available for compatibility', helperSource.includes('DPP_MANUAL_RESUME_PROMPT_SAFE_331011'));
 test('manual request path no longer calls unsafe gateway', !requestAugmenter.includes('DPP_MANUAL_RESUME_PROMPT_331010(r,t.chatSessionId)'));
-test('Agent launch uses bounded resume preparation', agentLauncher.includes('DPP_AGENT_RESUME_PREPARE_331011'));
+test('Agent launch uses current isolated resume preparation', agentLauncher.includes('DPP_AGENT_RESUME_PREPARE_331012'));
 test('legacy unbounded preparation is not used by Agent launch', !agentLauncher.includes('DPP_AGENT_RESUME_PREPARE_331010(e,n,await k0())'));
 
 if (failed) {

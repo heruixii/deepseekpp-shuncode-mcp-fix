@@ -8,7 +8,7 @@ function between(s,a,b){const i=s.indexOf(a); if(i<0)throw Error('missing '+a); 
 
 ok(content.includes('function DPP_AGENT_CHECKPOINT_333(e){return(e+1)%4===0}'),'checkpoint helper present');
 ok(content.includes('DPP_TRIM_AGENT_TRACES_333(i)'),'trace byte trim wired');
-ok(content.includes('t=262144'),'trace 256KB cap present');
+ok(content.includes('t=65536'),'trace byte cap present and further tightened');
 ok(content.includes('status:`streaming`,text:``,toolExecutions:[],responseMessageId:null,collapsed:!1}),{persist:!1}'),'step start is memory-only');
 ok(content.includes('status:`executing_tools`}),{persist:!1})'),'tool detected is memory-only');
 ok(content.includes('{reasoning:r}),{persist:!1})'),'reasoning chunks are memory-only');
@@ -23,7 +23,7 @@ ok(content.includes('%APPDATA%\\obsidian\\obsidian.json'),'Obsidian config-first
 ok(content.includes('DPP_STREAM_TERMINAL_331'),'3.3.1 stream-close logic preserved');
 ok(content.includes('DPP_SAFE_DOM_332'),'3.3.2 Safe DOM preserved');
 ok(bg.includes('function DPP_HISTORY_DUP_333'),'background history dedupe present');
-ok(bg.includes('Math.min(Math.floor(e*O_),262144)'),'background tool history capped at 256KB');
+ok(bg.includes('Math.min(Math.floor(e*O_),65536)'),'background tool history capped at 64KB');
 
 // Evaluate the exact production content result-compaction helpers.
 const compactSrc=between(content,'var jH=4e3','var UH=');

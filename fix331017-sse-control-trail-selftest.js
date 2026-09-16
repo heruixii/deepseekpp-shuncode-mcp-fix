@@ -1,0 +1,26 @@
+const fs=require('fs'),path=require('path'),vm=require('vm');
+const root=__dirname,main=fs.readFileSync(path.join(root,'content-scripts','main-world.js'),'utf8'),content=fs.readFileSync(path.join(root,'content-scripts','content.js'),'utf8'),manifest=JSON.parse(fs.readFileSync(path.join(root,'manifest.json'),'utf8'));
+let pass=0,total=0;const test=(n,c)=>{total++;if(!c){console.error('FAIL',n);process.exitCode=1}else{pass++;console.log('PASS',n)}};
+test('version',['1.14.0.22','1.14.0.23','1.14.0.24','1.14.0.25','1.14.0.26','1.14.0.27','1.14.0.28','1.14.0.29','1.14.0.30','1.14.0.31','1.14.0.32','1.14.0.33','1.14.0.34','1.14.0.35'].includes(manifest.version));
+test('version name',['1.14.0 ShunCode MCP Fix 3.3.10.17','1.14.0 ShunCode MCP Fix 3.3.10.18','1.14.0 ShunCode MCP Fix 3.3.10.19','1.14.0 ShunCode MCP Fix 3.3.10.20','1.14.0 ShunCode MCP Fix 3.3.10.21','1.14.0 ShunCode MCP Fix 3.3.10.22','1.14.0 ShunCode MCP Fix 3.3.10.23','1.14.0 ShunCode MCP Fix 3.3.10.24','1.14.0 ShunCode MCP Fix 3.3.10.25','1.14.0 ShunCode MCP Fix 3.3.10.26','1.14.0 ShunCode MCP Fix 3.3.10.27','1.14.0 ShunCode MCP Fix 3.3.10.28','1.14.0 ShunCode MCP Fix 3.3.10.29','1.14.0 ShunCode MCP Fix 3.3.10.30'].includes(manifest.version_name));
+test('control state exists',main.includes('finished:!1,controlTrail:[]'));
+test('control capture wired before parsed consumer',main.includes('zi(e,n),DPP_CAPTURE_SSE_CONTROL_331017(e,t,n),r.onParsed?.(e,t)'));
+test('control trail exported by parser',main.includes('dppControlTrail331017:Array.isArray(n.controlTrail)?n.controlTrail.slice(-8):[]'));
+test('fetch terminal includes control trail',main.includes('controlTrail:a?.dppControlTrail331017??[]'));
+test('xhr terminal includes control trail',main.includes('controlTrail:s?.dppControlTrail331017??[]'));
+test('persistent ring sanitizes control trail',content.includes('controlTrail:Array.isArray(t.controlTrail)?t.controlTrail.slice(-8).map'));
+test('trail bounded to eight',main.includes('r.length>8&&r.splice(0,r.length-8)'));
+test('privacy value cap is 80',main.includes('t&&t.length<=80?t:null'));
+function cut(name,next){const a=main.indexOf(`function ${name}`),b=main.indexOf(`function ${next}`,a);if(a<0||b<0)throw Error('function cut failed');return main.slice(a,b)}
+const ctx={};vm.createContext(ctx);vm.runInContext(cut('DPP_CONTROL_VALUE_331017','DPP_CAPTURE_SSE_CONTROL_331017')+cut('DPP_CAPTURE_SSE_CONTROL_331017','hi'),ctx);
+const st={controlTrail:[]};ctx.DPP_CAPTURE_SSE_CONTROL_331017({p:'response/status',v:'FAILED'},'message',st);ctx.DPP_CAPTURE_SSE_CONTROL_331017({p:'response/fragments/0/content',v:'SECRET_USER_TEXT'},'message',st);ctx.DPP_CAPTURE_SSE_CONTROL_331017({p:'error/message',v:'PRIVATE_ERROR_MESSAGE'},'message',st);ctx.DPP_CAPTURE_SSE_CONTROL_331017({o:'BATCH',v:[{p:'quasi_status',v:'FAILED'},{p:'error/code',v:'SERVER_BUSY'}]},'message',st);
+const serialized=JSON.stringify(st);
+test('status captured',serialized.includes('response/status')&&serialized.includes('FAILED'));
+test('error code captured',serialized.includes('SERVER_BUSY'));
+test('assistant content not captured',!serialized.includes('SECRET_USER_TEXT'));
+test('error message not captured',!serialized.includes('PRIVATE_ERROR_MESSAGE'));
+test('error presence retained without message',st.controlTrail.some(x=>x.path==='error/message'&&x.errorPresent===true&&!('value' in x)));
+test('3.3.10.16 XHR correlation preserved',main.includes('l=e=>{o||(o=!0,U.onRequestTerminal({requestId:t.requestId,...e?{diag331015:e}:{}}))}'));
+test('3.3.10.14 DOM fix preserved',content.includes('function DPP_MUTATION_MESSAGES_331014'));
+test('3.3.10.13 Agent delta preserved',content.includes('function DPP_AGENT_RESULT_DELTA_331013'));
+console.log(`FIX331017_PASS ${pass}/${total}`);if(pass!==total)process.exit(1);

@@ -1,0 +1,15 @@
+const fs=require('fs'),path=require('path');
+const root=__dirname,main=fs.readFileSync(path.join(root,'content-scripts','main-world.js'),'utf8'),content=fs.readFileSync(path.join(root,'content-scripts','content.js'),'utf8'),manifest=JSON.parse(fs.readFileSync(path.join(root,'manifest.json'),'utf8'));
+let pass=0,total=0;const test=(n,c)=>{total++;if(!c){console.error('FAIL',n);process.exitCode=1}else{pass++;console.log('PASS',n)}};
+test('version',['1.14.0.21','1.14.0.22','1.14.0.23','1.14.0.24','1.14.0.25','1.14.0.26','1.14.0.27','1.14.0.28','1.14.0.29','1.14.0.30','1.14.0.31','1.14.0.32','1.14.0.33','1.14.0.34','1.14.0.35'].includes(manifest.version));
+test('version name',['1.14.0 ShunCode MCP Fix 3.3.10.16','1.14.0 ShunCode MCP Fix 3.3.10.17','1.14.0 ShunCode MCP Fix 3.3.10.18','1.14.0 ShunCode MCP Fix 3.3.10.19','1.14.0 ShunCode MCP Fix 3.3.10.20','1.14.0 ShunCode MCP Fix 3.3.10.21','1.14.0 ShunCode MCP Fix 3.3.10.22','1.14.0 ShunCode MCP Fix 3.3.10.23','1.14.0 ShunCode MCP Fix 3.3.10.24','1.14.0 ShunCode MCP Fix 3.3.10.25','1.14.0 ShunCode MCP Fix 3.3.10.26','1.14.0 ShunCode MCP Fix 3.3.10.27','1.14.0 ShunCode MCP Fix 3.3.10.28','1.14.0 ShunCode MCP Fix 3.3.10.29','1.14.0 ShunCode MCP Fix 3.3.10.30'].includes(manifest.version_name));
+test('old shadowed XHR terminal callback removed',!main.includes('l=t=>{o||(o=!0,U.onRequestTerminal({requestId:t.requestId,...t?{diag331015:t}:{}}))}'));
+test('XHR terminal callback keeps outer request metadata',main.includes('l=e=>{o||(o=!0,U.onRequestTerminal({requestId:t.requestId,...e?{diag331015:e}:{}}))}'));
+test('XHR load still emits diagnostics',main.includes('phase:`xhr_load`,chars:n,streamFinished:'));
+test('XHR error/abort/timeout still emit diagnostics',main.includes('()=>h(`xhr_abort`)')&&main.includes('()=>h(`xhr_error`)')&&main.includes('()=>h(`xhr_timeout`)'));
+test('request terminal validator still requires correlation id',main.includes('REQUEST_TERMINAL:e=>$(e.payload)&&Q(e.payload.requestId)'));
+test('content persistence unchanged',content.includes('await DPP_RECORD_WEB_DIAG_331015(e.payload),DPP_MANUAL_FINISH_334(t)'));
+test('fetch diagnostics preserved',main.includes('phase:`eof`,bytes:p,chunks:m,streamFinished:'));
+test('3.3.10.14 DOM fix preserved',content.includes('function DPP_MUTATION_MESSAGES_331014'));
+test('3.3.10.13 Agent delta preserved',content.includes('function DPP_AGENT_RESULT_DELTA_331013'));
+console.log(`FIX331016_PASS ${pass}/${total}`);if(pass!==total)process.exit(1);

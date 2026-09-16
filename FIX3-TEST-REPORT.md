@@ -1,4 +1,48 @@
-> Current release: **Fix 3.3.10.11** — prevents “continue task” from destabilizing the DeepSeek page by using a fail-open, DSML-sanitized resume gateway, a 2,400-character checkpoint ceiling, and deduplicated Agent history capped at 12 calls / 24 KiB.
+> Current release: **Fix 3.3.10.29** — live Fix 3.3.10.28 evidence showed the first task starting correctly, but the second task's page crashed around completion/persistence. The Agent loop itself finished cleanly (5 steps / 5 real tool actions, HTTP 200, no generation_err or Agent exception), while the extension wrote about 975 KB of Local Storage state in the short repro: ~536 KB usage history, ~252 KB Agent traces, ~131 KB tool history, ~55 KB turn diagnostics. The 15-second delayed usage flush aligned almost exactly with the large write. `.29` removes the 536 KB legacy usage array from the hot write path by writing new usage records into per-day v2 shards plus a small meta record; legacy v1 stays read-only for compatibility and is merged only on stats/history reads. Agent trace and tool-history disk budgets are also tightened from ~128 KB to ~64 KB. This reduces extension-side persistence pressure, but does **not** claim that the ambiguous Windows LiveKernelEvent 141 (which still referenced an old Aug-21 WATCHDOG dump) proves or is fixed as a GPU crash.
+
+> Current release: **Fix 3.3.10.28** — no new `.27` Agent reproduction was present yet (DeepSeek IndexedDB advanced via page/cache activity while extension storage stayed at 12:59), so this release is a proactive hardening based on the already captured live failure chain. The old logs repeatedly showed `run_command` returning `status=completed`, `exit_code=0`, `total_output_bytes=0`, after which the model replayed a consumed single-use capability. `.28` makes capability readiness consumption-aware (any later `mcp_invoke` invalidates earlier discover/describe readiness until a fresh discover/describe occurs) and annotates successful empty-PTY command results as completed/consumed with a strict no-replay + fresh read-only verification instruction. It does not auto-retry neutral or mutating commands.
+
+> Current release: **Fix 3.3.10.27** — live `.26` logs proved the remaining user-visible failure was not the previous generation_err loop: one Agent loop still hit `tool_intent_limit` after a successful capability discovery, and a later 12-step/11-tool loop was falsely marked complete on the exact text `页面内容已成功加载。继续读取剩余内容。` while its reasoning explicitly said only the first 25 of 421 lines had been read. Fix 3.3.10.27 adds a narrow direct-continuation classifier, lets manual escalation consult reasoning only when visible text is itself a continuation/mid-step (concrete final text still suppresses stale reasoning), and makes tool-intent steering capability-aware when recent successful mcp_discover/mcp_describe results already provide a real handle/schema. It still never synthesizes a handle, arguments, or tool call from reasoning.
+
+> Current release: **Fix 3.3.10.26** — live logs showed five consecutive DeepSeek HTTP 200 SSE responses ending `INCOMPLETE + finish_reason=generation_err`. The previous recovery alternated full augmentation (~16.7 KB) and compact augmentation (~10.9 KB); after compact failure its “bypass” actually returned to full augmentation, creating a full/compact failure loop. Fix 3.3.10.26 adds a third, fail-safe `passthrough` stage: normal generation_err -> one compact retry -> raw original request with no DeepSeek++ prompt injection. If raw also fails, passthrough stays armed for the matching parent for 60 seconds instead of returning to full/compact. A separate 120-second generation-error streak map fixes the old failure counter resetting to 1 whenever one-shot recovery state was consumed. FINISHED clears both maps. No automatic network replay, tool synthesis, capability guessing, or authorization bypass is introduced.
+
+> Current release: **Fix 3.3.10.25** — fixes two live state-machine gaps proven by the 2026-09-15 reproduction. First, completed manual DeepSeek turns could announce a real tool action only inside reasoning (`Let me invoke run_command`, `I need a fresh capability`) while visible text stayed empty; Fix 3.3.10.22 inspected visible text only, so Agent mode often did not start until the user's third attempt. This release carries only a bounded 4096-character reasoning tail across the ephemeral MAIN/content bridge and uses it solely as a boolean tool-intent classifier. Raw reasoning is not added to the Agent prompt, trace, or diagnostic storage. Second, generic no-tool continuation still used a one-shot boolean gate: after one nudge, another incomplete reasoning-only turn could require continuation while steering returned `none`, ending as `EMPTY_FINAL`. Fix 3.3.10.25 replaces that gate with an independent bounded counter (maximum 3 per step), resets it on a real tool call, and emits an explicit `generic_continuation_limit_331025` if exhausted. Tool-intent and generic budgets remain separate; FINISHED/manual/no-tool/no-resume safety gates remain authoritative, and no tool arguments or capabilities are inferred from reasoning.
+
+> Current release: **Fix 3.3.10.24** — fixes a live parser/finalization failure where DeepSeek emitted `<tool_invoke>{"capability":...,"arguments":...}</tool_invoke>` after a successful `mcp_discover`. Fix 3.3.10.23 had already repaired the prior `h is not a function` Agent crash, and the same live session proved the Agent could execute 10+ real `run_command` steps. The fourth task then stopped because `<tool_invoke>` was not a registered tool tag: the parser treated it as ordinary text and the completion gate promoted the raw control markup to `finalText`. This release adds a strict compatibility bridge: only an exact `<tool_invoke>` JSON object with exactly `capability` + plain-object `arguments`, a valid `mcp_cap_...` handle, and an available `mcp_invoke` descriptor is normalized to **mcp_invoke**. It never dispatches `run_command` directly; the existing owner/session/TTL/single-use/schema checks remain authoritative. Malformed or ambiguous wrappers are not executed, `<tool_call>` is never auto-normalized, both generic wrappers are suppressed from visible stream text, and residual control markup is forbidden from final-answer promotion. It also fixes the live false-final sentence `我试试分享链接背后的数据接口。` / `Let me try ...` by expanding the mid-step gate. Because `mcp_discover` candidate summaries do not expose argument schemas, the Agent guidance now requires `mcp_describe` before `mcp_invoke` when arguments are not already verified instead of guessing optional fields (the earlier live `run_command.execution` INVALID_ARGUMENT is therefore addressed without unsafe parameter deletion).
+
+> Validation: dedicated Fix 3.3.10.24 suite **43/43 PASS**; all **45 self-test suites PASS**; health checks **94 JavaScript files** plus all patchers. Manifest: `1.14.0.29 / 1.14.0 ShunCode MCP Fix 3.3.10.24`.
+
+> Previous release: **Fix 3.3.10.23** — fixed deterministic Agent lexical-shadow crash (`h is not a function`) and reduced large-object storage pressure.
+
+> Historical release: **Fix 3.3.10.23** — fixes a deterministic Agent crash proven by the latest live session. In `Jz.shouldStopAfterTurn`, the outer parent-message accessor `h=()=>...parentMessageId` was shadowed by an inner `let h=DPP_STAT_CLAIM_MISMATCH_33109(...)` added in 3.3.10.21. Once a discovered capability returned and the completion path reached turn-decision diagnostics, `responseMessageId:h()` called the shadowing value instead of the accessor and threw `h is not a function`. The local statistic binding is now uniquely named (`DPPStatMismatch331023`), health explicitly rejects the old shadow declaration, and Agent exceptions now persist bounded error/stack metadata for future diagnosis. The same live log also showed 4.65 MB of extension LevelDB writes dominated by whole-array usage/trace/execution/history rewrites, so this release halves trace/execution/tool-history byte budgets and delays usage flushes to 15 seconds while preserving the existing 180-day/5000-record usage retention contract.
+
+> Validation: dedicated Fix 3.3.10.23 suite **31/31 PASS**; all **44 self-test suites PASS**; health checks **93 JavaScript files** and all patchers. Manifest: `1.14.0.28 / 1.14.0 ShunCode MCP Fix 3.3.10.23`.
+
+> Previous release: **Fix 3.3.10.22** — manual tool-intent escalation, compact recovery circuit breaker, and diagnostic/usage batching.
+
+> Historical release: **Fix 3.3.10.22** — addresses three failure layers proven by the 2026-09-15 live session `adb18f7b-418d-403b-8034-ad271f6a6c6f`: a finished manual completion can explicitly narrate `mcp_discover` / `run_command` / curl without emitting any executable tool call; compact `generation_err` recovery can itself fail and should not immediately recurse into compact mode; and extension diagnostics/usage telemetry were repeatedly rewriting large whole arrays during rapid retries. A FINISHED zero-tool manual response with explicit tool intent can now escalate into the existing authorized Agent path without synthesizing arguments or calls. A compact `generation_err` enters a single-use normal-mode cooldown for the exact next parent. Diagnostic rings are buffered/coalesced, and usage turns are burst-buffered with an in-memory cache while preserving the existing 180-day / 5000-record retention contract. No native Edge crash was proven by the incident, so this release treats page/renderer instability as a stability target rather than claiming to fix an `msedge.exe` process crash.
+
+> Validation: dedicated Fix 3.3.10.22 behavior suite **42/42 PASS**; all **44 self-test suites PASS**; health checks **92 JavaScript files** plus every patcher. Manifest: `1.14.0.27 / 1.14.0 ShunCode MCP Fix 3.3.10.22`.
+
+> Previous release: **Fix 3.3.10.21** — bounded Agent tool-intent steering and strict terminal promotion.
+
+> Historical release: **Fix 3.3.10.21** — fixes the Agent no-tool dead end exposed after 3.3.10.20 successfully recovered `generation_err`. Real traces showed DeepSeek could repeatedly narrate an intended `run_command`/`mcp_invoke` action without emitting an executable tool call; the old generic nudge gate effectively allowed only one correction in the same no-tool step. 3.3.10.21 adds a separate, bounded tool-intent steering path (maximum 3 attempts per step), never guesses arguments or capability handles, resets immediately after a real tool execution, and fails closed when the conversation chain is not continuable. A strict terminal promotion can recover concrete final text but rejects narrated next-step/tool plans. New privacy-safe Agent-turn diagnostics persist only IDs, counters, lengths, booleans and terminal metadata — not prompt, reasoning, answer text or tool argument values.
+
+> Validation: dedicated Fix 3.3.10.21 behavior suite **43/43 PASS**; all **43 self-test suites PASS**; health currently checks **91 JavaScript files** plus every patcher. Manifest: `1.14.0.26 / 1.14.0 ShunCode MCP Fix 3.3.10.21`.
+
+> Previous release: **Fix 3.3.10.20** — parent-chain compact recovery for explicit DeepSeek `finish_reason=generation_err`.
+
+> Historical release: **Fix 3.3.10.20** — adds a narrowly-scoped recovery path for DeepSeek HTTP 200/SSE responses that explicitly end with `finish_reason=generation_err`. The plugin does not replay the failed request itself. It arms a 12-second, single-use recovery only for the next request in the same chat whose `parent_message_id` exactly matches the failed assistant message, and uses a compact model-facing augmentation while preserving the full authorization descriptors for execution. The compact retry disables memory/project/preset/automatic-skill context for that one retry, keeps the system prompt, and strips verbose tool-schema prose. Parent/recovery metadata is recorded without prompt content so the next reproduction can prove whether the fallback was used.
+
+> Previous release: **Fix 3.3.10.19** — capability alias recovery, durable zero-tool resume, and compact Agent UI.
+
+> Current release: **Fix 3.3.10.19** — fixes capability protocol drift after `mcp_discover` without weakening MCP authorization: a unique, unexpired discovered candidate may be parsed through a temporary Agent-only alias, but execution still delegates to the original single-use `mcp_invoke` lease. It also makes explicit `继续/resume` able to start from an interrupted checkpoint even when the manual DeepSeek reply produced zero fresh tool calls, persists the first/mutation step more aggressively, and replaces the default Agent transcript with a compact Codex-style status surface that hides reasoning/control noise and exposes tool detail only on demand.
+
+> Previous release: **Fix 3.3.10.18** — closes the pre-transport observability gap around manual sends such as “继续”: privacy-safe breadcrumbs record request stages from the send hook through augmentation and transport.
+
+> Current release: **Fix 3.3.10.12** — isolates interrupted-task recovery from the DeepSeek page request/render path: the user prompt and trace stay unchanged, only the internal Agent receives a DSML-sanitized checkpoint, and historical tool objects are never replayed.
+
+> Previous release: **Fix 3.3.10.11** — introduced a bounded resume checkpoint, but still rewrote the manual DeepSeek request and replayed historical tool objects; real-page testing showed that path could still destabilize the page.
 
 > Previous release: **Fix 3.3.10.10** — restores interrupted Agent checkpoints instead of restarting completed work, fixes false-positive `run_command` success and blank-final “complete” states, classifies ambiguous 120-second MCP disconnects safely, and adds an honest live status strip.
 
@@ -27,7 +71,7 @@
 ## Build identity
 
 - Base: DeepSeek++ 1.14.0 + ShunCode MCP Fix 2
-- Target: `1.14.0 ShunCode MCP Fix 3.3.10.11`
+- Target: `1.14.0 ShunCode MCP Fix 3.3.10.12`
 - Strategy module: `fix3-policy.js`
 - Patch mode: exact-marker, fail-closed
 
@@ -260,3 +304,97 @@ An isolated Edge profile successfully registered the unpacked extension and expo
 - Dedicated crash regression: **18/18 PASS**, including oversized histories, repeated executions, raw DSML, corrupt runtime state, and circular tool results.
 - All **32** self-test suites pass; **81 JavaScript files** pass syntax validation. The clean 3.3.10.10 upgrade build and 3.3.10.11 self-rebuild reproduce all **162 files** byte-for-byte.
 - Fix 3.3.10.11 core SHA-256: `content.js` `5A91E6EECAD2BF6A7C3266EA43E89BEC22392F7DDCAE691C6185F04B7437FAA2`; `manifest.json` `8BE4F258F1BAD887A691044C2329DD980E4907E5B89CAD4D9633110E5956BFF7`.
+
+## Fix 3.3.10.12 isolated resume context
+
+- Follow-up Edge evidence showed two distinct outcomes: one 3.3.10.11 trace stored the generated safe-resume prompt as its user request and ended incomplete; another raw `继续执行` trace ran ten Agent steps and completed in the background while the visible page still became unusable. No native Edge crash record was created.
+- Manual DeepSeek requests are no longer rewritten. The page, conversation history, and durable trace retain the exact user prompt such as `继续任务`.
+- The compact, DSML-sanitized checkpoint is now used only as the internal Agent task prompt after the normal DeepSeek turn has produced the initial tool execution.
+- Historical tool execution objects are not replayed into the new Agent loop. Only current-turn executions are passed, eliminating a second object/history path into page state.
+- The durable trace is created from the raw request rather than the synthetic checkpoint, preventing generated recovery instructions from becoming the next task identity.
+- Dedicated isolation regression: **16/16 PASS**. All **33** self-test suites pass; **82 JavaScript files** pass syntax validation.
+- Fix 3.3.10.12 core SHA-256: `content.js` `3AFE6900CD11DCDF66471DB0F8D7F63DEA0D4A58942F5C725F69A22A4A6B9BD8`; `manifest.json` `B2F3F42E8082C59755369875A80D6E2B4DEBD2ACC826F6DDBD3C57AE9067C598`.
+## Fix 3.3.10.13 Agent context-pressure fix
+
+- Live Edge extension storage had `memoryEnabled=false` while `systemPromptEnabled=true`, so the later page failures cannot be attributed to normal memory injection alone.
+- Current ShunCode tool descriptors occupy about 37 KB in cached form; the existing manual system/tool rendering contributes about 29.2 KB of tool instructions/schema to a fully augmented manual request. This remains a secondary context cost, not the per-Agent-step root cause.
+- The decisive long-Agent path is `Jz -> Nz/Pz`: every web continuation previously serialized the full cumulative execution ledger `g` into `<tool_results>` / `<tool_results_so_far>`, while DeepSeek's parent-message chain already retained previous continuation prompts.
+- Server-sourced usage evidence from a real 13-step Agent rose from 15,791 to 100,497 tokens; another 9-step Agent rose from 131,749 to 177,354 and the same conversation later reached 196,407 tokens. The stable late-step growth was roughly 5K-7K tokens per step.
+- Fix 3.3.10.13 adds a web-Agent result cursor. The first continuation receives the current-turn settled results; each later continuation receives only results settled since the previous web request; a nudge with no new tool result sends an empty result delta.
+- The authoritative execution ledger remains cumulative in memory. `DPP_COMPLETION_GATE_31(g)`, verified-statistics checks, task-progress classification, duplicate-call protection, and tool execution history are unchanged.
+- Dedicated context-pressure regression: **19/19 PASS**. A 12-turn synthetic resend fixture reduces serialized repeated-result traffic by **84.6%**.
+- Fail-closed tamper probe: the 3.3.10.13 patcher exits non-zero on a modified input bundle and leaves the target hash unchanged.
+- No native `msedge.exe` Application Error or matching Edge Crashpad dump was found for the observed failures, consistent with a DeepSeek renderer/tab becoming unusable under page/context pressure rather than a whole-browser process crash.
+- Full health: **34/34 self-test suites PASS**; **83 JavaScript files** pass syntax validation; every shipped patcher through `apply-fix331013.py` compiles.
+- Independent 3.3.10.12 -> 3.3.10.13 rebuild: **166/166 files byte-identical by SHA-256**. Core hashes: `content.js` `FB3CDB5CE056B3CE8C824A2084788DD0C0F33F7A2705AC3AD80601F6C715C827`; `manifest.json` `22AA662AE139A9D13D8B03415B49AEB5354F5EEEF6634BAF42821645070F7BC2`.
+
+## Fix 3.3.10.14 renderer-pressure / targeted DOM scan
+
+- The latest real failure sequence split into two classes: the old conversation was still around 200,460 server-reported tokens when the user saw server-unavailable behavior, but a newly created conversation then recorded only 4,035 tokens before the page became unusable. This rules out server context size as the sole crash mechanism.
+- Live settings still show `memoryEnabled=false` and `systemPromptEnabled=true`; normal memory injection was not active during the later failure.
+- No matching Edge Crashpad dump or Windows Application Error/Hang event was created. At 16:33 no new Edge renderer process was started, so switching to a new conversation was an SPA navigation inside the existing long-lived renderer rather than a renderer reset.
+- The content script's shared root MutationObserver remains active on ordinary DeepSeek pages. The tool UI path previously coalesced relevant mutations with RAF but then called `C4()`, which scans recent `.ds-message` nodes (up to 24) and may TreeWalk/modify matching tool-control text. Streaming tool/DSML output can therefore turn one changed text node into repeated multi-message cleanup work.
+- Fix 3.3.10.14 keeps the initial full reconciliation scan, but streaming mutation handling now gathers only `.ds-message` nodes directly touched by each mutation batch, excludes plugin-owned subtrees, caps the candidate set at four, and runs `D4/j4` only on those candidates.
+- The prior 3.3.10.13 Agent result-delta fix and cumulative correctness ledger remain unchanged.
+- Dedicated renderer-pressure regression: **15/15 PASS**. Under a synthetic 120-batch comparison, the maximum message-candidate work falls from `24*120` to `4*120`, an **83.3%** bound reduction.
+- Full health after compatibility updates: **35/35 self-test suites PASS**; **84 JavaScript files** pass syntax validation; every shipped patcher through `apply-fix331014.py` compiles.
+- Fail-closed tamper probe: a modified 3.3.10.13 `content.js` is rejected on input SHA-256 mismatch; the target hash is unchanged after the failed patch attempt.
+- Independent 3.3.10.13 -> 3.3.10.14 rebuild: **168/168 files byte-identical by SHA-256**. Core hashes: `content.js` `F647EB21F644DF87898D2DF44152DBF43170C8C7A5F719497391E95E4E1FC5C5`; `manifest.json` `83D8F13274CE9C866C2D6D6A288B70C213D5A10A9BFF9ECBC2B4BE3E1A64D906`.
+
+## Fix 3.3.10.15 web transport diagnostics / error passthrough
+
+- The fresh real reproduction occurred before any MCP execution or inline Agent: session `9a5d60a7-...` produced server-sourced usage samples at 4,035, 8,078, 12,075 and 16,072 tokens, while the latest LevelDB log contained no new Agent trace, execution block, tool history, or parser-diagnostic write.
+- The historical `dpp_mcp_parse_diag_fix2` key does contain an older `tool_call_incomplete` / `run_command` event, but no new parse error was written for this failure. Direct-XML EOF therefore remains a historical failure class, not the confirmed cause of the current incident.
+- The remaining observability gap was in the ordinary completion transport wrapper: HTTP status, Content-Type, stream byte/chunk counts and parser FINISHED state were not persisted.
+- Fix 3.3.10.15 records a bounded local diagnostic ring for both fetch and XHR. It stores only request/session IDs, route, request-size counts, selected descriptor names/count, HTTP status/content type, transport phase, byte/chunk or char counts, FINISHED state and short error metadata. Prompt/response bodies and authorization headers are not recorded.
+- Non-2xx fetch responses and JSON fetch responses now pass through to the official DeepSeek page unchanged instead of entering the plugin SSE transformer. Successful SSE behavior is unchanged.
+- Dedicated transport regression: **22/22 PASS**, including identity-preserving HTTP 503 and HTTP 200 JSON passthrough.
+- Full health: **36/36 self-test suites PASS**; **85 JavaScript files** pass syntax validation; every shipped patcher through `apply-fix331015.py` compiles.
+- Fail-closed tamper probe: a modified 3.3.10.14 `main-world.js` is rejected on SHA-256 mismatch and remains byte-identical to its pre-patch tampered state after the failed attempt.
+- Independent 3.3.10.14 -> 3.3.10.15 rebuild: **170/170 files byte-identical by SHA-256**. Core hashes: `content.js` `7FECC173832CE58B39DCB118537CD2B42D70418418D51C0C5EC2B81EB9CB071E`; `main-world.js` `507E8A802E1367D08DDDDDB5CC94095CD9449D854AF0BF640C1C3202B97BC686`; `manifest.json` `9CE98F269394226CE8E72EDDCAF9EFE1B77C7B8BB9B9F997C942F38AFF569F33`.
+
+## Fix 3.3.10.16 XHR terminal correlation
+
+- Fresh post-reload evidence produced a new session (`00bc0b3a-874b-4cf9-8a4c-55e82c21c411`) and new server usage writes, but `dpp_web_response_diag_331015` remained absent. This ruled out the stale-tab explanation by itself.
+- Inspection found an XHR-only correlation bug in Fix 3.3.10.15: `ro(e,t)` defined its terminal callback as `l=t=>...requestId:t.requestId...`, so the callback argument shadowed outer request metadata. The diagnostic payload had no requestId, therefore bridge validation rejected `REQUEST_TERMINAL`.
+- Fix 3.3.10.16 renames the callback argument and deliberately reads `requestId` from the outer request metadata while attaching the diagnostic payload separately. Fetch logic and all MCP/Agent behavior are unchanged.
+- Dedicated XHR-correlation selftest: **11/11 PASS**.
+
+## Fix 3.3.10.17 SSE control-state trail
+
+- Live 3.3.10.16 evidence proved the failing DeepSeek requests return HTTP 200 `text/event-stream` through XHR, end in `xhr_load`, and have `streamFinished=false` despite partial visible output.
+- 3.3.10.17 records at most eight final SSE control entries: path, operation, event type, status/code-like scalar value, and an error-present boolean.
+- Assistant content, reasoning, prompt text, and error message strings are deliberately excluded. Values are accepted only for status/code/finish/quasi paths and capped at 80 characters.
+- Dedicated privacy/control-state selftest: **18/18 PASS**.
+
+## Fix 3.3.10.18 pre-transport and Agent tool-shape diagnostics
+
+- The reproduction session `ff5eb9fc-c03c-46ec-999d-aae5d095d4ad` proved three separate failure layers: two HTTP-200 SSE responses explicitly ended `INCOMPLETE` with `finish_reason=generation_err`; a later FINISHED turn entered Agent mode but `mcp_invoke` reached validation with `{}` and the following turn/nudge produced no new tool activity; finally the user's `继续` was persisted by DeepSeek's own IndexedDB with an `ASSISTANT/WIP` placeholder but produced no new DeepSeek++ transport/usage record.
+- Windows Application/WER and Edge Crashpad contained no corresponding native renderer crash record, so the last symptom is treated as a page/pre-request stall rather than a proven `msedge.exe` process crash.
+- `dpp_request_preflight_diag_331018` records bounded, privacy-safe stage breadcrumbs from `mw_send_hook_seen` through augmentation/content authorization/project work and `mw_transport_started`. It never stores prompt text, request bodies, or error messages.
+- `dpp_agent_tool_shape_diag_331018` records tool name, argument kind, argument keys, and schema-required keys at `tool_execution_start` before validation; it never stores argument values.
+- Dedicated selftest: **21/21 PASS**.
+
+## Fix 3.3.10.25 validation
+
+- Live-root-cause specialist regression: `43/43 PASS`.
+- Full regression: `46/46 self-test suites PASS`.
+- Dry health: `95` JavaScript files pass `node --check`; all patchers through `apply-fix331025.py` compile.
+- Health enforces the reasoning privacy boundary: the bounded reasoning tail is classifier-only and is absent from the Agent prompt, trace constructor, and persisted Agent diagnostics.
+- Clean `.24 -> .25` hash-locked patcher output is byte-identical for all six core files.
+- Tampered `.24` input fails closed and leaves the manifest at `.24`.
+- Independent preformal builder output from formal `.24` is `190/190` files byte-identical to the `.25` dry tree (`missing=0`, `extra=0`, `diff=0`).
+
+
+
+## Fix 3.3.10.30 validation
+
+- Root cause of recurrent "page crash" on refresh of one specific conversation, caught live via CDP (`D:/tmp/hang_capture.json`, `D:/tmp/probe_page.png`): DeepSeek frontend (`fe-static.deepseek.com`, fn `su`) throws `NotFoundError: Failed to execute 'insertBefore' on 'Node'` while reconciling `.ds-message` containers that DeepSeek++ restores tool blocks / agent traces into on hard refresh; the uncaught exception hits the app error boundary and renders its "页面崩溃/刷新重试" screen. SPA in-app navigation does not re-run the racy restore path, matching the user's observed "switch OK / refresh crashes".
+- Fix: MAIN-world DOM fence (`DPP_DOM_FENCE_331030`, installed at `document_start` before page scripts) wraps `Node#insertBefore/removeChild/replaceChild`; on `NotFoundError` (and only on NotFoundError) it recovers instead of throwing (append at intended parent / remove from actual parent / no-op for detached), and persists a throttled beacon to `localStorage` key `dpp_dom_fence_diag_331030`.
+- `.30` live-root-cause specialist regression: `fix331030-dom-fence-selftest.js` PASS.
+- Full regression: all prior self-test suites re-run PASS (see health log).
+- `node --check` PASS for `content-scripts/main-world.js` and the new selftest.
+- Clean `.29 -> .30` hash-locked patcher output PASS; tampered `.29` input fails closed.
+- Independent rebuild from frozen `.29` matches the `.30` tree with `missing=0 / extra=0 / diff=0`.
+- Release-chain maintenance in step with the bump: `_locales/{en,zh_CN}` extension display name -> `Fix 3.3.10.30` (the name shown by chrome://extensions), and legacy selftest version allow-lists extended (18 list files + 2 supersedes-regex suites) — eliminates the 22 stale version-gate regressions observed right after the manifest bump.
+- GPU LiveKernelEvent 141 note: repeated 141s on 2026-09-16 correlate only with the morning window; the afternoon crash wave shows no new 141, so 141 is tracked as a separate machine-level watch item, not this bug.

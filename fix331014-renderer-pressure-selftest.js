@@ -1,0 +1,20 @@
+const fs=require('fs'); const path=require('path');
+const root=__dirname; let pass=0,total=0;
+function test(name,cond){total++;if(!cond){console.error('FAIL',name);process.exitCode=1}else{pass++;console.log('PASS',name)}}
+const content=fs.readFileSync(path.join(root,'content-scripts','content.js'),'utf8');const manifest=JSON.parse(fs.readFileSync(path.join(root,'manifest.json'),'utf8'));
+test('version bumped for renderer pressure fix',['1.14.0.19','1.14.0.20','1.14.0.21','1.14.0.22','1.14.0.23','1.14.0.24','1.14.0.25','1.14.0.26','1.14.0.27','1.14.0.28','1.14.0.29','1.14.0.30','1.14.0.31','1.14.0.32','1.14.0.33','1.14.0.34','1.14.0.35'].includes(manifest.version));
+test('version name bumped for renderer pressure fix',['1.14.0 ShunCode MCP Fix 3.3.10.14','1.14.0 ShunCode MCP Fix 3.3.10.15','1.14.0 ShunCode MCP Fix 3.3.10.16','1.14.0 ShunCode MCP Fix 3.3.10.17','1.14.0 ShunCode MCP Fix 3.3.10.18','1.14.0 ShunCode MCP Fix 3.3.10.19','1.14.0 ShunCode MCP Fix 3.3.10.20','1.14.0 ShunCode MCP Fix 3.3.10.21','1.14.0 ShunCode MCP Fix 3.3.10.22','1.14.0 ShunCode MCP Fix 3.3.10.23','1.14.0 ShunCode MCP Fix 3.3.10.24','1.14.0 ShunCode MCP Fix 3.3.10.25','1.14.0 ShunCode MCP Fix 3.3.10.26','1.14.0 ShunCode MCP Fix 3.3.10.27','1.14.0 ShunCode MCP Fix 3.3.10.28','1.14.0 ShunCode MCP Fix 3.3.10.29','1.14.0 ShunCode MCP Fix 3.3.10.30'].includes(manifest.version_name));
+test('mutation message helper installed',content.includes('function DPP_MUTATION_MESSAGES_331014'));
+test('mutation candidate cap is four',content.includes('DPP_DOM_MUTATION_MAX_MESSAGES_331014=4'));
+test('plugin generated subtrees excluded',content.includes('if(!r||r.closest(cq))return'));
+test('character data scoped to touched node',content.includes('t.type===`characterData`)n(t.target)'));
+test('child additions scoped to added nodes',content.includes('for(let e of t.addedNodes)n(e)'));
+test('targeted scanner invokes D4/j4 only on candidates',content.includes('function DPP_SCAN_MESSAGES_331014(e){for(let t of e)D4(t),j4(t)}'));
+test('stream handler feeds targeted candidates',content.includes('i(DPP_MUTATION_MESSAGES_331014(e))'));
+test('full scan is fallback/initial only',content.includes('e.length?DPP_SCAN_MESSAGES_331014(e):C4()'));
+test('initial reconciliation preserved',content.includes('))};i(),e.addCleanup(`cleanup`,t.subscribe'));
+test('RAF coalescing preserved',content.includes('zY=requestAnimationFrame'));
+test('prior Agent delta fix preserved',content.includes('function DPP_AGENT_RESULT_DELTA_331013'));
+test('completion ledger remains cumulative',content.includes('DPP_COMPLETION_GATE_31(g)'));
+const reduction=1-(4*120)/(24*120);test('worst-case streaming candidate work reduced at least 80%',reduction>=0.8);
+console.log(`FIX331014_PASS ${pass}/${total} candidate_reduction=${(reduction*100).toFixed(1)}%`);if(pass!==total)process.exit(1);

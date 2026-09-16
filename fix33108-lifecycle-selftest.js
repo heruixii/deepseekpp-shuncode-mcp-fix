@@ -22,7 +22,7 @@ const resultHelpers = between(
   'function DPP_RUN_COMMAND_TEXT_33108',
   'function DPP_PTY_EMPTY_33',
 );
-const resultContext = { JSON, Number, Object, String };
+const resultContext = { JSON, Number, Object, String, DPP_ANNOTATE_EMPTY_PTY_331028:(e,t)=>t };
 resultContext.DPP_TOOL_NAME_33 = (name) => String(name).split(/[.:/]/).pop();
 vm.createContext(resultContext);
 vm.runInContext(

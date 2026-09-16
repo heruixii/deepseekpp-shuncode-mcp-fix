@@ -16,8 +16,8 @@ if(fail)process.exit(1);console.log('CONTINUATION_HELPERS_PASS 11');
 const fs=require('fs'),path=require('path');
 const source=fs.readFileSync(path.join(__dirname,'content-scripts','content.js'),'utf8');
 function scheck(name,cond){console.log((cond?'PASS':'FAIL')+' '+name);if(!cond)process.exitCode=1;}
-scheck('nudge-retry-flow',source.includes('if(y.currentTurnIsNudge){if(!a)return ie=n,!0;if(y.count>=Ce.maxNudges)return ae=DPP_NUDGE_LIMIT_31(d,y.count),!0;return!1}'));
-scheck('nudge-hard-cap',source.includes('y.count>=Ce.maxNudges?[]'));
+scheck('nudge-retry-flow',source.includes('if(y.currentTurnIsNudge){if(!o)return ie=n,q(`final_after_nudge`,!0);')&&source.includes('return q(k?`tool_intent_continue`:`continue_after_nudge`,!1)'));
+scheck('nudge-hard-cap',source.includes('e.nudgeCount>=e.maxNudges')&&source.includes('y.count>=Ce.maxNudges'));
 scheck('nudge-reset-on-progress',source.includes('e&&(y.count=0,y.completionReason=``)'));
 scheck('completion-gate-hook',source.includes('DPP_COMPLETION_GATE_31(g)')); 
 scheck('old-one-nudge-stop-removed',!source.includes('y.currentTurnIsNudge?(i?ae=$z(d,b+1):ie=n,!0)'));

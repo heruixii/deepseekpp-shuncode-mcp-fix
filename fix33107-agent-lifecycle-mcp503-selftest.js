@@ -23,7 +23,8 @@ t('non-mcp code excluded',ctx.tr('find_files',{}, {ok:false,error:{code:'tool_er
  t('retry reuses same payload only after safe classifier',src.includes('DPP_MCP_TRANSIENT_VERIFICATION_33107(e.invocationName,c,f?.result)&&await DPP_MCP_RETRY_DELAY_33107(a)'));
  t('manual request abort helper present',src.includes('function DPP_ABORT_ACTIVE_AGENT_FOR_MANUAL_REQUEST_33107(){if(!t1())return!1;return r1(),!0}'));
  const bz=between('async function bZ(e)','function xZ(e)');
- t('manual request aborts after valid body parse',bz.includes('let o=Kc(e.route,e.body);if(!o){xZ(t);return}DPP_ABORT_ACTIVE_AGENT_FOR_MANUAL_REQUEST_33107();'));
+ const bzParse=bz.indexOf('let o=Kc(e.route,e.body)'),bzAbort=bz.indexOf('DPP_ABORT_ACTIVE_AGENT_FOR_MANUAL_REQUEST_33107();');
+t('manual request aborts after valid body parse',bzParse>=0&&bzAbort>bzParse&&bz.indexOf('if(!o){',bzParse)>=0&&bz.indexOf('return}',bzParse)<bzAbort);
  t('abort happens before manual authorization',bz.indexOf('DPP_ABORT_ACTIVE_AGENT_FOR_MANUAL_REQUEST_33107();')<bz.indexOf('jZ({requestId:i,trigger:`manual_chat`'));
  t('existing agent budget preserved',src.includes('DPP_AGENT_MIN_BUDGET_338=88,DPP_AGENT_PROJECT_BUDGET_338=96,DPP_AGENT_COMPLETION_BUDGET_338=128'));
  t('existing direct retry mutation guard preserved',src.includes('DPP_TOOL_EFFECT_31(`run_command`,t)===`verification`&&DPP_PTY_EMPTY_33(n)'));
@@ -38,6 +39,7 @@ t('non-mcp code excluded',ctx.tr('find_files',{}, {ok:false,error:{code:'tool_er
  wctx.DPP_MCP_TRANSIENT_VERIFICATION_33107=(name,payload,result)=>result?.ok===false&&result?.error?.code==='mcp_http_error'&&result?.error?.retryable===true&&/HTTP\s+(?:502|503|504)\b/i.test(result?.error?.message||'')&&wctx.DPP_TOOL_EFFECT_31(name,payload)==='verification';
  wctx.DPP_MCP_RETRY_DELAY_33107=async signal=>!signal?.aborted;
  wctx.DPP_SHOULD_DIRECT_RETRY_33=()=>false;
+wctx.DPP_ANNOTATE_EMPTY_PTY_331028=(e,t)=>t;
  wctx.DPP_DESCRIPTOR_PROPERTY_33108=(descriptor,name)=>!!descriptor?.inputSchema?.properties&&Object.prototype.hasOwnProperty.call(descriptor.inputSchema.properties,name);
  vm.createContext(wctx);vm.runInContext(uzSrc+';globalThis.Uz=Uz;',wctx);
  const desc=n=>({invocationName:n,name:n,title:n,description:n,inputSchema:{type:'object'}});

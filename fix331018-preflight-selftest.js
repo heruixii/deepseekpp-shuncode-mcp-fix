@@ -1,0 +1,36 @@
+const fs=require('fs'),path=require('path'),vm=require('vm');
+const root=__dirname;
+const main=fs.readFileSync(path.join(root,'content-scripts/main-world.js'),'utf8');
+const content=fs.readFileSync(path.join(root,'content-scripts/content.js'),'utf8');
+const manifest=JSON.parse(fs.readFileSync(path.join(root,'manifest.json'),'utf8'));
+let pass=0,total=0;function test(n,c){total++;if(c){pass++;console.log('PASS',n)}else{console.error('FAIL',n);process.exitCode=1}}
+test('version',['1.14.0.23','1.14.0.24','1.14.0.25','1.14.0.26','1.14.0.27','1.14.0.28','1.14.0.29','1.14.0.30','1.14.0.31','1.14.0.32','1.14.0.33','1.14.0.34','1.14.0.35'].includes(manifest.version));
+test('version name',['1.14.0 ShunCode MCP Fix 3.3.10.18','1.14.0 ShunCode MCP Fix 3.3.10.19','1.14.0 ShunCode MCP Fix 3.3.10.20','1.14.0 ShunCode MCP Fix 3.3.10.21','1.14.0 ShunCode MCP Fix 3.3.10.22','1.14.0 ShunCode MCP Fix 3.3.10.23','1.14.0 ShunCode MCP Fix 3.3.10.24','1.14.0 ShunCode MCP Fix 3.3.10.25','1.14.0 ShunCode MCP Fix 3.3.10.26','1.14.0 ShunCode MCP Fix 3.3.10.27','1.14.0 ShunCode MCP Fix 3.3.10.28','1.14.0 ShunCode MCP Fix 3.3.10.29','1.14.0 ShunCode MCP Fix 3.3.10.30'].includes(manifest.version_name));
+test('bridge event main',main.includes('REQUEST_PREFLIGHT_DIAG:X.mainWorld'));
+test('bridge event content',content.includes('REQUEST_PREFLIGHT_DIAG:wK.mainWorld'));
+test('bridge validators',main.includes('REQUEST_PREFLIGHT_DIAG:e=>$(e.data)&&Q(e.data.stage)')&&content.includes('REQUEST_PREFLIGHT_DIAG:e=>XK(e.data)&&YK(e.data.stage)'));
+test('send hook breadcrumb fetch+xhr',(main.match(/stage:`mw_send_hook_seen`/g)||[]).length===2);
+test('augment begin breadcrumb',(main.match(/stage:`mw_augment_begin`/g)||[]).length===2);
+test('augment result breadcrumb',(main.match(/stage:`mw_augment_result`/g)||[]).length===2);
+test('transport started breadcrumb',(main.match(/stage:`mw_transport_started`/g)||[]).length===2);
+test('content received',content.includes('stage:`content_augment_received`'));
+test('content auth/project stages',['content_after_multimodal','content_auth1_done','content_project_done','content_augment_done','content_auth_close_done','content_auth2_done','content_result_posted','content_augment_error'].every(x=>content.includes('stage:`'+x+'`')));
+test('agent tool shape hook',content.includes('DPP_RECORD_AGENT_TOOL_SHAPE_331018({loopId:a,chatSessionId:s,stepIndex:b'));
+test('agent shape records keys not values',content.includes('argKeys:Array.isArray(t.argKeys)')&&!content.includes('argValues:Array.isArray(t.argValues)'));
+test('preflight ring bounded',content.includes('DPP_DIAG_BATCH_APPEND_331022(DPP_PREFLIGHT_DIAG_KEY_331018,96,n)'));
+test('tool shape ring bounded',content.includes('DPP_DIAG_BATCH_APPEND_331022(DPP_AGENT_TOOL_SHAPE_KEY_331018,64,n)'));
+const a=content.indexOf('var DPP_DIAG_BATCH_STATE_331022='),b=content.indexOf('async function _Z',a);if(a<0||b<0)throw Error('diagnostic functions missing');
+const store={};const chrome={storage:{local:{async get(k){return {[k]:store[k]}},async set(o){Object.assign(store,o)}}}};const ctx={chrome,console,Promise,Date,Number,Array,Object,Map,window:{addEventListener(){}},setTimeout(fn){return 1},clearTimeout(){}};vm.createContext(ctx);vm.runInContext(content.slice(a,b),ctx);
+(async()=>{
+ await ctx.DPP_RECORD_PREFLIGHT_331018({stage:'mw_augment_begin',requestId:'r1',route:'completion',rawBodyChars:10,prompt:'SECRET_PROMPT',body:'SECRET_BODY',errorMessage:'SECRET_ERROR'}); await ctx.DPP_DIAG_BATCH_FLUSH_331022('dpp_request_preflight_diag_331018');
+ const p=JSON.stringify(store.dpp_request_preflight_diag_331018);
+ test('preflight persists safe metadata',p.includes('mw_augment_begin')&&p.includes('r1'));
+ test('preflight excludes prompt/body/error message',!p.includes('SECRET_PROMPT')&&!p.includes('SECRET_BODY')&&!p.includes('SECRET_ERROR'));
+ await ctx.DPP_RECORD_AGENT_TOOL_SHAPE_331018({loopId:'loop',chatSessionId:'chat',stepIndex:1,callId:'call',toolName:'mcp_invoke',argKind:'object',argKeys:['capability','arguments'],requiredKeys:['capability','arguments'],argValues:'SECRET_ARGS'}); await ctx.DPP_DIAG_BATCH_FLUSH_331022('dpp_agent_tool_shape_diag_331018');
+ const t=JSON.stringify(store.dpp_agent_tool_shape_diag_331018);
+ test('tool shape captures keys',t.includes('capability')&&t.includes('arguments')&&t.includes('mcp_invoke'));
+ test('tool shape excludes argument values',!t.includes('SECRET_ARGS'));
+ test('3.3.10.17 SSE trail preserved',main.includes('DPP_CAPTURE_SSE_CONTROL_331017'));
+ test('3.3.10.16 XHR correlation preserved',main.includes('requestId:t.requestId'));
+ console.log(`FIX331018_PASS ${pass}/${total}`);if(pass!==total)process.exit(1);
+})().catch(e=>{console.error(e);process.exit(1)});

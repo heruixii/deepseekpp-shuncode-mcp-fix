@@ -80,7 +80,7 @@ const windowedResult = between('function Lz(e)', 'function Rz(e)');
 test('full tool context includes verified facts', fullResult.includes('DPP_VERIFIED_FACTS_33109(e)'));
 test('windowed tool context retains verified facts', windowedResult.includes('DPP_VERIFIED_FACTS_33109(e)'));
 test('agent completion path invokes statistics gate',
-  src.includes('let h=DPP_STAT_CLAIM_MISMATCH_33109(n,g);if(h)'));
+  src.includes('let DPPStatMismatch331023=DPP_STAT_CLAIM_MISMATCH_33109(n,g);if(DPPStatMismatch331023)'));
 
 const traceHelpers = between('var DPP_TRACE_EXPIRY_33109', 'DPP_INIT_AGENT_LIFECYCLE_CHANNEL_33109();async function M0');
 const traceContext = { Date, Number, Array, Set, Promise, Math, setTimeout, clearTimeout };
