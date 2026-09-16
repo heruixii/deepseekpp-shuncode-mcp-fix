@@ -29,7 +29,7 @@ console.log("=====================================");
 
 // ---- group 1: build integrity -------------------------------------------
 console.log("\n[1] build integrity");
-ok("manifest version is 1.14.0.38", manifest.version === "1.14.0.38", manifest.version);
+ok("manifest version is 1.14.0.39", manifest.version === "1.14.0.39", manifest.version);
 ok("transport code set present", src.indexOf("DPP_TRANSPORT_ERROR_CODES_331031") >= 0);
 ok("transport predicate present", src.indexOf("DPP_IS_TRANSPORT_FAILURE_331031") >= 0);
 ok("step counter present", src.indexOf("DPP_STEP_TRANSPORT_FAILURES_331031") >= 0);

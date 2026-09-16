@@ -21,7 +21,7 @@ t('non-mcp code excluded',ctx.tr('find_files',{}, {ok:false,error:{code:'tool_er
  t('retry wiring has unique id',src.includes(':dpp33107-mcp-retry`'));
  t('retry happens before PTY direct fallback',src.indexOf('DPP_MCP_TRANSIENT_VERIFICATION_33107(e.invocationName,c,f?.result)')<src.indexOf('DPP_SHOULD_DIRECT_RETRY_33(e.invocationName,c,f?.result)'));
  t('retry reuses same payload only after safe classifier',src.includes('DPP_MCP_TRANSIENT_VERIFICATION_33107(e.invocationName,c,f?.result)&&await DPP_MCP_RETRY_DELAY_33107(a)'));
- t('manual request abort helper present',src.includes('function DPP_ABORT_ACTIVE_AGENT_FOR_MANUAL_REQUEST_33107(){if(!t1())return!1;return r1(),!0}'));
+ t('manual request abort helper present',src.includes('function DPP_ABORT_ACTIVE_AGENT_FOR_MANUAL_REQUEST_33107(){if(!t1())return!1;')&&src.includes('return r1(DPP_MANUAL_SUPERSEDE_TEXT_331034('));
  const bz=between('async function bZ(e)','function xZ(e)');
  const bzParse=bz.indexOf('let o=Kc(e.route,e.body)'),bzAbort=bz.indexOf('DPP_ABORT_ACTIVE_AGENT_FOR_MANUAL_REQUEST_33107();');
 t('manual request aborts after valid body parse',bzParse>=0&&bzAbort>bzParse&&bz.indexOf('if(!o){',bzParse)>=0&&bz.indexOf('return}',bzParse)<bzAbort);

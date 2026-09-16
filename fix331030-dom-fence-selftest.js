@@ -3,8 +3,8 @@ const root=__dirname,ct=fs.readFileSync(path.join(root,'content-scripts/main-wor
 let pass=0,total=0;function t(n,c,d=''){total++;if(c){pass++;console.log('PASS',n,d)}else{console.error('FAIL',n,d);process.exitCode=1}}
 function between(s,a,b){const i=s.indexOf(a),j=s.indexOf(b,i);if(i<0||j<0)throw new Error(`missing ${a} -> ${b}`);return s.slice(i,j)}
 (async()=>{
-t('version',mf.version==='1.14.0.38');
-t('version name',mf.version_name==='1.14.0 ShunCode MCP Fix 3.3.10.33','1.14.0 ShunCode MCP Fix 3.3.10.32','1.14.0 ShunCode MCP Fix 3.3.10.31','1.14.0 ShunCode MCP Fix 3.3.10.32','1.14.0 ShunCode MCP Fix 3.3.10.33');
+t('version',mf.version==='1.14.0.39');
+t('version name',mf.version_name==='1.14.0 ShunCode MCP Fix 3.3.10.34','1.14.0 ShunCode MCP Fix 3.3.10.32','1.14.0 ShunCode MCP Fix 3.3.10.31','1.14.0 ShunCode MCP Fix 3.3.10.32','1.14.0 ShunCode MCP Fix 3.3.10.33','1.14.0 ShunCode MCP Fix 3.3.10.34');
 t('fence marker',ct.includes('DPP_DOM_FENCE_331030'));
 t('fence installed at startup',ct.includes('DPP_DOM_FENCE_331030();'));
 t('fence wrap flag',ct.includes('__dppFence331030'));

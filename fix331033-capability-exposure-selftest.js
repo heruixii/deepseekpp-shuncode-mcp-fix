@@ -34,9 +34,9 @@ console.log("=======================================");
 
 // ---- [1] build integrity ----------------------------------------------------
 console.log("\n[1] build integrity");
-ok("manifest version is 1.14.0.38", manifest.version === "1.14.0.38", manifest.version);
-ok("manifest version_name is Fix 3.3.10.33",
-   manifest.version_name === "1.14.0 ShunCode MCP Fix 3.3.10.33", manifest.version_name);
+ok("manifest version is 1.14.0.39", manifest.version === "1.14.0.39", manifest.version);
+ok("manifest version_name is Fix 3.3.10.34",
+   manifest.version_name === "1.14.0 ShunCode MCP Fix 3.3.10.34", manifest.version_name);
 ok("background has core-tool rank floor", bg.indexOf("function DPP_CORE_TOOL_FLOOR_331033(") !== -1);
 ok("background Cd() applies the floor", bg.indexOf("s=(r?1e4:0)+DPP_CORE_TOOL_FLOOR_331033(e);") !== -1);
 ok("content has handle-code set", src.indexOf("var DPP_HANDLE_ERROR_CODES_331033=") !== -1);
