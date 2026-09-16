@@ -13,13 +13,13 @@
 | 项目 | 状态 |
 |---|---|
 | 在做什么 | 修复 **DeepSeek++ 浏览器扩展**在自动化执行任务时导致 **DeepSeek 网页崩溃 / "服务器暂不可用" / 任务中断** 的系列问题 |
-| 当前正式版 | **`1.14.0.36 / DeepSeek++ ShunCode MCP Fix 3.3.10.31`** |
+| 当前正式版 | **`1.14.0.37 / DeepSeek++ ShunCode MCP Fix 3.3.10.32`**（GitHub 已同步：main `c3fb35d`，Release `v1.14.0-fix3.3.10.32` Latest） |
 | 正式目录 | `D:\learn\DeepSeekPP-1.14.0-ShunCode-MCP-Fix3`（Edge 解压加载） |
 | 最新成就 | **“继续/重试只口头答应不调工具”根因实锤并修复**：MCP 传输故障被完成门当作有效进展 → trace 误标 `complete` → 恢复网关永久拒绝接管；`.31` 双点修复（见 §2.5） |
 | 当前阶段 | **Fix 3.3.10.31 已发布，待用户实测验收**：专项 43/43、全回归 **50/50**、hash-lock 干净升级、篡改 fail-closed、独立重建 **201/201 零差异**。`.30` DOM 保险丝未回归 |
 | 下一步 | ①**用户实测 `.31`**（断连后发“继续”应真实重发工具调用）；②剩余整值重写通道分片化（候选 .32）；③`.29` 验收闭环 + `.30`/`.31` 补稳定化计划节；④GPU 141 观察项 |
 | 如果复现 | 对 Agent 说 **“查看新日志”**。崩溃自查：console 有无 `NotFoundError` 刷屏、`localStorage["dpp_dom_fence_diag_331030"]` 计数是否在涨；**“只口头答应不调工具”自查**：看 `dpp_inline_agent_traces` 末条 `status` 是否 `complete` 且末步无 `toolExecutions` |
-| 当前回退点 | `D:\tmp\DeepSeekPP-Fix331030-pre331031-20260916`（.30 冻结版） |
+| 当前回退点 | `D:\tmp\DeepSeekPP-Fix331031-pre331032-20260916`（.31 冻结版） |
 
 ---
 
@@ -36,8 +36,8 @@
 | 用途 | 路径 |
 |---|---|
 | 正式扩展目录（Edge 加载此目录） | `D:\learn\DeepSeekPP-1.14.0-ShunCode-MCP-Fix3` |
-| 正式 ZIP（当前 .31） | `D:\learn\DeepSeekPP-1.14.0-ShunCode-MCP-Fix3.3.10.31.zip`（13,893,358 B，202 文件） |
-| 当前 ZIP SHA-256 | `B3C9C51257EC50993616F6466BF4390BCD0E3C8695B21A6A9A230A0317B2F540` |
+| 正式 ZIP（当前 .32） | `D:\learn\DeepSeekPP-1.14.0-ShunCode-MCP-Fix3.3.10.32.zip`（13,920,096 B，204 文件） |
+| 当前 ZIP SHA-256 | `7C52B0C5721CD63CC4ACA4A3DF07A986F980DD6508ACC2BE55FB7324BD100D8C` |
 | 回退点（每次发版前冻结上一版） | `D:\tmp\DeepSeekPP-Fix3310XX-pre3310YY-20260916` |
 | 工作区（Athena） | `D:\learn\Athena计划` |
 | 稳定化计划 | 项目内的稳定化计划文档，每版追加一节，目前到 **第 27 节** |
@@ -237,7 +237,7 @@ inline agent loop 末尾的 `u&&_1()`（`window.location.reload()`）与之竞�
 1. **用户实测 `.32`**：`edge://extensions` 重新加载解压扩展 → 彻底关闭旧 DeepSeek 标签页 → 开新标签页；不用超长旧对话。
    预期：中断后发“继续”应真正发出工具调用；若仍不调用，本轮应落为 `error` 而非 `complete`，且**不再整页刷新**。
 2. 若仍失败：直接导出 `dpp_agent_turn_diag_331021`（改点 D 后应能看到失败轮次的条目），重点看 `terminal_promotion` / `turn_decision` 两个 stage。
-3. GitHub 同步仍未做（本机非 git 仓库）；推送前需先处理 `.gitattributes` 行尾问题（`main-world.js` 本机 CRLF vs 仓库 LF）。
+3. ~~GitHub 同步仍未做~~ **已完成（2026-09-16 晚）**：`.31`/`.32` 各一个 commit（`49f9fb5` / `e42c61a`）+ README（`495cef7`）+ Release `v1.14.0-fix3.3.10.32`。行尾由仓库 `.gitattributes` 处理（js/md/py/ps1 → LF；manifest/_locales → CRLF），提交前已用 `diff --strip-trailing-cr` 验证核心文件仅行尾差异。工作副本 `D:\tmp\gh-deepseekpp`。
 
 ## 6. 排查定位技巧（沉淀的经验）
 
@@ -265,3 +265,4 @@ inline agent loop 末尾的 `u&&_1()`（`window.location.reload()`）与之竞�
 | 2026-09-16 晚 | Arena Agent 响应“查看新日志，任务突然中断、继续/重试只口头答应不调工具”：快照新 WAL `D:\tmp\edsnap-331030-nudge-20260916`，解析 traces / turn_diag / web_diag / preflight / tool_shape 五条诊断链 | 未改扩展，仅取证；本文档 §0/§2.5/§5/§7 更新 | **根因实锤**：`run_command` 返回 `mcp_network_error`（ngrok 隧道瞬断）→ 失败结果仍计入完成门 → 模型一句“MCP 暂时断连”被判 `final` → trace 误标 `status=complete` → `DPP_RESUME_TRACE_CHAIN_331010` 只接 error/stopping/过期 running，永久拒绝接管，“继续/重试”退化为普通聊天（editMessage 三次 200 但零 turn_decision） | 实施 `.31` 两处修复；修复前绕过：断连后新开一轮对话而非点重试 |
 | 2026-09-16 晚 | Arena Agent 实施并发布 **Fix 3.3.10.31**：按 §4 全套发布链（冻结回退点 → hash-lock patcher → 专项套件 → 全回归 → 独立重建 → 落正式目录 → ZIP） | 正式目录 → 1.14.0.36（202 文件）；`D:\learn\DeepSeekPP-1.14.0-ShunCode-MCP-Fix3.3.10.31.zip` SHA `B3C9C512…B2F540`；回退点 `D:\tmp\DeepSeekPP-Fix331030-pre331031-20260916`；新套件 `fix331031-transport-failure-selftest.js`；本文档 §0/§3/§5/§7 | **修复已落地**：传输故障不再判 final（最多续跑 3 次后落 error）；恢复水位只计真实成功。专项 43/43、全回归 50/50（基线 .30 为 49/49）、篡改与重复打补丁 fail-closed、独立重建 201/201 零差异；只改 content.js+manifest+2 locales+22 版本门套件 | 用户实测（§5-1）；通过后考虑候选 .32 分片化 |
 | 2026-09-16 | 3.3.10.32 | reasoning 已宣告但未发出的工具调用被误提升为终局答案；同时修复 reload 与批刷诊断的竞态（使故障可观测）。回归 51/51，独立重建 203/203 零差异。ZIP SHA256 7C52B0C5…0D8C | 已交付，待用户实测 |
+| 2026-09-16 晚 | Arena Agent 将 `.31`+`.32` 同步至 GitHub `heruixii/deepseekpp-shuncode-mcp-fix`：工作副本 `D:\tmp\gh-deepseekpp`，`.31` 取自冻结树 `D:\tmp\DeepSeekPP-Fix331031-pre331032-20260916`（202 文件），`.32` 取自正式目录（204 文件）；README 顶部改 `.32` Current / `.31` Previous / `.30` Historical；创建 Release `v1.14.0-fix3.3.10.32`（Latest）附 ZIP | commits `49f9fb5`（.31，30 文件）、`e42c61a`（.32，31 文件）、`495cef7`（README）、`c3fb35d`（本文档）；Release 资产 `DeepSeekPP-1.14.0-ShunCode-MCP-Fix3.3.10.32.zip` 13,920,096 B，SHA `7C52B0C5…0D8C` 已写入 notes；本文档 §0/§1.2/§5/§7 | GitHub 追平至 `.32`；仓库与正式树逐文件比对：仅 `.gitattributes` 声明的行尾差异，无内容差异；仓库多出 `.gitattributes` 与本交接文档两文件（预期）。踩坑复现一次：Windows Python 不认 `/c/...` 路径（§6 已记） | 待用户实测 `.32`（§5）；`.31` 未单独建 Release（内容已含于 .32 notes） |
