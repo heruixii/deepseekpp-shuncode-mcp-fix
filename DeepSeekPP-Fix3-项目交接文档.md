@@ -13,13 +13,13 @@
 | 项目 | 状态 |
 |---|---|
 | 在做什么 | 修复 **DeepSeek++ 浏览器扩展**在自动化执行任务时导致 **DeepSeek 网页崩溃 / "服务器暂不可用" / 任务中断** 的系列问题 |
-| 当前正式版 | **`1.14.0.35 / DeepSeek++ ShunCode MCP Fix 3.3.10.30`** |
+| 当前正式版 | **`1.14.0.36 / DeepSeek++ ShunCode MCP Fix 3.3.10.31`** |
 | 正式目录 | `D:\learn\DeepSeekPP-1.14.0-ShunCode-MCP-Fix3`（Edge 解压加载） |
-| 最新成就 | **网页频繁崩溃根因实锤并修复**：CDP 现场抓获——扩展恢复注入与 DeepSeek React reconciler 互撞，`insertBefore` NotFoundError → app 错误边界「页面崩溃」屏；`.30` 装 MAIN-world DOM 保险丝，只吞 NotFoundError 并就地恢复 |
-| 当前阶段 | **Fix 3.3.10.30 已发布并经用户实测通过**（2026-09-16）：根因=扩展注入互撞（§2.4），发布链绿灯 + 重载后硬刷新崩溃会话确认修复。代码与本文档已同步 GitHub `heruixii/deepseekpp-shuncode-mcp-fix` |
-| 下一步 | ①`.29` 验收闭环（稳定化计划第 27 节收尾 + `.30` 补第 28 节）；②GPU 141 A/B 机器级观察项（§5）；③候选 `.31`：剩余整值重写通道分片化 |
-| 如果复现 | 对 Agent 说 **"查看新日志"**；自查项：console 有无 `NotFoundError` 刷屏、`localStorage["dpp_dom_fence_diag_331030"]` 计数是否在涨（在涨=保险丝正在替你挡互撞） |
-| 当前回退点 | `D:\tmp\DeepSeekPP-Fix331029-pre331030-20260916`（.29 冻结版） |
+| 最新成就 | **“继续/重试只口头答应不调工具”根因实锤并修复**：MCP 传输故障被完成门当作有效进展 → trace 误标 `complete` → 恢复网关永久拒绝接管；`.31` 双点修复（见 §2.5） |
+| 当前阶段 | **Fix 3.3.10.31 已发布，待用户实测验收**：专项 43/43、全回归 **50/50**、hash-lock 干净升级、篡改 fail-closed、独立重建 **201/201 零差异**。`.30` DOM 保险丝未回归 |
+| 下一步 | ①**用户实测 `.31`**（断连后发“继续”应真实重发工具调用）；②剩余整值重写通道分片化（候选 .32）；③`.29` 验收闭环 + `.30`/`.31` 补稳定化计划节；④GPU 141 观察项 |
+| 如果复现 | 对 Agent 说 **“查看新日志”**。崩溃自查：console 有无 `NotFoundError` 刷屏、`localStorage["dpp_dom_fence_diag_331030"]` 计数是否在涨；**“只口头答应不调工具”自查**：看 `dpp_inline_agent_traces` 末条 `status` 是否 `complete` 且末步无 `toolExecutions` |
+| 当前回退点 | `D:\tmp\DeepSeekPP-Fix331030-pre331031-20260916`（.30 冻结版） |
 
 ---
 
@@ -36,8 +36,8 @@
 | 用途 | 路径 |
 |---|---|
 | 正式扩展目录（Edge 加载此目录） | `D:\learn\DeepSeekPP-1.14.0-ShunCode-MCP-Fix3` |
-| 正式 ZIP（当前 .29） | `D:\learn\DeepSeekPP-1.14.0-ShunCode-MCP-Fix3.3.10.29.zip` |
-| 当前 ZIP SHA-256 | `C83459E9EE10CD1FD1D8C0B19307026A7CA4BAF79A85176A9A98222C629A8D7A` |
+| 正式 ZIP（当前 .31） | `D:\learn\DeepSeekPP-1.14.0-ShunCode-MCP-Fix3.3.10.31.zip`（13,893,358 B，202 文件） |
+| 当前 ZIP SHA-256 | `B3C9C51257EC50993616F6466BF4390BCD0E3C8695B21A6A9A230A0317B2F540` |
 | 回退点（每次发版前冻结上一版） | `D:\tmp\DeepSeekPP-Fix3310XX-pre3310YY-20260916` |
 | 工作区（Athena） | `D:\learn\Athena计划` |
 | 稳定化计划 | 项目内的稳定化计划文档，每版追加一节，目前到 **第 27 节** |
@@ -91,6 +91,41 @@
 - tokens 42K→47K 无雪崩；usage v2 分片正常；v1 536 KB 大键仅被写 1 次（只读兼容生效）。
 - Crashpad 无新 dump；Edge 主进程 13:50:32 后未再重启；当天 LiveKernelEvent 141 共 10+ 次（最后一次 13:53:07，P2/P3 恒定），与下午崩溃波无时间相关性。
 
+### 2.5 任务中断后“继续/重试只口头答应不调工具”根因·已实锤（2026-09-16 晚，LevelDB 新日志取证）
+
+**现象**：长任务跑到一半突然中断；用户发“继续”或点“重试”，模型只回一句“好的，我继续/重试诊断命令”，然后直接结束，不再发起任何工具调用。
+
+**取证**：快照 `D:\tmp\edsnap-331030-nudge-20260916`（源 `Local Extension Settings\kdmpkkahkhdmdhfkdihkopikgcocbpbf`，WAL `000900.log`，16:28 新鲜写入）。
+
+**机制链（每一环都有证据）**：
+
+1. **真实中断源是 MCP 传输失败，不是模型偷懒**。`dpp_inline_agent_traces` 末条 loop `d1e59b46` 的 step1 工具结果为
+   `run_command ok=false, error.code="mcp_network_error", message="Cannot reach MCP server at https://unlimited-underline-lunchroom.ngrok-free.dev/mcp/..."`。
+   即 ngrok 隧道瞬断，Bridge 不可达。
+2. **失败被当成“已执行”记入结果集**。工具执行失败后仍作为一条 toolExecution 进入 `g`（累计结果数组），后续 `DPP_COMPLETION_GATE_31(g)` 只看“有没有工具结果”，**不看 `result.ok` 是否为 false**。
+3. **模型自述收尾 → 直接判 final**。step2 模型输出“MCP 暂时断连，重试诊断命令。”这句既不含 `<task_complete>`，也不含中段续跑线索，于是
+   `Az()`（续跑判定）返回 false → `shouldStopAfterTurn` 走 `return o?q(...):(ie=n,q('final',!0))` 的 **`final` 分支**，循环正常结束。
+4. **trace 被写成 `status:"complete"`**。证据：该 trace `status=complete`、`totalSteps=3`、`totalTools=3`，但**末步 step2 的 `toolExecutions` 为空**——“三步三工具、最后一步零工具且全部失败”却记为成功完成。
+5. **恢复网关因此永久拒绝接管**。`DPP_RESUME_TRACE_CHAIN_331010` 的过滤条件是
+   `status==='error' || status==='stopping' || (status==='running' && 过期)`，**`complete` 不在内**；且函数开头先算出“本会话最近一条 complete 的 updatedAt”作为水位 `a`，只接受 `updatedAt > a` 的候选。
+   于是这条被误标 complete 的 trace 既不是候选、又把水位抬到最新 → `DPP_RESUME_PREPARE/LIGHT` 恒返回 `null` → “继续/重试”拿不到任何 `<interrupted_run_checkpoint>`，退化成一次**普通聊天**。模型没有工具续跑上下文，自然只能口头答应一句就结束。
+6. **前端侧证据吻合**：`dpp_web_response_diag_331015` 显示 16:23:57 / 16:26:00 / 16:28:29 三次 `route="editMessage"`（即“重试”）均 HTTP 200、`streamFinished=true`、`controlTrail` 为 `FINISHED`，**但 `dpp_agent_turn_diag_331021` 在 16:22:34 之后再无任何 `turn_decision` 记录** —— 确认这些请求根本没有进入 Agent 循环，是普通对话轮。
+
+**关键区分（不要误修）**：
+- 这**不是** `.27` 修过的 `tool_intent_limit`，也**不是** `.28` 的“未完成不得标 complete”（那条针对模型自称“继续读取剩余内容”的文本判定）。本次是**工具传输层失败**被完成门当作有效进展，属于 `DPP_COMPLETION_GATE_31` 与 `DPP_RESUME_TRACE_CHAIN_331010` 的**共同盲区**。
+- 全程 `errorName` 为空、无异常栈：失败被结构化成 `result.error` 正常返回，**没有抛异常**，所以 `agent_exception_331023` 一片空白，只看异常链会完全漏判。
+- 与 `.30` DOM 保险丝无关；本轮无 `NotFoundError`、无页面崩溃屏，`.30` 修复未回归。
+
+**修复方案（候选 `.31`，两处必须同时改，缺一仍会复发）**：
+
+1. **完成门增加传输故障判定**（`content-scripts/content.js`，`shouldStopAfterTurn` 的 `final` 分支前）：
+   当本步新增的 toolExecutions 中存在 `result.ok===false` 且 `result.error.code` 属于传输类（`mcp_network_error`、`mcp_timeout`、`mcp_unauthorized`、`capability_expired` 等）时，**禁止**走 `final`，改判 `tool_transport_failure_33131` 并触发续跑纠偏；连续失败达上限则落 **`error`**（而非 `complete`）。
+2. **无进展死循环必须落 `error`**（trace 落库处 + `DPP_RESUME_TRACE_CHAIN_331010`）：
+   一个 loop 若「工具全失败且末步无工具」则 trace 写 `status:"error"` 并带 `error.code`，使恢复网关可接管；同时把水位计算 `a` 限定为**真正成功**的 complete（末步有成功工具或含 `<task_complete>`），避免误标记录抬高水位挡住后续恢复。
+
+**临时绕过（修复发布前，用户可用）**：MCP 断连后不要点“重试”，改为**新开一轮对话**重新下达任务；或先确认 ngrok 隧道已恢复（浏览器直接访问 MCP URL 应有响应）再继续。
+
+
 ### 2.3 关键区分
 
 - 用户最初怀疑"记忆注入导致崩溃"——查实当时真实设置是 `memoryEnabled=false`、`systemPromptEnabled=true`，**普通记忆注入早已关闭**；罪魁是 **system/tool prompt 每步全量注入 + 累计工具结果反复注入**导致的上下文膨胀。
@@ -98,7 +133,36 @@
 
 ---
 
-## 3. 修复历程（Fix 3.3.10.11 → 3.3.10.30）
+## 2.6 .31 上线后仍然“只口头答应、不调用工具”（已实证，2026-09-16）
+
+**现象**：任务中断后发“继续”，模型口头答应后零工具结束；有时紧接一次整页刷新然后停止。
+
+**取证方法**：不靠阅读代码，而是从 content.js 中抽出真实函数（自动解析 20 个符号依赖闭包），
+用 17:16 失败 loop `098021bb` 的真实文本实跑判定：
+
+| 判定 | 实测 |
+|---|---|
+| `DPP_TOOL_INTENT_TEXT_331021(reasoning)` | **true** |
+| `DPP_TOOL_INTENT_331021(text, reasoning)` | **false** |
+| `DPP_SAFE_FINAL_CANDIDATE_331021(...)` | **非 null（被提升为终局）** |
+
+**缺陷 1**：`DPP_TOOL_INTENT_331021` 仅在正文为空、或正文自带线索时才查 reasoning。
+失败轮次的 25 字符正文 `midstep/strict/Mz` 全为 false，模型在 reasoning 里明写的 run_command 计划被整条丢弃，
+于是不触发 tool_intent 纠偏，`Ee()` 直接把残缺文本提升为终局答案（`totalTools:0`）。
+
+**缺陷 2（使前者不可观测）**：`dpp_agent_turn_diag_331021` 经 650ms 批刷，而
+`DPP_DIAG_BATCH_FLUSH_ALL_331022` 只挂在**不被 await 的** `pagehide` 上；
+inline agent loop 末尾的 `u&&_1()`（`window.location.reload()`）与之竞态，吃掉了失败现场。
+`finally` 里被 await 的只有 `MZ(r)`。
+
+> **更正（重要）**：之前“turn_diag 零新增 → 所以 `.31` 改点 A 从未执行”的结论**作废**。
+> 证据只能证明“无法观测”，不能证明“未执行”。
+
+**reload 触发条件**（实测两个失败 loop 均 `RELOAD_WOULD_FIRE=True`）：
+`iB()` = web 后端 && 非 budgetPaused && finalText 非空 && 会话可见 && 末步 `responseMessageId` 为正整数。
+该行为在 `.30` 字节一致，**非 `.31` 引入**；经用户决定 **保留不动**。
+
+## 3. 修复历程（Fix 3.3.10.11 → 3.3.10.32）
 
 | 版本 | manifest | 主要内容 | 验证 |
 |---|---|---|---|
@@ -119,10 +183,29 @@
 | .28 | 1.14.0.33 | 验收标准硬化：日志时间戳必须推进；空 PTY 不得重放 capability；`mcp_invoke` 后旧 capability 必须失效；未完成不得标 complete | 196/196；ZIP `CED55E…`；第 26 节 |
 | **.30** | **1.14.0.35** | **页面崩溃根因修复**：MAIN-world DOM 保险丝（`DPP_DOM_FENCE_331030`）包裹 `insertBefore/removeChild/replaceChild`，只吞 NotFoundError 就地恢复，节流 beacon `dpp_dom_fence_diag_331030`，幂等零成本；发布链同步维护 `_locales` 显示名与 21 个旧套件版本门 | 专项行为 21/21、全回归 49/49、hash-lock 干净升级、篡改 fail-closed、**199/199 独立重建一致**；核心改动仅 manifest+main-world 两文件；ZIP `E33D2579…A378E`（13,911,078 B） |
 | **.29** | **1.14.0.34** | **存储写压力根治**：usage 新记录只写 `v2_meta` + 按天分片 `v2_day_YYYY-MM-DD`，旧 v1（~536 KB）转只读兼容、统计时合并读取，无一次性大迁移；trace/tool-history 预算 128→64 KB；保留 180 天/5000 条规则 | 专项存储行为 24/24 + 边界（>180 天 prune 不回写）、.29 专项 25/25、全回归 50/50、99 JS、health（含"hot writer 不得写 v1"硬检查）、hash-lock 干净升级、篡改 fail-closed、**198/198 字节一致**；ZIP `C83459E9…8D7A`；第 27 节 |
+| **.31** | **1.14.0.36** | **中断后无法续跑修复**：①完成门新增传输故障判定，`mcp_network_error` 类失败禁止判 `final`，最多续跑 3 次后置 `oe` 落 **`error`**；②恢复网关 complete 水位改为只计真实成功的 run，误标记录不再挡住接管；同步维护 `_locales` 显示名与 22 个旧套件四种版本门形态 | 专项行为 43/43、全回归 **50/50**、hash-lock 干净升级、篡改/重复打补丁均 fail-closed、**独立重建 201/201 零差异**；核心只改 content.js+manifest；ZIP `B3C9C512…B2F540`（13,893,358 B） |
 
 > 所有版本的完整根因、证据、哈希、回归记录都写在扩展目录内的**稳定化计划**（已到第 27 节）与 `FIX3-TEST-REPORT.md`。
 
 ---
+
+
+### Fix 3.3.10.32（2026-09-16）
+- **根因**：reasoning 中已宣告但未发出的工具调用被 `DPP_SAFE_FINAL_CANDIDATE_331021` 提升为终局答案（详 §2.6）。
+- **改点 C**：当 reasoning 有工具意图、无 `<task_complete>`、且本轮没有任何 `result.ok===true` 的执行时，**禁止提升终局**。
+  转而走 `AGENT_LOOP_ERROR` → trace 存为 `error`（可续跑候选）；且该路径不返回真值，**顺带不触发 reload**。
+- **改点 D**：`DPP_DIAG_BATCH_FLUSH_ALL_331022` 改为返回 Promise 并在 reload 前 `await`，保证失败现场可诊断。
+- **被否决的方案**：曾先改 `DPP_TOOL_INTENT_331021` 无条件回落 reasoning，**导致 fix331025 / fix331027 回归**
+  （两套都固定“可见的具体终局优先于陈旧 reasoning”），已回滚；最终只在提升点动手，两条规则同时成立。
+- **验证**：专项 12/12；全量回归 **51/51**（`.31` 基线 50/50）；真实失败 trace 提升 true→false，无关 trace 不变；
+  篡改与重复打补丁均 fail-closed；独立重建 203/203 零差异。
+- **产物**：`1.14.0.37` / `1.14.0 ShunCode MCP Fix 3.3.10.32`；
+  ZIP `D:\learn\DeepSeekPP-1.14.0-ShunCode-MCP-Fix3.3.10.32.zip`
+  SHA256 `7C52B0C5721CD63CC4ACA4A3DF07A986F980DD6508ACC2BE55FB7324BD100D8C`，13,920,096 B，204 文件（两次构建 SHA 一致）。
+- **回退点**：`D:\tmp\DeepSeekPP-Fix331031-pre331032-20260916`（`.31` 冻结 202 文件）。
+
+
+> 注：`.31` ZIP 曾被旧 `_mkzip.py`（输出路径写死）意外覆盖，已从冻结的 `.31` 树重建；新版 `_mkzip2.py` 改为受参数控制且固定时间戳。重建后 `.31` ZIP SHA256 = C50C507A0CD0388A868763970DBCEC2DA5FF9DFEAE20653EF1300B31502B7605，202 文件，内容与冻结树逐文件一致。
 
 ## 4. 发布工程规范（本项目的工作方式，务必遵守）
 
@@ -137,7 +220,7 @@
 
 ## 5. 下一步工作（接手从这里开始）
 
-1. **【先做】.30 现场验证**：`edge://extensions` 重新加载扩展 → 彻底关闭旧 DeepSeek 标签页后开新页 → 硬刷新此前必崩的会话 `c0ba574e`。预期：不再出现「页面崩溃」屏；console 可能出现被保险丝拦下的 NotFoundError（不致命），`localStorage["dpp_dom_fence_diag_331030"]` 计数如 >0 属正常（保险丝在工作）。
+1. **【先做】`.31` 用户实测验收**：`edge://extensions` 重新加载解压扩展 → **彻底关闭旧 DeepSeek 标签页后开新页** → 跑一个需要多步工具的任务，中途制造 MCP 断连（关掉 ngrok/Bridge 数秒）。**预期**：不再一句“我继续”就结束；应看到自动重试同一工具调用；若连续 3 次失败，任务应停在**错误**状态（非完成），此时恢复网关可接管，隔一会儿发“继续”能真实续跑。验证点：`dpp_agent_turn_diag_331021` 应出现 `tool_transport_failure_331031` / `tool_transport_failure_limit_331031` 决策记录。
 2. **【降为观察项】GPU 141 A/B**（机器级，独立于网页崩溃问题；每步后连续跑 2~3 个同等级任务看 WER 是否还新增 141）：
    - **A. 退净串流/安卓模拟器**：完全退出 GameViewer（UU 远程）与 MuMu 模拟器及其后台服务 → 重测。
    - **B. Edge 关硬件加速**：`edge://settings/system` 关闭"使用硬件加速(如可用)" → 重启 Edge 重测。
@@ -149,6 +232,13 @@
 
 ---
 
+
+### 下一步（`.32` 交付后）
+1. **用户实测 `.32`**：`edge://extensions` 重新加载解压扩展 → 彻底关闭旧 DeepSeek 标签页 → 开新标签页；不用超长旧对话。
+   预期：中断后发“继续”应真正发出工具调用；若仍不调用，本轮应落为 `error` 而非 `complete`，且**不再整页刷新**。
+2. 若仍失败：直接导出 `dpp_agent_turn_diag_331021`（改点 D 后应能看到失败轮次的条目），重点看 `terminal_promotion` / `turn_decision` 两个 stage。
+3. GitHub 同步仍未做（本机非 git 仓库）；推送前需先处理 `.gitattributes` 行尾问题（`main-world.js` 本机 CRLF vs 仓库 LF）。
+
 ## 6. 排查定位技巧（沉淀的经验）
 
 - **Edge 扩展 LevelDB 做只读快照**再分析（注意 Git Bash 的 `/c/...` 路径 Windows Python 不认，要用 `C:\...`）。
@@ -156,7 +246,7 @@
 - 服务端 token 轨迹看 usage 记录 `totalTokens` 增长；每步涨 4k~7k 即注入放大。
 - 崩溃证据链：Edge Crashpad 新 dump、Windows WER（`LiveKernelEvent 141` 要看引用的 dmp 是否为本次新文件、Report ID 是否重复）。
 - **WER 直接查事件日志更快**（Application 日志无需管理员）：`Get-WinEvent -FilterHashtable @{LogName='Application'; StartTime=(Get-Date).AddHours(-26)} | ? {$_.Message -match 'LiveKernel'}`；同一 P2/P3 = 同一挂起引擎。ReportQueue 文件夹与 `C:\Windows\LiveKernelReports` 需管理员。
-- **LevelDB WAL 解析器已沉淀**：`D:\tmp\analyze_leveldb.py`（解析 WriteBatch，统计每 key 写入字节/次数）；快照目录 `D:\tmp\edsnap-331029-repro-20260916\`；key 值导出 `D:\tmp\keysnap_*.txt`。取快照只需 cp `.log/.ldb/LOG/MANIFEST`，不必锁库。
+- **LevelDB WAL 解析器已沉淀**：`D:\tmp\analyze_leveldb.py`（解析 WriteBatch，统计每 key 写入字节/次数）；快照目录 `D:\tmp\edsnap-331029-repro-20260916`；key 值导出 `D:\tmp\keysnap_*.txt`。取快照只需 cp `.log/.ldb/LOG/MANIFEST`，不必锁库。
 - 区分"旧标签页没重载"与"新版没生效"：先看有无新会话 ID、诊断 key 是否有新时间戳。
 
 ---
@@ -172,3 +262,6 @@
 | 2026-09-16 傍晚 | Arena Agent 做 CDP 现场捕获并发布 **Fix 3.3.10.30**：edgeprobe 沙盒 9222 端口、`capture.py` 240s 监视 navigate+reload 会话 c0ba574e；hash-lock patcher `.29→.30`、全链验证、落正式目录、ZIP | 正式目录 → 1.14.0.35；`D:\learn\DeepSeekPP-1.14.0-ShunCode-MCP-Fix3.3.10.30.zip`（SHA256 `E33D…378E`）；/d/tmp 五核心哈希 `.30` 版已录；本文档 §0/§2.4/§3/§5/§7；`docs/mcp-deepseekpp-gpu141-crash-repro.md` 修订 | **根因实锤**：扩展恢复注入与 DeepSeek React reconciler 互撞 → `insertBefore` NotFoundError → app 错误边界「页面崩溃」屏（renderer 未死，GPU 141 解耦降级为观察项）。验证：行为 21/21、全回归 49/49、篡改 fail-closed、独立重建整树 0 差异；核心改动仅 manifest+main-world 两文件 | ①用户重载扩展+硬刷新原崩溃会话验证（§5-1）；②保险丝 beacon 计数 `dpp_dom_fence_diag_331030` 观察；③GPU A/B 仍建议；④候选 .31 分片化 |
 | 2026-09-16 晚 | 用户实测：`.30` 重载后硬刷新原崩溃会话 → **"没问题了"**；Arena Agent 将正式 .30 树同步至 GitHub 仓库 `heruixii/deepseekpp-shuncode-mcp-fix`（含 18 个新自测、19 个 patcher、补 tools/apply-fix331030.py、本文档一并入库），更新仓库描述 | GitHub：deepseekpp-shuncode-mcp-fix；正式目录 `tools/apply-fix331030.py` 入库；本文档 §0/§7 | 网页崩溃修复**实测闭环**。GitHub 自 .16 追平至 .30（37 新文件 + 全树更新）；后续行动接上条 ②③④ |
 | 2026-09-16 晚 | Arena Agent 补齐 GitHub 门面：README.md 顶部加 .30 Current release 节（.29 降为 Previous）、创建 Release `v1.14.0-fix3.3.10.30`（Latest）并附 ZIP 资产 | GitHub README（commit `d86f4fb`）；Release 附 `DeepSeekPP-1.14.0-ShunCode-MCP-Fix3.3.10.30.zip`（13,911,078 B，SHA `E33D…378E` 已写入 notes）；正式树/仓库 README 同步更新 | GitHub 门面与代码、交接文档三者一致 | 无（待机事项同前：27 节闭环、GPU A/B、候选 .31） |
+| 2026-09-16 晚 | Arena Agent 响应“查看新日志，任务突然中断、继续/重试只口头答应不调工具”：快照新 WAL `D:\tmp\edsnap-331030-nudge-20260916`，解析 traces / turn_diag / web_diag / preflight / tool_shape 五条诊断链 | 未改扩展，仅取证；本文档 §0/§2.5/§5/§7 更新 | **根因实锤**：`run_command` 返回 `mcp_network_error`（ngrok 隧道瞬断）→ 失败结果仍计入完成门 → 模型一句“MCP 暂时断连”被判 `final` → trace 误标 `status=complete` → `DPP_RESUME_TRACE_CHAIN_331010` 只接 error/stopping/过期 running，永久拒绝接管，“继续/重试”退化为普通聊天（editMessage 三次 200 但零 turn_decision） | 实施 `.31` 两处修复；修复前绕过：断连后新开一轮对话而非点重试 |
+| 2026-09-16 晚 | Arena Agent 实施并发布 **Fix 3.3.10.31**：按 §4 全套发布链（冻结回退点 → hash-lock patcher → 专项套件 → 全回归 → 独立重建 → 落正式目录 → ZIP） | 正式目录 → 1.14.0.36（202 文件）；`D:\learn\DeepSeekPP-1.14.0-ShunCode-MCP-Fix3.3.10.31.zip` SHA `B3C9C512…B2F540`；回退点 `D:\tmp\DeepSeekPP-Fix331030-pre331031-20260916`；新套件 `fix331031-transport-failure-selftest.js`；本文档 §0/§3/§5/§7 | **修复已落地**：传输故障不再判 final（最多续跑 3 次后落 error）；恢复水位只计真实成功。专项 43/43、全回归 50/50（基线 .30 为 49/49）、篡改与重复打补丁 fail-closed、独立重建 201/201 零差异；只改 content.js+manifest+2 locales+22 版本门套件 | 用户实测（§5-1）；通过后考虑候选 .32 分片化 |
+| 2026-09-16 | 3.3.10.32 | reasoning 已宣告但未发出的工具调用被误提升为终局答案；同时修复 reload 与批刷诊断的竞态（使故障可观测）。回归 51/51，独立重建 203/203 零差异。ZIP SHA256 7C52B0C5…0D8C | 已交付，待用户实测 |
