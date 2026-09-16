@@ -13,14 +13,14 @@
 | 项目 | 状态 |
 |---|---|
 | 在做什么 | 修复 **DeepSeek++ 浏览器扩展**在自动化执行任务时导致 **DeepSeek 网页崩溃 / "服务器暂不可用" / 任务中断** 的系列问题 |
-| 当前正式版 | **`1.14.0.37 / DeepSeek++ ShunCode MCP Fix 3.3.10.32`**（GitHub 已同步：main `c3fb35d`，Release `v1.14.0-fix3.3.10.32` Latest） |
+| 当前正式版 | **`1.14.0.38 / DeepSeek++ ShunCode MCP Fix 3.3.10.33`**（GitHub 已同步：main `c99119f`，Release `v1.14.0-fix3.3.10.33` Latest） |
 | 正式目录 | `D:\learn\DeepSeekPP-1.14.0-ShunCode-MCP-Fix3`（Edge 解压加载） |
 | 最新成就 | **“继续/重试只口头答应不调工具”根因实锤并修复**：MCP 传输故障被完成门当作有效进展 → trace 误标 `complete` → 恢复网关永久拒绝接管；`.31` 双点修复（见 §2.5） |
 | 当前阶段 | **Fix 3.3.10.31 已发布，待用户实测验收**：专项 43/43、全回归 **50/50**、hash-lock 干净升级、篡改 fail-closed、独立重建 **201/201 零差异**。`.30` DOM 保险丝未回归 |
 | 下一步 | ①**用户实测 `.31`**（断连后发“继续”应真实重发工具调用）；②剩余整值重写通道分片化（候选 .32）；③`.29` 验收闭环 + `.30`/`.31` 补稳定化计划节；④GPU 141 观察项 |
 | 如果复现 | 对 Agent 说 **“查看新日志”**。崩溃自查：console 有无 `NotFoundError` 刷屏、`localStorage["dpp_dom_fence_diag_331030"]` 计数是否在涨；**“只口头答应不调工具”自查**：看 `dpp_inline_agent_traces` 末条 `status` 是否 `complete` 且末步无 `toolExecutions` |
-| 当前回退点 | `D:\tmp\DeepSeekPP-Fix331031-pre331032-20260916`（.31 冻结版） |
-| 最新进展 | `.32` 实测失败（继续→零工具 complete / 中途 error）根因实锤 = **run_command 未进直连集 + 句柄别名残留 + 完成门零工具盲区**（§2.7）；`.33` 候选干跑 54/54，待确认发布 |
+| 当前回退点 | `D:\tmp\DeepSeekPP-Fix331032-pre331033-20260916`（.32 冻结版，204 文件） |
+| 最新进展 | `.32` 实测失败（继续→零工具 complete / 中途 error）根因实锤 = **run_command 未进直连集 + 句柄别名残留 + 完成门零工具盲区**（§2.7）；**`.33` 已发布**（全回归 54/54，双重建 206/206 零差异），待用户实测 |
 
 ---
 
@@ -219,8 +219,9 @@ inline agent loop 末尾的 `u&&_1()`（`window.location.reload()`）与之竞�
 
 > 注：`.31` ZIP 曾被旧 `_mkzip.py`（输出路径写死）意外覆盖，已从冻结的 `.31` 树重建；新版 `_mkzip2.py` 改为受参数控制且固定时间戳。重建后 `.31` ZIP SHA256 = C50C507A0CD0388A868763970DBCEC2DA5FF9DFEAE20653EF1300B31502B7605，202 文件，内容与冻结树逐文件一致。
 
-### Fix 3.3.10.33（2026-09-16，候选，干跑已通过，待用户确认后落正式目录/打包）
+### Fix 3.3.10.33（2026-09-16，已发布）
 - 根因见 §2.7。改动：**A** `background.js` `Cd()` 核心 ShunCode 工具排名下限（`DPP_CORE_TOOL_FLOOR_331033`：run_command +1600 / get_command_output、read_files +1000 / apply_patch、search_files、list_directory +700）；**B1** 任何 `mcp_invoke` 完成后退役同 capability 的 `.19` 别名；**B2** 句柄类错误码入传输失败集（`DPP_HANDLE_ERROR_CODES_331033`）+ 定向纠偏“重新 discover 后下一轮立即 invoke”；**C1** 未注册工具标签检测（`DPP_UNREGISTERED_TOOL_TAG_331033`，诊断 `unregistered_tool_tag_331033`）视为 tool_intent 并说明“标签被忽略”；**C2** 续行提示词或 reasoning 含意图时零工具 `<task_complete>` 拒绝（`zero_tool_complete_331033` / 上限 `zero_tool_complete_limit_331033`）。
+- 发布：正式目录 → 1.14.0.38（206 文件）；`D:\learn\DeepSeekPP-1.14.0-ShunCode-MCP-Fix3.3.10.33.zip` 13,933,248 B SHA256 `7A398F4F…B795`；回退点 `D:\tmp\DeepSeekPP-Fix331032-pre331033-20260916`；GitHub commit `c99119f`，Release `v1.14.0-fix3.3.10.33`（Latest）。
 - 产物：`tools/apply-fix331033.py`（`.32→.33`，5 文件 sha 锁 + 11 锚点 fail-closed，bump 26 套件版本门 + 2 locales）、`fix331033-capability-exposure-selftest.js`（53 断言）。干跑目录 `D:\tmp\DeepSeekPP-Fix331033-dry`：`node --check` 4/4，全回归 **54/54**（.32 基线 51/51）。manifest → `1.14.0.38`。
 - 保留：.25/.27 “可见 final 优先”、.31 传输门、.32 安全 final 守卫（新套件断言）。
 
@@ -251,7 +252,7 @@ inline agent loop 末尾的 `u&&_1()`（`window.location.reload()`）与之竞�
 
 
 ### 下一步（`.32` 交付后）
-0. **`.32` 实测已失败并查明根因（§2.7）**；`.33` 候选已干跑通过，等待用户确认后执行 §4 发布链（冻结 `.32` 回退点 → 落正式目录 → ZIP → GitHub commit + Release）。
+0. **`.32` 实测已失败并查明根因（§2.7）→ `.33` 已发布**。下一步 = **用户实测 `.33`**：重载扩展 → 关旧标签 → 新会话 → 发无关键词的“继续”；预期 `web_response_diag` 注入工具含 `run_command`，不再出现 `textChars` ≫ 可见文本的回合。若失败导出 `dpp_agent_turn_diag_331021` 看 `unregistered_tool_tag_331033` / `zero_tool_complete_331033` / `tool_transport_failure_331031`。
 1. **用户实测 `.32`**：`edge://extensions` 重新加载解压扩展 → 彻底关闭旧 DeepSeek 标签页 → 开新标签页；不用超长旧对话。
    预期：中断后发“继续”应真正发出工具调用；若仍不调用，本轮应落为 `error` 而非 `complete`，且**不再整页刷新**。
 2. 若仍失败：直接导出 `dpp_agent_turn_diag_331021`（改点 D 后应能看到失败轮次的条目），重点看 `terminal_promotion` / `turn_decision` 两个 stage。
@@ -285,3 +286,4 @@ inline agent loop 末尾的 `u&&_1()`（`window.location.reload()`）与之竞�
 | 2026-09-16 | 3.3.10.32 | reasoning 已宣告但未发出的工具调用被误提升为终局答案；同时修复 reload 与批刷诊断的竞态（使故障可观测）。回归 51/51，独立重建 203/203 零差异。ZIP SHA256 7C52B0C5…0D8C | 已交付，待用户实测 |
 | 2026-09-16 晚 | Arena Agent 将 `.31`+`.32` 同步至 GitHub `heruixii/deepseekpp-shuncode-mcp-fix`：工作副本 `D:\tmp\gh-deepseekpp`，`.31` 取自冻结树 `D:\tmp\DeepSeekPP-Fix331031-pre331032-20260916`（202 文件），`.32` 取自正式目录（204 文件）；README 顶部改 `.32` Current / `.31` Previous / `.30` Historical；创建 Release `v1.14.0-fix3.3.10.32`（Latest）附 ZIP | commits `49f9fb5`（.31，30 文件）、`e42c61a`（.32，31 文件）、`495cef7`（README）、`c3fb35d`（本文档）；Release 资产 `DeepSeekPP-1.14.0-ShunCode-MCP-Fix3.3.10.32.zip` 13,920,096 B，SHA `7C52B0C5…0D8C` 已写入 notes；本文档 §0/§1.2/§5/§7 | GitHub 追平至 `.32`；仓库与正式树逐文件比对：仅 `.gitattributes` 声明的行尾差异，无内容差异；仓库多出 `.gitattributes` 与本交接文档两文件（预期）。踩坑复现一次：Windows Python 不认 `/c/...` 路径（§6 已记） | 待用户实测 `.32`（§5）；`.31` 未单独建 Release（内容已含于 .32 notes） |
 | 2026-09-16 晚 | Arena Agent 响应 `.32` 实测失败：快照 `D:\tmp\edsnap-331032-20260916`，新写 `ldb_extract.py` 直接解 WAL，五条诊断链交叉比对（turn_diag `textChars` vs trace 可见文本） | 未改正式目录；产物 `D:\learn\Athena计划\docs\mcp-deepseekpp-capability-exposure.md`、`D:\tmp\fix331033\apply-fix331033.py`、`fix331033-capability-exposure-selftest.js`、干跑树 `D:\tmp\DeepSeekPP-Fix331033-dry`；本文档 §0/§2.7/§3/§5/§7 | **根因实锤（非回归）**：自适应暴露按提示词关键词选工具，`继续` 选不中 `run_command` → `<run_command>` 标签被解析器剥成文本；别名指向已消费句柄 → `mcp_capability_handle_replayed` 无定向纠偏；零工具 `task_complete` 放行。`.33` 五处修复干跑：node --check 4/4、新套件 53/53、全回归 54/54 | 待用户确认后跑 §4 发布链落 `.33`；未升级前把 ShunCode 服务器切 `direct` 模式 |
+| 2026-09-16 晚 | 用户确认“全部修复”，Arena Agent 按 §4 发布 **Fix 3.3.10.33**：冻结 `.32` 回退点 → patcher 落正式目录 → 双独立重建比对 → 全回归 → ZIP → GitHub commit + Release | 正式目录 → 1.14.0.38（206 文件）；ZIP `D:\learn\DeepSeekPP-1.14.0-ShunCode-MCP-Fix3.3.10.33.zip` 13,933,248 B SHA `7A398F4F…B795`；回退点 `D:\tmp\DeepSeekPP-Fix331032-pre331033-20260916`；GitHub `c99119f` + Release `v1.14.0-fix3.3.10.33`（Latest，README 顶部改 .33 Current）；本文档 §0/§3/§5/§7 | 全回归 54/54、双重建 206/206 零差异、重复打补丁 fail-closed。踩坑：正式目录被占用导致 `shutil.rmtree` 失败（已改为先 patch 到临时树再 `cp -r` 覆盖，§6 建议 patcher 勿以正式目录为 dst） | 用户实测 `.33`（§5-0） |
