@@ -398,3 +398,36 @@ An isolated Edge profile successfully registered the unpacked extension and expo
 - Independent rebuild from frozen `.29` matches the `.30` tree with `missing=0 / extra=0 / diff=0`.
 - Release-chain maintenance in step with the bump: `_locales/{en,zh_CN}` extension display name -> `Fix 3.3.10.30` (the name shown by chrome://extensions), and legacy selftest version allow-lists extended (18 list files + 2 supersedes-regex suites) — eliminates the 22 stale version-gate regressions observed right after the manifest bump.
 - GPU LiveKernelEvent 141 note: repeated 141s on 2026-09-16 correlate only with the morning window; the afternoon crash wave shows no new 141, so 141 is tracked as a separate machine-level watch item, not this bug.
+
+## Fix 3.3.10.31 validation
+
+Reproduction evidence (snapshot `D:\tmp\edsnap-331030-nudge-20260916`, WAL
+`000900.log`):
+
+- `dpp_inline_agent_traces`: last trace `status=complete`, `totalSteps=3`,
+  `totalTools=3`, final step has **no** tool executions; step 1 recorded
+  `run_command ok=false error.code=mcp_network_error`.
+- `dpp_agent_turn_diag_331021`: no `turn_decision` entry after 16:22:34.
+- `dpp_web_response_diag_331015`: 16:23:57 / 16:26:00 / 16:28:29 all
+  `route=editMessage`, HTTP 200, `streamFinished=true` - i.e. the retries were
+  plain chat turns that never reached the agent loop.
+- `errorName` empty throughout and `agent_exception_331023` silent, confirming
+  the failure never threw and an exception-only investigation would miss it.
+
+Suite: `fix331031-transport-failure-selftest.js` - 43 checks in 5 groups.
+
+| Group | Checks | Covers |
+|---|---|---|
+| build integrity | 14 | new symbols present, transport check ordered before the `final` branch, limit path sets `oe`, `.30` DOM fence not regressed |
+| transport predicate | 10 | `mcp_network_error` / `mcp_timeout` classified; ordinary command failure and success rejected; null / missing-result / non-object-error safe |
+| genuine-success predicate | 5 | all-failed run is not a success; successful step or successful initialExecution is; empty and null safe |
+| turn decision | 9 | the exact reported bug (transport failure no longer yields `final`), re-steer twice, stop as error on the third, counter reset after recovery, ordinary failures and continuation cues unaffected, real tool call wins |
+| resume gating | 5 | old watermark was raised by the mislabelled run and nothing was resumable; new watermark ignores it and the interrupted run becomes resumable; a genuinely finished task still blocks pointless resume |
+
+Full regression: 50/50 suites pass. Frozen `.30` baseline re-measured at 49/49
+before the change, so the delta is the one added suite and no regressions.
+
+Patcher: `tools/apply-fix331031.py`, hash-locked to the five `.30` core files.
+Clean input upgrades exactly; tampered input and already-patched input both
+fail closed without writing an output tree. Independent rebuild from the frozen
+`.30` reproduced the release tree byte for byte (201 files, 0 differences).

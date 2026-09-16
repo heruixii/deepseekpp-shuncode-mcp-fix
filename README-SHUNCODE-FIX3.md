@@ -394,3 +394,52 @@ DeepSeek 新前端会在页面结构被扩展修改后进入自己的错误边�
 ## Fix 3.3.10.30
 
 **MAIN-world DOM fence for the refresh crash.** On hard refresh of an agent-heavy conversation, DeepSeek++ restores tool blocks / agent trace UI into DeepSeek's React-managed `.ds-message` containers while DeepSeek's own reconciler is also updating them; the anchor node Drift makes DeepSeek's `insertBefore` throw `NotFoundError`, and the uncaught exception becomes the app-level "页面崩溃" screen. `.30` installs `DPP_DOM_FENCE_331030` at `document_start` in the MAIN world: it wraps `Node#insertBefore`, `Node#removeChild` and `Node#replaceChild` so a `NotFoundError` (and only that error) recovers in place instead of crashing the app — foreign anchors fall back to append at the intended parent, removals of already-detached nodes become no-ops, and removals of nodes attached elsewhere are removed from their real parent. Every recovery bumps a throttled diagnostic beacon at `localStorage["dpp_dom_fence_diag_331030"]` (counts + lastAt). Fence is idempotent (`__dppFence331030`), zero-cost on the non-error path (single try/catch), and covered by `fix331030-dom-fence-selftest.js`.
+
+## Fix 3.3.10.31
+
+Root cause, proven from the extension LevelDB WAL (`dpp_inline_agent_traces`,
+`dpp_agent_turn_diag_331021`, `dpp_web_response_diag_331015`): when the MCP
+transport drops, the tool call returns a *structured* failed result
+(`result.ok === false`, `result.error.code === "mcp_network_error"`) instead of
+throwing. Nothing in the agent loop treated that as a non-result, so:
+
+1. the failed execution was folded into the cumulative results array;
+2. the completion gate only asks "is there a tool result", never "did it
+   succeed", so a model reply such as "MCP is temporarily disconnected, retrying"
+   resolved to the `final` branch;
+3. the trace was persisted as `status: "complete"` even though the last step ran
+   no tools and every tool in the run had failed;
+4. `DPP_RESUME_TRACE_CHAIN_331010` only accepts `error` / `stopping` / expired
+   `running` traces, and treats the newest `complete` as a watermark - so the
+   mislabelled run both failed to qualify and blocked everything behind it.
+
+The visible symptom was that "continue" / "retry" produced a verbal
+acknowledgement and then stopped: those turns never entered the agent loop at
+all (three `editMessage` responses returned HTTP 200 with zero `turn_decision`
+records).
+
+Fix, both halves required:
+
+- **Completion gate** - a transport-class failure in the current step can never
+  resolve to `final`. It re-steers the model to re-issue the same tool call, and
+  after `DPP_TRANSPORT_RETRY_MAX_331031` (3) consecutive transport failures the
+  loop stops through `oe`/`se`, which routes to `AGENT_LOOP_ERROR` and therefore
+  persists `status: "error"` - a state the resume gateway can pick up.
+- **Resume watermark** - only runs containing at least one genuinely successful
+  tool execution count as a completion watermark, so a mislabelled `complete`
+  can no longer mask a resumable interrupted run.
+
+Ordinary tool failures (for example a command exiting non-zero) are deliberately
+left alone: they are real results and must still be allowed to finish a task.
+
+Release-chain maintenance: extension display name in `_locales/{en,zh_CN}`,
+`manifest.version_name`, and four distinct version-gate shapes across 22 legacy
+suites were bumped in step.
+
+Validation: dedicated suite 43/43; all 50 self-test suites pass (frozen .30
+baseline was 49/49); hash-locked .30 -> .31 patcher upgrades cleanly and fails
+closed on tampered or already-patched input; independent rebuild matches the
+release tree exactly (missing=0 / extra=0 / diff=0, 201 files). Only
+`content.js`, `manifest.json`, two locale files and the version-gated suites
+changed.
+

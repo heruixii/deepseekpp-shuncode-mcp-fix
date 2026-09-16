@@ -73,7 +73,7 @@ const request = { originalPrompt: '继续任务', chatSessionId: 'chat' };
 const prepared = context.prepare(request, [trace]);
 
 test('version includes or supersedes isolated resume hotfix', Number(manifest.version.split('.').at(-1)) >= 17);
-test('version name includes or supersedes isolated resume hotfix', /Fix 3\.3\.10\.(?:12|13|14|15|16|17|18|19|20|21|22|23|24|25|26|27|28|29|30)$/.test(manifest.version_name));
+test('version name includes or supersedes isolated resume hotfix', /Fix 3\.3\.10\.(?:12|13|14|15|16|17|18|19|20|21|22|23|24|25|26|27|28|29|30|31)$/.test(manifest.version_name));
 test('isolated checkpoint is generated', typeof prepared?.prompt === 'string');
 test('checkpoint keeps verified progress', prepared.prompt.includes('timelapse'));
 test('checkpoint strips DSML markup', !prepared.prompt.includes('DSML') && !prepared.prompt.includes('<｜'));
