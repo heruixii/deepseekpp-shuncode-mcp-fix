@@ -188,3 +188,20 @@ Arena共享工作区 `/home/user` 有 `mcp.sh`、`rpy.sh`（run_command 传脚�
 - 另：C 之后 14:34:59 的追问轮以 `unregistered_tool_continue_331036`×3 → `unexecuted_work_limit_331036` 结束为 error，属 .36 长块门在无工具追问时的误触发，需单独记录，不与上传阻塞混淆。
 
 下一步（待用户授权）：制作 .37 候选，仅在后台授权门增加固定原因枚举（`gate_stage` + 布尔位：hasTab/frameId0/lifecycleActive/hasDocumentId/senderSession/tabSession/sessionsEqual/tabsGetOk），写入 `chrome.storage.local` 有界环形数组并随响应返回 `reason`；不记录 URL/token/sender 原文，不放宽任何检查；配套 16 组后台边界测试扩展与新的版本基线。
+
+## 9. 2026-09-17 14:54 .37 诊断部署后首个原因码：`ctx_sender_tab_session_mismatch`
+
+live 已于 14:52 部署 .37/1.14.0.42（备份 `D:/tmp/deepseekpp-fix331037-20260917/live-backup/`）。用户重载扩展后两次 read_image（快照 `D:/tmp/svg-vision-fix37-20260917-145633/`）：
+
+| 时间 | 场景 | 结果 |
+|---|---|---|
+| 14:54:16 | 重载后未刷新的现有页面 | capture→upload_ok→refs=1→ack=1（成功） |
+| 14:54:59 | 地址栏直接加载旧会话 URL | capture→upload_start→**gate_reason=`ctx_sender_tab_session_mismatch`**→runtime_message_unauthorized，refs=0 |
+
+探针：`frame=zero lifecycle=active documentId=true tab=true tabUrl=true senderSession=true tabSession=true sameSession=false`。即：frame、生命周期、documentId 全部正常；`sender.url` 与 `tab.url` **都含会话段但不相同**。命中的是 `DPP_REQUIRE_UPLOAD_CONTEXT_V7` 的 `vN(context.senderUrl) !== context.chatSessionId`，其中 `chatSessionId` 来自 `tab.url`（`wN` 里 `vN(i??n)`，且 `aI→TN` 再以 `tabs.get().url` 覆盖）。
+
+解释：Chromium 传给 `onMessage` 的 `sender.url` 是该 content script 文档**提交时**的 URL，DeepSeek 用 History API 在同一文档内切换会话后它不会跟着变；`tab.url` 则是当前值。因此同一文档内只要发生过一次会话切换（新对话、点击左栏会话、甚至站点自身的 replaceState 规范化），此后所有上传都被拒；F5 让两者重新一致。这与第 8 节“按 document 实例失败”完全吻合，也解释了第 7 节 SPA 假设为何“方向对、条件错”。
+
+修复方向（.38，待授权）：会话身份以**浏览器可信的 `tab.url`** 为准（它已在 `TN` 与上传前后 `ASSERT_CURRENT` 通过 `tabs.get` 校验三次），`sender.url` 只保留来源/顶层 frame/同源校验，不再要求其会话段与 `tab.url` 相等；`documentId`、lifecycle、frameId=0、会话不变等检查全部保留。不接受 payload 自报会话。需新增正反例：同文档 SPA 切换后上传（应通过并绑定 tab 会话）、sender 为其他来源/iframe/其他扩展（仍拒绝）、上传期间 tab 导航（仍拒绝）。
+
+另：`chrome.storage.local['dpp_upload_gate_diag_v9']` 在本快照中尚未见到（可能未落盘或 service worker 写入时机），content 侧 `gate_reason` 已足够定位；部署 .38 前核实。
