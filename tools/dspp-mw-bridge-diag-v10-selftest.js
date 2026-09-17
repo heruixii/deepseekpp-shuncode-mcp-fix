@@ -23,6 +23,8 @@ let groups = 0; async function test(n, f) { await f(); groups++; console.log('PA
     assert.equal(pairs.length, 10);
     let back = stripped.replace(/\r\n/g, '\n');
     for (const [o, n] of pairs) { assert.equal(back.split(n).length, 2, 'patched once: ' + o.slice(0, 40)); back = back.replace(n, o); }
+    // .40+ may additionally carry the skill-popup observe fix; undo it before comparing (validated by its own selftest).
+    back = back.replace('document.body?Y.observe(document.body,{childList:!0,subtree:!0}):document.addEventListener(`DOMContentLoaded`,()=>{Y&&document.body&&Y.observe(document.body,{childList:!0,subtree:!0}),_o()},{once:!0})', 'Y.observe(document.body,{childList:!0,subtree:!0})');
     assert.equal(back, old.replace(/\r\n/g, '\n'), 'only diagnostic calls were inserted');
   });
   await test('helper: sanitized, bounded to 64, dedupes bursts, never stores URLs/ids', () => {

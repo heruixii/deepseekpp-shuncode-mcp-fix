@@ -2,7 +2,9 @@
 
 > **2026-09-17 目录分离**：本文件及全部 DSPP 文档/脚本/私有取证已从 `D:/learn/Athena计划` 迁出，独立于 Athena 计划维护；当前真源为公开仓库工作树 `D:/tmp/gh-deepseekpp`（docs/、tools/），私有取证在其 `local/`（已 gitignore，不上传）。
 
-> **2026-09-17 本轮浏览器验收失败（优先于下方此前待验状态）**：磁盘仍为.36/1.14.0.41，GitHub发布不变；本轮22步/30工具，3次取得图像字节后上传被 runtime_message_unauthorized 拒绝，refs=0，2,168字节也失败。其余直接读图含4次文件不存在、6次网络错误，并非全部success。当前MCP小图复核返回原生image块，不能归因于ShunCode始终剥离。具体后台拒绝子条件及浏览器驻留版本未取证；阻塞仍被记为complete待修。本次仅核查，未改运行代码或发布新版。 详见 docs/mcp-deepseekpp-visual-blocker-20260917.md。
+> **2026-09-17 15:51 当前接手入口（优先于下方全部旧状态）**：本机 live `D:/learn/DeepSeekPP-1.14.0-ShunCode-MCP-Fix3` 已运行 **Fix 3.3.10.40 / 1.14.0.45**；GitHub 最新 Release 仍为 .36（.37–.40 未发布、未 tag）。.36 的浏览器视觉上传阻塞（`runtime_message_unauthorized`）已由 **.38** 修复并验收通过：根因是 `DPP_REQUIRE_UPLOAD_CONTEXT_V7` 拿冻结于文档提交时刻的 `sender.url` 会话段与 `tab.url` 比较（.37 诊断现场命中 `ctx_sender_tab_session_mismatch`），现改以浏览器 tab URL 为准并锁定监听时会话，其余检查全部保留；浏览器三次 `upload_ok→refs=1→ack=1`。.39 加 MAIN-world 直写诊断 `dpp_mw_bridge_diag_v10`；.40 修 `main-world.js` 技能弹窗 `observe(null)`。每级都有 hash 锁 builder/validator（`tools/apply-fix33103[7-9|40].py`、`validate-…`），基线须用干净 .36 树 `D:/tmp/deepseekpp-base36`；每级 live 备份与回执在 `D:/tmp/deepseekpp-fix33103N-20260917/`。待办：(a) 需授权后按 §4 发布 .40（草稿 `docs/RELEASE-Fix3.3.10.40-draft.md`）；(b) 15:1x 曾出现一次“新对话首条消息无工具、扩展零日志”未复现，再现时读 `dpp_mw_bridge_diag_v10`；(c) 黑曜石 dspp 未同步 .37–.40。详见 `docs/mcp-deepseekpp-visual-blocker-20260917.md` §9–§14、`docs/mcp-deepseekpp-upload-gate-fix38.md`、`docs/mcp-deepseekpp-mw-bridge-diag-v10.md`、`docs/mcp-deepseekpp-skill-popup-observe-fix40.md`。
+
+> 历史（已被 .38 修复）：**2026-09-17 本轮浏览器验收失败**：磁盘仍为.36/1.14.0.41，GitHub发布不变；本轮22步/30工具，3次取得图像字节后上传被 runtime_message_unauthorized 拒绝，refs=0，2,168字节也失败。其余直接读图含4次文件不存在、6次网络错误，并非全部success。当前MCP小图复核返回原生image块，不能归因于ShunCode始终剥离。具体后台拒绝子条件及浏览器驻留版本未取证；阻塞仍被记为complete待修。本次仅核查，未改运行代码或发布新版。 详见 docs/mcp-deepseekpp-visual-blocker-20260917.md。
 > 部署状态（脚本维护）：v8/.36正式磁盘已更新为1.14.0.41；content e66f24d5…f1ec，policy c8e843c8…c8c6，background不变。浏览器重载/新模型验收待进行，分发回执见v8文档；2026-09-17。
 
 > **2026-09-17 v8 当前接手入口**：Fix3.3.10.36 / 1.14.0.41 已部署本机磁盘，修复视觉主动工作流与长未注册工具块误完成；48视觉/22读图/16后台/22原生维护/55旧回归、14工程/6语法通过，正式文件复测48/22/16通过。浏览器尚需用户重载，新模型SVG端到端未验证；GitHub已正式发布 Latest v1.14.0-fix3.3.10.36，提交16a9219ff8dbd3601fedecfb459d1d5431e04248；三个远端附件下载SHA-256及API digest一致。黑曜石已将奇思妙想整理为dspp：4当前入口+21历史原稿+1历史索引，53处链接修复、131处校验，原始备份保留，未推送私人笔记库。详见 docs/mcp-deepseekpp-visual-workflow-v8.md。下方旧版状态按历史阅读。
@@ -342,3 +344,10 @@ inline agent loop 末尾的 `u&&_1()`（`window.location.reload()`）与之竞�
 - 两文件备份为各自 `.v7_bak`（v6）；本操作含双文件语法校验和文档回执。
 - 未修改侧栏开关、未重载浏览器、未进行真实图片上传；端到端验收仍待进行。
 
+### 2026-09-17T15:51+08:00 · .37 → .40 连续四级（诊断 → 修复 → 诊断 → 小修）
+
+- .37（1.14.0.42，14:52 部署）：上传门固定枚举诊断；现场命中 `ctx_sender_tab_session_mismatch`（frame/lifecycle/documentId 全正常）。
+- .38（1.14.0.43，15:06 部署）：`DPP_REQUIRE_UPLOAD_CONTEXT_V7` 去掉过期 `sender.url` 会话比较，新增 `dppListenerChatSessionId` 会话锁；离线 20/64，浏览器 15:22/15:27/15:43 三次 upload_ok→refs→ack。background `76df1046…`。
+- .39（1.14.0.44，15:41 部署）：main-world 直写 `dpp_mw_bridge_diag_v10`（10 插桩点，仅枚举/布尔/计数）；首轮显示新对话首条消息 tools=24、桥正常，“服务器不可用”为 DeepSeek `generation_err`。
+- .40（1.14.0.45，15:51 部署）：`go()` 的 `Y.observe(document.body)` 改为 body 缺失时延后到 DOMContentLoaded；4 组专项 + 22/67 全过。main-world `e63b1676…`。
+- 未做：发布/tag/ZIP、黑曜石同步、Athena 目录（已 DSPP-free，勿动）。
