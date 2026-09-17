@@ -227,3 +227,11 @@ live 已于 14:52 部署 .37/1.14.0.42（备份 `D:/tmp/deepseekpp-fix331037-202
 ## 13. .39（1.14.0.44）诊断已部署，用于“新对话首条消息无工具”
 
 现有诊断全走桥，桥断则全无记录；.39 在 main-world 加直写 localStorage 的 `dpp_mw_bridge_diag_v10`（仅枚举/布尔/计数）。background/content 与 .38 相同。详见 `docs/mcp-deepseekpp-mw-bridge-diag-v10.md`。待用户复现后读取。
+
+## 14. .39 首轮现场结果（15:42–15:44）
+
+`dpp_mw_bridge_diag_v10`：F5 后 `boot→bridge_open→sync_state tools=24`；两次同页“新对话”（`navigate session=false`）后首条消息均 `send_hook route=completion tools=24`、`augment bridge=true`，无 `post_drop`/`lifecycle_error`/`main_crash`。content 侧 preflight 完整（`content_augment_done→result_posted→mw_transport_started`，16 个描述符，16,183 字符）。
+
+第一个新对话用户看到“服务器不可用”：`dpp_web_response_diag_331015` 显示 HTTP 200 但 SSE `finish_reason=generation_err`、`status=INCOMPLETE`（15:43:05）；扩展按 .20/.26 机制 compact 重发（10,704 字符）再次 `generation_err`（15:43:14）。15:43:19 第二个新对话相同大小请求成功并正常调用工具。**判定：DeepSeek 服务端偶发 generation_err，非扩展问题。**
+
+同时段 read_image：`upload_ok→refs=1→ack=1`（第三次通过）。15:1x 的“零日志无工具”本轮未复现；.39 诊断保留在 live，再现时直接读取。
