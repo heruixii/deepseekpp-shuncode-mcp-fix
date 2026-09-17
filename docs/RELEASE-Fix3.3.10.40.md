@@ -1,6 +1,6 @@
-# DeepSeek++ ShunCode MCP Fix 3.3.10.40（草稿，未发布）
+# Fix 3.3.10.40（扩展版本 1.14.0.45）
 
-> 本文是 .37–.40 的合并 Release 说明草稿。**未打 tag、未运行 stage-repo / 发布脚本、未上传 ZIP。** 发布需另行授权，并按项目交接文档 §4 流程执行。
+2026-09-17 · .37–.40 合并发布：修复 .36 浏览器视觉上传授权误拒、技能弹窗启动竞态，附上传门与 MAIN-world 桥诊断。
 
 ## 版本
 
@@ -39,3 +39,26 @@ manifest `1.14.0.45` / `1.14.0 ShunCode MCP Fix 3.3.10.40`。运行时相对 .36
 python tools/apply-fix331040.py --build <干净 .36 树> <新目录>
 python tools/validate-fix331040.py --root <候选> --baseline <干净 .36 树> --tools tools --output <新目录>
 ```
+
+## 升级与复测
+
+1. 下载本 Release 的 `DeepSeekPP-1.14.0-ShunCode-MCP-Fix3.3.10.40.zip`（`SHA256SUMS.txt` 校验）；备份后更新解压目录。
+2. `edge://extensions` / `chrome://extensions` **重新加载扩展**，关闭旧 DeepSeek 标签页并新开已登录页面；目标显示版本 **1.14.0.45**。
+3. 在同一页面切换会话（不 F5）后执行需要参考图的任务，`dpp_read_image_diag_v7` 应出现 `upload_ok → request_refs(1) → request_ack(1)` 且无 `gate_reason` 行。
+4. 若仍被拒，`gate_reason` 行与 `chrome.storage.local.dpp_upload_gate_diag_v9` 给出固定原因码；“新对话首条消息无工具”时读页面 `localStorage.dpp_mw_bridge_diag_v10`。
+
+## 工程资料
+
+- [上传门根因与现场取证](mcp-deepseekpp-visual-blocker-20260917.md)
+- [.37 上传门诊断](mcp-deepseekpp-upload-gate-diag-v9.md) · [.38 门禁修复](mcp-deepseekpp-upload-gate-fix38.md) · [.39 桥诊断](mcp-deepseekpp-mw-bridge-diag-v10.md) · [.40 弹窗竞态](mcp-deepseekpp-skill-popup-observe-fix40.md)
+- [脱敏机器可读报告](fix331040-validation.json)
+- [中文使用指南](../USAGE-zh_CN.md)
+
+重建需 Python 3.10+ / Node 20+。从 `v1.14.0-fix3.3.10.36` tag 用 `git archive` 导出独立基线（须与 `tools/fix331037-baseline-sha256.json` 一致），然后：
+
+```bash
+python tools/apply-fix331040.py --build BASE_36 NEW_OUTPUT
+python tools/validate-fix331040.py --root NEW_OUTPUT --baseline BASE_36 --tools tools --output NEW_EXTERNAL_REPORT_DIR
+```
+
+输出目录必须不存在。只复制哈希锁定的基线文件；不复制浏览器资料、私人笔记或原始日志。

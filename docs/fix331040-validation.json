@@ -1,0 +1,441 @@
+{
+  "release": "v1.14.0-fix3.3.10.40",
+  "passed": true,
+  "checks": [
+    {
+      "name": "runtime_changes_exactly_allowed",
+      "passed": true
+    },
+    {
+      "name": "independently_rebuilt_all_files",
+      "passed": true
+    },
+    {
+      "name": "no_extra_files",
+      "passed": true
+    },
+    {
+      "name": "policy_unchanged",
+      "passed": true
+    },
+    {
+      "name": "gate_functions_unchanged",
+      "passed": true
+    },
+    {
+      "name": "require_drops_stale_sender_url_comparison",
+      "passed": true
+    },
+    {
+      "name": "require_keeps_all_other_conditions",
+      "passed": true
+    },
+    {
+      "name": "require_is_the_only_gate_body_change",
+      "passed": true
+    },
+    {
+      "name": "allowlist_unchanged",
+      "passed": true
+    },
+    {
+      "name": "diag_call_sites_exactly_three",
+      "passed": true
+    },
+    {
+      "name": "no_url_or_token_fields_in_diag_helper",
+      "passed": true
+    },
+    {
+      "name": "version",
+      "passed": true
+    },
+    {
+      "name": "manifest_only_version_changed",
+      "passed": true
+    },
+    {
+      "name": "no_new_runtime_permissions",
+      "passed": true
+    },
+    {
+      "name": "locale:en",
+      "passed": true
+    },
+    {
+      "name": "locale:zh_CN",
+      "passed": true
+    },
+    {
+      "name": "55_legacy_suites",
+      "passed": true
+    },
+    {
+      "name": "python_ast:apply-fix331037.py",
+      "passed": true
+    },
+    {
+      "name": "python_ast:apply-fix331038.py",
+      "passed": true
+    },
+    {
+      "name": "python_ast:apply-fix331039.py",
+      "passed": true
+    },
+    {
+      "name": "python_ast:apply-fix331040.py",
+      "passed": true
+    },
+    {
+      "name": "python_ast:validate-fix331040.py",
+      "passed": true
+    }
+  ],
+  "tests": [
+    {
+      "name": "syntax-content.js",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "syntax-background.js",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "syntax-fix3-policy.js",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "syntax-gate-diag-v9",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "skill-popup-observe",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "mw-bridge-diag-v10",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "syntax-main-world",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "upload-gate-v10",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "visual-workflow-v8",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "image-runtime-v7",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "image-boundary-v7",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "native-maintenance",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix3-continuation-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix3-policy-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix3-web-policy-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix31-agent-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix32-capability-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix33-known-issues-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix33-stream-integration-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix331-stream-close-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix3310-dsml-storm-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix33101-quarantine-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix331010-status-errors-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix331011-resume-crash-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix331012-resume-isolation-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix331013-agent-context-pressure-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix331014-renderer-pressure-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix331015-web-transport-diagnostics-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix331016-xhr-terminal-correlation-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix331017-sse-control-trail-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix331018-preflight-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix331019-capability-resume-ui-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix33102-manual-page-filter-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix331020-generation-error-recovery-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix331021-agent-tool-intent-terminal-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix331022-manual-escalation-storage-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix331023-agent-shadow-storage-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix331024-generic-wrapper-midstep-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix331025-reasoning-generic-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix331026-generation-passthrough-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix331027-continuation-capability-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix331028-empty-pty-capability-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix331029-storage-pressure-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix33103-parent-fallback-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix331030-dom-fence-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix331031-transport-failure-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix331032-reasoning-intent-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix331033-capability-exposure-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix331034-run-command-status-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix33104-history-filter-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix33105-prompt-exposure-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix33106-dsml-eof-integration-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix33106-dsml-eof-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix33107-agent-lifecycle-mcp503-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix33108-lifecycle-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix33109-global-trace-stats-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix332-safe-dom-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix333-agent-stability-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix334-tool-storm-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix335-empty-stream-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix336-long-task-stability-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix337-attachment-json-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix338-agent-budget-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix339-hr-sim-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix339-message-id-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "mcp-diagnostic-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "mcp-repair-selftest",
+      "passed": true,
+      "exit_code": 0
+    }
+  ],
+  "runtime_sha256": {
+    "_locales/en/messages.json": "3a03d967ba9d4167ba97c5925415b220090614eb3cb4281a46edda07c9603fd9",
+    "_locales/zh_CN/messages.json": "401407553440144006520253fcce9ff69f0bf41366b156bf0ca51e556827fe3a",
+    "background.js": "76df1046a8bd3247484dc96092785b876b7b7985cbfe31c5cd31947212a536f5",
+    "content-scripts/content.js": "ddda4a9ea97a4105454ab0cea3970eb35212da3c9527a4e82519937e0f4d43fe",
+    "content-scripts/main-world.js": "e63b16762734e524af680e9f4e40fc18e92990f2f26afecca60f98bf3a199d92",
+    "fix3-policy.js": "c8e843c8bb49e312596dc02da0a5e20699c7e8ffa471a8879bf1168c8ce9c8c6",
+    "manifest.json": "5cd4f69854e89321605c531603e88a9cd51b051da23b89b6e1f3db5c8247b76b"
+  },
+  "browser_model_acceptance": "pending: reload + F5, extension error panel must stay free of main-world.js observe errors; slash-command skill popup still opens"
+}
