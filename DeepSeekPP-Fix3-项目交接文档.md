@@ -48,8 +48,8 @@
 | 当前正式版 | **`1.14.0.47 / DeepSeek++ ShunCode MCP Fix 3.3.10.42`**（GitHub：main `b19e0e0`，Release `v1.14.0-fix3.3.10.42` **Latest**，ZIP SHA `22a06e49…2cee6`；live 217 文件） |
 | 正式目录 | `D:\learn\DeepSeekPP-1.14.0-ShunCode-MCP-Fix3`（Edge 解压加载） |
 | 最新成就 | **“继续/重试只口头答应不调工具”根因实锤并修复**：MCP 传输故障被完成门当作有效进展 → trace 误标 `complete` → 恢复网关永久拒绝接管；`.31` 双点修复（见 §2.5） |
-| 当前阶段 | **Fix 3.3.10.42 已部署 live，待浏览器验收**：.41 后 20:53–20:56 三连断的真实根因 = 工具暴露漂移（ShunCode 15 工具 35.9 KB > 28 KB 自动降级线 → 被悄悄改成 adaptive 5 槽，每轮工具表随提示词漂移，模型调用上一轮还在的工具）。.42 改暴露层（policy/background）+ 修 .41 `resolution` 白名单 bug |
-| 下一步 | ①**用户实测 `.42`**（重载扩展 → 关旧标签 → 新会话 → 参考图任务 + 「继续」；判据 `web_response_diag.descriptorCount==24`、无 `unexecuted_work_limit_331036`）；②旧观察项：首次 read_image `mcp_tool_result_error`、GPU 141、整值重写通道分片化 |
+| 当前阶段 | **.42 首次现场：任务 complete、0 中断、6 核心工具全程在表（目标达成）**；但 A1 触发线未生效（真实描述符成本 49,240 > 48,000，我估算漏了 gd=1024），靠 B 兜底；模型"看不到图"= `include_data_uri:false` 时扩展 `Zo()` 丢弃 `content[]` image 块，`:true` 时通道端到端成功（22:00:46 模型 reasoning 明确描述了画面）。复盘 `docs/mcp-deepseekpp-fix42-first-run-20260917.md` |
+| 下一步 | ①用户决定是否做 .43（触发线 64,000 + `Zo()` 保留 image 块 + 文案点名 `include_data_uri`），或先用侧边栏缓解（手选「直接」、Max Result Bytes 1,500,000、提示词要求 include_data_uri:true + 先降采样）；②旧观察项不变 |
 | 如果复现 | 对 Agent 说 **“查看新日志”**。崩溃自查：console 有无 `NotFoundError` 刷屏、`localStorage["dpp_dom_fence_diag_331030"]` 计数是否在涨；**“只口头答应不调工具”自查**：看 `dpp_inline_agent_traces` 末条 `status` 是否 `complete` 且末步无 `toolExecutions` |
 | 当前回退点 | `D:\tmp\DeepSeekPP-Fix331041-pre331042-20260917`（.41 冻结版，216 文件）；更早 `…Fix331040-pre331041…`、`…Fix331036-pre331040…` |
 | 最新进展 | `.32` 实测失败（继续→零工具 complete / 中途 error）根因实锤 = **run_command 未进直连集 + 句柄别名残留 + 完成门零工具盲区**（§2.7）；`.33` 实测：Agent 本身正常，“只跑一会就中断”= **用户在运行中发新消息触发 .33107 手动接管**（§2.8）；`.34` 修假失败 + 中断可见 + 用户指南，已发布 |
@@ -441,3 +441,10 @@ inline agent loop 末尾的 `u&&_1()`（`window.location.reload()`）与之竞�
 - ZIP 布局 = .41 布局 + .42 新增（selftest / builder / validator / 哈希锁 / 两篇 docs），.41 的 docs 保留。
 - `USAGE-zh_CN.md` §2.2 错误陈述已更正。黑曜石 dspp 同步 .42（见下）。桌面镜像已刷新。
 - **仍待用户浏览器验收**（判据见 `docs/mcp-deepseekpp-exposure-drift-fix42.md` §5）。诚实边界：本次全为离线证据。
+
+### 2026-09-17T22:2x+08:00 · .42 首次现场复盘（loop 806d5ac7）
+
+- **任务达成**：complete、17 步、0 次 `unexecuted_work_limit_331036`、0 裸标签；6 个 ShunCode 核心工具每轮固定在表（vs .41 的 3–4 个漂移）。
+- **纠错**：.42 A1 触发线 48,000 未生效——真实成本 49,240 B（我沙盒估算用 96 B 开销、policy 实为 1024，差 13.9 KB；.42 文档中 35,883 B 有误）。成功靠 B（8 槽/24 KB + read_image floor）。
+- **视觉通道**：`include_data_uri:true` 时端到端成功（capture→upload_ok→request_refs→request_ack，模型 reasoning "Now I can see the reference image"）；`:false` 时 `background.js Zo()` 只取 structuredContent、丢弃 `content[]` image 块 → no_image_data。原图 774 KB 直读超 128 KB 上限。模型最终答复"从未看到图"与其第 8 步推理矛盾。
+- 详见 `docs/mcp-deepseekpp-fix42-first-run-20260917.md`；.43 候选改动列于该文 §4，**未实施、未授权**。
