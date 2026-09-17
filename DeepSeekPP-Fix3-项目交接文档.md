@@ -4,6 +4,8 @@
 
 > **2026-09-17 15:51 当前接手入口（优先于下方全部旧状态）**：本机 live `D:/learn/DeepSeekPP-1.14.0-ShunCode-MCP-Fix3` 已运行 **Fix 3.3.10.40 / 1.14.0.45**；GitHub 已发布 **`v1.14.0-fix3.3.10.40`（Latest）**：ZIP `DeepSeekPP-1.14.0-ShunCode-MCP-Fix3.3.10.40.zip` 9,109,365 B SHA-256 `8b40e9ff…b358`，99 个运行时文件与验收候选逐字节一致，回退点 `D:\tmp\DeepSeekPP-Fix331036-pre331040-20260917`。.36 的浏览器视觉上传阻塞（`runtime_message_unauthorized`）已由 **.38** 修复并验收通过：根因是 `DPP_REQUIRE_UPLOAD_CONTEXT_V7` 拿冻结于文档提交时刻的 `sender.url` 会话段与 `tab.url` 比较（.37 诊断现场命中 `ctx_sender_tab_session_mismatch`），现改以浏览器 tab URL 为准并锁定监听时会话，其余检查全部保留；浏览器三次 `upload_ok→refs=1→ack=1`。.39 加 MAIN-world 直写诊断 `dpp_mw_bridge_diag_v10`；.40 修 `main-world.js` 技能弹窗 `observe(null)`。每级都有 hash 锁 builder/validator（`tools/apply-fix33103[7-9|40].py`、`validate-…`），基线须用干净 .36 树 `D:/tmp/deepseekpp-base36`；每级 live 备份与回执在 `D:/tmp/deepseekpp-fix33103N-20260917/`。待办：(a) 已完成发布（`docs/RELEASE-Fix3.3.10.40.md`）；(b) 15:1x 曾出现一次“新对话首条消息无工具、扩展零日志”未复现，再现时读 `dpp_mw_bridge_diag_v10`；(c) 黑曜石 dspp 未同步 .37–.40。详见 `docs/mcp-deepseekpp-visual-blocker-20260917.md` §9–§14、`docs/mcp-deepseekpp-upload-gate-fix38.md`、`docs/mcp-deepseekpp-mw-bridge-diag-v10.md`、`docs/mcp-deepseekpp-skill-popup-observe-fix40.md`。
 
+> **2026-09-17 22:5x 当前接手入口（优先于下方全部旧状态）**：live = **Fix 3.3.10.43 / 1.14.0.48**，已发布 Latest（用户授权）。.42 首次现场任务 complete 但"看不到图"：根因 `include_data_uri:false` 时 `background.js Zo()` 丢弃 `content[]` image 块（`:true` 时通道端到端成功，模型 reasoning 明确描述过画面）；原图 774 KB 超 `Max Result Bytes=128000`；.42 触发线 48,000 < 真实 49,240（我估算漏 gd=1024）。.43：`Zo()` 白名单复制 image 块到 `output.content`（v7 walker 已遍历该键，content.js 采集零改动）+ 触发线 64,000 + note/规则点名参数与上限。validator 28/71/58 全过、专项 19/19（含真实 v7 `capture()` 发出 UPLOAD_DEEPSEEK_IMAGE）、fail-closed 三项、重建一致。回退点 `D:/tmp/DeepSeekPP-Fix331042-pre331043-20260917`。**浏览器未验收**。文档：`docs/RELEASE-Fix3.3.10.43.md`、`docs/mcp-deepseekpp-fix42-first-run-20260917.md`。
+
 > **2026-09-17 21:4x 当前接手入口（优先于下方全部旧状态）**：live 已是 **Fix 3.3.10.42 / 1.14.0.47**。`.41` 发布后 20:53–20:56 同会话三次 `unexecuted_work_limit_331036` 复现，取证发现**根因在暴露层而非提示词**：`fix3-policy.promptExposureSettings` 把 ShunCode（15 工具 35,883 B > 28,000）从 direct 悄悄降为 adaptive（5 槽/14 KB），每轮按关键词重选，「继续」时 read_image 权重 0、视觉提示时 run_command 被挤掉，模型调用的总是上一轮还在的工具；裸标签别名（方案 D）对此无效。`.42`：触发线 48000 + 尊重显式 direct + adaptive 8 槽/24 KB + read_image floor 1000 + turn_diag 白名单加 `resolution`。证据与回执：`docs/mcp-deepseekpp-exposure-drift-fix42.md`。builder/validator `tools/*-fix331042.py`（22 checks/69 进程/57 套件全过，fail-closed 三项验证）。回退点 `D:/tmp/DeepSeekPP-Fix331041-pre331042-20260917`。**浏览器未验收**。已发布（用户预先授权）：commit `b19e0e0`、tag `v1.14.0-fix3.3.10.42`、Release Latest，ZIP 9,157,024 B / 147 条目，回下载 = 本地 = SHA256SUMS。
 
 > **2026-09-17 20:5x 当前接手入口（优先于下方全部旧状态）**：`.41` 已发布（Latest）且浏览器验收通过；本条只做收尾：①黑曜石 `dspp/00`–`03` 已同步到 .41/1.14.0.46（备份 `dspp/_backup-20260917-fix41/`，私有库不推送）；②仓库工作树 3 个未跟踪 `.bak-*` 文档备份移入 `local/_doc_backups_20260917/`（gitignored）；③桌面副本 `C:\Users\29066\Desktop\DeepSeekPP-Fix3-项目交接文档.md` 已用本文件覆盖（仅镜像，真源仍是仓库）；④§0 TL;DR 已更新到 .41。**运行代码未改、未发新版**。剩余观察项见 §0「下一步」。
@@ -45,13 +47,13 @@
 | 项目 | 状态 |
 |---|---|
 | 在做什么 | 修复 **DeepSeek++ 浏览器扩展**在自动化执行任务时导致 **DeepSeek 网页崩溃 / "服务器暂不可用" / 任务中断** 的系列问题 |
-| 当前正式版 | **`1.14.0.47 / DeepSeek++ ShunCode MCP Fix 3.3.10.42`**（GitHub：main `b19e0e0`，Release `v1.14.0-fix3.3.10.42` **Latest**，ZIP SHA `22a06e49…2cee6`；live 217 文件） |
+| 当前正式版 | **`1.14.0.48 / DeepSeek++ ShunCode MCP Fix 3.3.10.43`**（GitHub：main `50a4b47`，Release `v1.14.0-fix3.3.10.43` **Latest**，ZIP SHA `bcc4a30e…7f986`；live 218 文件） |
 | 正式目录 | `D:\learn\DeepSeekPP-1.14.0-ShunCode-MCP-Fix3`（Edge 解压加载） |
 | 最新成就 | **“继续/重试只口头答应不调工具”根因实锤并修复**：MCP 传输故障被完成门当作有效进展 → trace 误标 `complete` → 恢复网关永久拒绝接管；`.31` 双点修复（见 §2.5） |
-| 当前阶段 | **.42 首次现场：任务 complete、0 中断、6 核心工具全程在表（目标达成）**；但 A1 触发线未生效（真实描述符成本 49,240 > 48,000，我估算漏了 gd=1024），靠 B 兜底；模型"看不到图"= `include_data_uri:false` 时扩展 `Zo()` 丢弃 `content[]` image 块，`:true` 时通道端到端成功（22:00:46 模型 reasoning 明确描述了画面）。复盘 `docs/mcp-deepseekpp-fix42-first-run-20260917.md` |
-| 下一步 | ①用户决定是否做 .43（触发线 64,000 + `Zo()` 保留 image 块 + 文案点名 `include_data_uri`），或先用侧边栏缓解（手选「直接」、Max Result Bytes 1,500,000、提示词要求 include_data_uri:true + 先降采样）；②旧观察项不变 |
+| 当前阶段 | **.43 已部署 live 并发布，待浏览器验收**：`background.js Zo()` 保留 MCP `content[]` image 块 → `include_data_uri:false` 也能进 v7 视觉通道；触发线 64,000（.42 的 48,000 低于真实 49,240）；v7 note / .36 视觉规则点名 `include_data_uri` 与 `Max Result Bytes` |
+| 下一步 | ①用户：重载扩展 → 关旧标签 → 新会话；侧边栏 ShunCode `Max Result Bytes` 改 7000000（直读 5 MB 原图）；跑参考图任务。判据：`dpp_read_image_diag_v7` 中 `include_data_uri:false` 的调用也出现 capture→upload_ok；`descriptorCount` 24。②旧观察项不变 |
 | 如果复现 | 对 Agent 说 **“查看新日志”**。崩溃自查：console 有无 `NotFoundError` 刷屏、`localStorage["dpp_dom_fence_diag_331030"]` 计数是否在涨；**“只口头答应不调工具”自查**：看 `dpp_inline_agent_traces` 末条 `status` 是否 `complete` 且末步无 `toolExecutions` |
-| 当前回退点 | `D:\tmp\DeepSeekPP-Fix331041-pre331042-20260917`（.41 冻结版，216 文件）；更早 `…Fix331040-pre331041…`、`…Fix331036-pre331040…` |
+| 当前回退点 | `D:\tmp\DeepSeekPP-Fix331042-pre331043-20260917`（.42 冻结版，217 文件）；更早 `…Fix331041-pre331042…`、`…Fix331040-pre331041…` |
 | 最新进展 | `.32` 实测失败（继续→零工具 complete / 中途 error）根因实锤 = **run_command 未进直连集 + 句柄别名残留 + 完成门零工具盲区**（§2.7）；`.33` 实测：Agent 本身正常，“只跑一会就中断”= **用户在运行中发新消息触发 .33107 手动接管**（§2.8）；`.34` 修假失败 + 中断可见 + 用户指南，已发布 |
 
 ---
@@ -448,3 +450,11 @@ inline agent loop 末尾的 `u&&_1()`（`window.location.reload()`）与之竞�
 - **纠错**：.42 A1 触发线 48,000 未生效——真实成本 49,240 B（我沙盒估算用 96 B 开销、policy 实为 1024，差 13.9 KB；.42 文档中 35,883 B 有误）。成功靠 B（8 槽/24 KB + read_image floor）。
 - **视觉通道**：`include_data_uri:true` 时端到端成功（capture→upload_ok→request_refs→request_ack，模型 reasoning "Now I can see the reference image"）；`:false` 时 `background.js Zo()` 只取 structuredContent、丢弃 `content[]` image 块 → no_image_data。原图 774 KB 直读超 128 KB 上限。模型最终答复"从未看到图"与其第 8 步推理矛盾。
 - 详见 `docs/mcp-deepseekpp-fix42-first-run-20260917.md`；.43 候选改动列于该文 §4，**未实施、未授权**。
+
+### 2026-09-17T22:5x+08:00 · .43 部署 + 发布（用户授权）
+
+- 改动：`fix3-policy.js` 触发线 64,000；`background.js Zo()` 在 structuredContent 存在时把 `content[]` 的 image 块（仅 type/mimeType/data，≤4，且不覆盖自有 `content`）并入 `output.content`；`content.js` v7 note 两条原因提示 + .36 视觉规则中英文点名 `include_data_uri`/降采样。不触碰授权。
+- 验证：`tools/validate-fix331043.py` passed:true（28 checks / 71 进程 / 58 套件）；`dspp-image-block-v43-selftest.js` 19/19；篡改基线/源/重复打补丁 fail-closed；独立重建一致；live 58/58。
+- 发布：commit `50a4b47`，tag `v1.14.0-fix3.3.10.43`，Release Latest；ZIP 9,176,427 B / 154 条目，SHA-256 `bcc4a30ec42d5a717c03d9b4e48fe1d01e81fa0d253e100a1fd9e101b437f986`；ZIP 内 7 运行时文件与 live 一致。回下载校验见下一条。
+- `USAGE-zh_CN.md` 新增 §2.2b（Max Result Bytes 7000000 / include_data_uri 默认 true），触发线数字更新。
+- **待浏览器验收**。
