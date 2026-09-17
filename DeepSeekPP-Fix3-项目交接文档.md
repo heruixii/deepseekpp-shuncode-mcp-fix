@@ -417,3 +417,9 @@ inline agent loop 末尾的 `u&&_1()`（`window.location.reload()`）与之竞�
 - 仓库工作树未跟踪备份 `交接文档.md.bak-20260917-pre41` / `-prefill41` / `docs/…fix41.md.bak-20260917-prefill` 移入 `local/_doc_backups_20260917/`（`.gitignore` 已含 `/local/`），`git status` 恢复干净。
 - 桌面镜像副本由仓库真源覆盖（此前为 .34 旧版）。§0 TL;DR 五行更新到 .41。
 - 未改运行代码、未打包、未发版。诚实边界：本条为文档/笔记维护，不新增任何关于 .41 行为的证据。
+
+### 2026-09-17T21:0x+08:00 · .41 部署后裸标签空转复现（取证，未改代码）
+
+- 20:53–20:56 同一会话三个 loop 全部 `unexecuted_work_limit_331036`（裸 `run_command`×4、`read_image`×4×2），纠偏路径在跑但模型不改；网络正常。详见 `docs/mcp-deepseekpp-bare-tool-tag-recurrence-20260917.md`。
+- 发现 .41 改点 C 缺陷：`resolution` 字段被 turn_diag 白名单丢弃，现场永不落盘。
+- 结论：A/B 提示词路线不够，建议 .42 做方案 D（唯一匹配时别名直执）+ 修 C；待用户裁定。
