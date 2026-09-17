@@ -4,6 +4,14 @@
 
 > **2026-09-17 15:51 当前接手入口（优先于下方全部旧状态）**：本机 live `D:/learn/DeepSeekPP-1.14.0-ShunCode-MCP-Fix3` 已运行 **Fix 3.3.10.40 / 1.14.0.45**；GitHub 已发布 **`v1.14.0-fix3.3.10.40`（Latest）**：ZIP `DeepSeekPP-1.14.0-ShunCode-MCP-Fix3.3.10.40.zip` 9,109,365 B SHA-256 `8b40e9ff…b358`，99 个运行时文件与验收候选逐字节一致，回退点 `D:\tmp\DeepSeekPP-Fix331036-pre331040-20260917`。.36 的浏览器视觉上传阻塞（`runtime_message_unauthorized`）已由 **.38** 修复并验收通过：根因是 `DPP_REQUIRE_UPLOAD_CONTEXT_V7` 拿冻结于文档提交时刻的 `sender.url` 会话段与 `tab.url` 比较（.37 诊断现场命中 `ctx_sender_tab_session_mismatch`），现改以浏览器 tab URL 为准并锁定监听时会话，其余检查全部保留；浏览器三次 `upload_ok→refs=1→ack=1`。.39 加 MAIN-world 直写诊断 `dpp_mw_bridge_diag_v10`；.40 修 `main-world.js` 技能弹窗 `observe(null)`。每级都有 hash 锁 builder/validator（`tools/apply-fix33103[7-9|40].py`、`validate-…`），基线须用干净 .36 树 `D:/tmp/deepseekpp-base36`；每级 live 备份与回执在 `D:/tmp/deepseekpp-fix33103N-20260917/`。待办：(a) 已完成发布（`docs/RELEASE-Fix3.3.10.40.md`）；(b) 15:1x 曾出现一次“新对话首条消息无工具、扩展零日志”未复现，再现时读 `dpp_mw_bridge_diag_v10`；(c) 黑曜石 dspp 未同步 .37–.40。详见 `docs/mcp-deepseekpp-visual-blocker-20260917.md` §9–§14、`docs/mcp-deepseekpp-upload-gate-fix38.md`、`docs/mcp-deepseekpp-mw-bridge-diag-v10.md`、`docs/mcp-deepseekpp-skill-popup-observe-fix40.md`。
 
+> **2026-09-17 16:30 当前接手入口（优先于下方全部旧状态）— 交给下一个智能体**
+>
+> - **已完成**：.40 / 1.14.0.45 已部署且 GitHub Latest（见下一条 15:51 入口）；黑曜石 dspp 已同步 .40。
+> - **当前问题（已取证、未修复）**：浏览器任务反复以"DeepSeek 连续 3 次明确表示要调用工具，但仍未输出可执行 tool call"停止。16:00 五次中断**全部**是扩展侧 `unexecuted_work_limit_331036`，**无一网络原因**。根因：模型对读图裸写 `<read_image>`（注册名其实是 `mcp_t_…_read_image`），.33 未注册标签检测器命中后，.36 视觉提示词仍用裸名要求调用、.33 纠偏文案又叫它去 `mcp_discover`（工具明明已在目录），提示自相矛盾，3 轮纠偏后被安全停止。
+> - **解决方式（.41，待实施）**：纠偏文案改为给出精确注册标签；视觉规则/重试文案注入真实 read_image 名；新增 `resolution` 枚举诊断。不触碰授权检查。完整方案、自测清单、实施与验收步骤见 **`docs/mcp-deepseekpp-bare-tool-tag-fix41.md`**。
+> - **下一个智能体阅读顺序**：① 本文档顶部两条入口 + §4 发布规范 + §7 末三条更新记录；② `docs/mcp-deepseekpp-bare-tool-tag-fix41.md`（任务书）；③ `docs/mcp-deepseekpp-visual-workflow-v8.md`（.36 视觉规则原始设计）；④ `docs/mcp-deepseekpp-visual-blocker-20260917.md` §9–§14 与 `docs/RELEASE-Fix3.3.10.40.md`（.37–.40 链路和打包方式）；⑤ 代码入口 `tools/apply-fix331040.py`、`tools/validate-fix331040.py`、`tools/dspp-visual-workflow-v8.js`、`tools/dspp-unregistered-tag-v8.js`。黑曜石 `dspp/02`、`03` 仅在维护黑曜石时读。
+> - **硬约束**：基线只能用 `D:/tmp/deepseekpp-base36`；builder/validator hash 锁 + fail-closed；发版前冻结回退点；新诊断只记固定枚举/布尔；不删弱授权检查；发布/打 tag 需用户明确授权；不重发 .36/.40；不动 Athena 目录；黑曜石不推送。
+
 > 历史（已被 .38 修复）：**2026-09-17 本轮浏览器验收失败**：磁盘仍为.36/1.14.0.41，GitHub发布不变；本轮22步/30工具，3次取得图像字节后上传被 runtime_message_unauthorized 拒绝，refs=0，2,168字节也失败。其余直接读图含4次文件不存在、6次网络错误，并非全部success。当前MCP小图复核返回原生image块，不能归因于ShunCode始终剥离。具体后台拒绝子条件及浏览器驻留版本未取证；阻塞仍被记为complete待修。本次仅核查，未改运行代码或发布新版。 详见 docs/mcp-deepseekpp-visual-blocker-20260917.md。
 > 部署状态（脚本维护）：v8/.36正式磁盘已更新为1.14.0.41；content e66f24d5…f1ec，policy c8e843c8…c8c6，background不变。浏览器重载/新模型验收待进行，分发回执见v8文档；2026-09-17。
 
@@ -361,3 +369,8 @@ inline agent loop 末尾的 `u&&_1()`（`window.location.reload()`）与之竞�
 - 助推因素：(a) .36 `DPP_VISUAL_RULES_331036` / `DPP_VISUAL_RETRY_331036` 提示词多次以裸名 `read_image` 要求调用，未给真实标签名；(b) `DPP_UNREGISTERED_TAG_STEERING_331033` 对裸 ShunCode 标签一律指向 `mcp_discover`，而此处工具明明已在目录中（应改为提示精确前缀标签），提示自相矛盾，模型反复空转。
 - 本窗口无 read_image v7 / upload gate 新行——因为 read_image 一次都没真正执行到，.38 上传链路未被触及；不是回归。
 - 建议 .41（未实施、待用户裁定）：① 检测器命中裸 ShunCode 名且注册表中存在 `*_${base}` 前缀工具时，纠偏文案改为"请使用精确标签 `<mcp_t_…_base>`"，不再引导 discover；② 视觉规则/重试文案带上运行时真实的 read_image 注册名；③ 可选：解析层把裸 ShunCode 标签别名到唯一匹配的前缀工具（行为变更，需单独门禁）。不涉及授权检查。
+
+### 2026-09-17T16:30+08:00 · .41 任务书与接手入口
+
+- 新增 `docs/mcp-deepseekpp-bare-tool-tag-fix41.md`：16:00 五次中断的取证表、根因（裸 `<read_image>` 标签 × 自相矛盾提示词 × 3 次 tool-intent 纠偏上限）、.41 方案 A/B/C、实施与验收流程。
+- 顶部新增 16:30 接手入口，列出下一个智能体的阅读顺序与硬约束。未改运行代码，未发布。
