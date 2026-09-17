@@ -6,8 +6,8 @@ const manifest=JSON.parse(fs.readFileSync(path.join(root,'manifest.json'),'utf8'
 let pass=0,total=0;function test(n,c,d=''){total++;if(c){pass++;console.log('PASS',n,d)}else{console.error('FAIL',n,d);process.exitCode=1}}
 function extract(a,b,s=content){const i=s.indexOf(a),j=s.indexOf(b,i);if(i<0||j<0)throw Error(`extract ${a}`);return s.slice(i,j)}
 (async()=>{
-test('version',['1.14.0.30','1.14.0.31','1.14.0.32','1.14.0.33','1.14.0.34','1.14.0.35','1.14.0.36','1.14.0.37','1.14.0.38','1.14.0.39'].includes(manifest.version));
-test('version name',['1.14.0 ShunCode MCP Fix 3.3.10.25','1.14.0 ShunCode MCP Fix 3.3.10.26','1.14.0 ShunCode MCP Fix 3.3.10.27','1.14.0 ShunCode MCP Fix 3.3.10.28','1.14.0 ShunCode MCP Fix 3.3.10.29','1.14.0 ShunCode MCP Fix 3.3.10.30','1.14.0 ShunCode MCP Fix 3.3.10.31','1.14.0 ShunCode MCP Fix 3.3.10.32','1.14.0 ShunCode MCP Fix 3.3.10.33','1.14.0 ShunCode MCP Fix 3.3.10.34'].includes(manifest.version_name));
+test('version',['1.14.0.30','1.14.0.31','1.14.0.32','1.14.0.33','1.14.0.34','1.14.0.35','1.14.0.36','1.14.0.37','1.14.0.38','1.14.0.40'].includes(manifest.version));
+test('version name',['1.14.0 ShunCode MCP Fix 3.3.10.25','1.14.0 ShunCode MCP Fix 3.3.10.26','1.14.0 ShunCode MCP Fix 3.3.10.27','1.14.0 ShunCode MCP Fix 3.3.10.28','1.14.0 ShunCode MCP Fix 3.3.10.29','1.14.0 ShunCode MCP Fix 3.3.10.30','1.14.0 ShunCode MCP Fix 3.3.10.31','1.14.0 ShunCode MCP Fix 3.3.10.32','1.14.0 ShunCode MCP Fix 3.3.10.33','1.14.0 ShunCode MCP Fix 3.3.10.35'].includes(manifest.version_name));
 // Ephemeral reasoning bridge: bounded, validated, never added to the Agent prompt.
 test('main response carries robust bounded reasoning tail',main.includes('dppReasoningTail331025:typeof n.assistantReasoningText==`string`?(n.assistantReasoningText.length>4096?n.assistantReasoningText.slice(-4096):n.assistantReasoningText):``'));
 test('main bridge validator accepts optional tail',main.includes('ns(e.dppReasoningTail331025)&&as(e.chatSessionId)'));

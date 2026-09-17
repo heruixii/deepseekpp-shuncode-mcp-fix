@@ -6,3 +6,11 @@
 manifest.json text eol=crlf
 _locales/en/messages.json text eol=crlf
 _locales/zh_CN/messages.json text eol=crlf
+
+# Preserve validated .35 bytes in Git archives and checkouts.
+content-scripts/content.js -text
+background.js -text
+manifest.json -text
+_locales/en/messages.json -text
+_locales/zh_CN/messages.json -text
+tools/fixtures/readimage-v6-background.txt -text

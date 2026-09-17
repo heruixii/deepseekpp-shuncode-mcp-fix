@@ -1,5 +1,7 @@
 # DeepSeek++ 扩展修复项目 · 交接文档
 
+> **2026-09-17 当前接手入口**：Fix3.3.10.35 / 1.14.0.40 维护版本；v7 小 JPEG 的原生 image 块及 upload_ok→request_refs(1)→request_ack(1) 已核实。当前 .35 重建100运行时文件一致，20工程检查、6语法、22读图/16后台/22维护/55旧回归均通过；实际分发以 GitHub Release 为准。见 [本版技术说明](docs/RELEASE-Fix3.3.10.35.md) 与 [ShunCode 覆盖安装维护](docs/ShunCode-read_image-图像通道-改造与维护.md)。下面 .34 及更早条目按历史保留。
+
 > **这份文档是项目的唯一交接入口。每次对项目做任何改动（修复、发版、验证、结论更新）后，都必须更新本文档**（改对应章节 + 在文末「更新记录」追加一条），保证任何人接手都能从本文档直接进入状态。
 >
 > - 创建时间：2026-09-16
@@ -13,7 +15,7 @@
 | 项目 | 状态 |
 |---|---|
 | 在做什么 | 修复 **DeepSeek++ 浏览器扩展**在自动化执行任务时导致 **DeepSeek 网页崩溃 / "服务器暂不可用" / 任务中断** 的系列问题 |
-| 当前正式版 | **`1.14.0.39 / DeepSeek++ ShunCode MCP Fix 3.3.10.34`**（GitHub 已同步：main `cce959e`，Release `v1.14.0-fix3.3.10.34` Latest；仓库新增 `USAGE-zh_CN.md` 用户指南） |
+| 当前维护版本 | **1.14.0.40 / Fix3.3.10.35**；小 JPEG 实测与本版离线门禁通过；分发和校验值见 GitHub Release |
 | 正式目录 | `D:\learn\DeepSeekPP-1.14.0-ShunCode-MCP-Fix3`（Edge 解压加载） |
 | 最新成就 | **“继续/重试只口头答应不调工具”根因实锤并修复**：MCP 传输故障被完成门当作有效进展 → trace 误标 `complete` → 恢复网关永久拒绝接管；`.31` 双点修复（见 §2.5） |
 | 当前阶段 | **Fix 3.3.10.31 已发布，待用户实测验收**：专项 43/43、全回归 **50/50**、hash-lock 干净升级、篡改 fail-closed、独立重建 **201/201 零差异**。`.30` DOM 保险丝未回归 |
@@ -101,7 +103,7 @@
 **机制链（每一环都有证据）**：
 
 1. **真实中断源是 MCP 传输失败，不是模型偷懒**。`dpp_inline_agent_traces` 末条 loop `d1e59b46` 的 step1 工具结果为
-   `run_command ok=false, error.code="mcp_network_error", message="Cannot reach MCP server at https://unlimited-underline-lunchroom.ngrok-free.dev/mcp/..."`。
+   `run_command ok=false, error.code="mcp_network_error", message="Cannot reach MCP server at https://<your-mcp-host>/mcp/<your-token>"`。
    即 ngrok 隧道瞬断，Bridge 不可达。
 2. **失败被当成“已执行”记入结果集**。工具执行失败后仍作为一条 toolExecution 进入 `g`（累计结果数组），后续 `DPP_COMPLETION_GATE_31(g)` 只看“有没有工具结果”，**不看 `result.ok` 是否为 false**。
 3. **模型自述收尾 → 直接判 final**。step2 模型输出“MCP 暂时断连，重试诊断命令。”这句既不含 `<task_complete>`，也不含中段续跑线索，于是
@@ -303,3 +305,14 @@ inline agent loop 末尾的 `u&&_1()`（`window.location.reload()`）与之竞�
 | 2026-09-16 晚 | Arena Agent 响应 `.32` 实测失败：快照 `D:\tmp\edsnap-331032-20260916`，新写 `ldb_extract.py` 直接解 WAL，五条诊断链交叉比对（turn_diag `textChars` vs trace 可见文本） | 未改正式目录；产物 `D:\learn\Athena计划\docs\mcp-deepseekpp-capability-exposure.md`、`D:\tmp\fix331033\apply-fix331033.py`、`fix331033-capability-exposure-selftest.js`、干跑树 `D:\tmp\DeepSeekPP-Fix331033-dry`；本文档 §0/§2.7/§3/§5/§7 | **根因实锤（非回归）**：自适应暴露按提示词关键词选工具，`继续` 选不中 `run_command` → `<run_command>` 标签被解析器剥成文本；别名指向已消费句柄 → `mcp_capability_handle_replayed` 无定向纠偏；零工具 `task_complete` 放行。`.33` 五处修复干跑：node --check 4/4、新套件 53/53、全回归 54/54 | 待用户确认后跑 §4 发布链落 `.33`；未升级前把 ShunCode 服务器切 `direct` 模式 |
 | 2026-09-16 晚 | 用户确认“全部修复”，Arena Agent 按 §4 发布 **Fix 3.3.10.33**：冻结 `.32` 回退点 → patcher 落正式目录 → 双独立重建比对 → 全回归 → ZIP → GitHub commit + Release | 正式目录 → 1.14.0.38（206 文件）；ZIP `D:\learn\DeepSeekPP-1.14.0-ShunCode-MCP-Fix3.3.10.33.zip` 13,933,248 B SHA `7A398F4F…B795`；回退点 `D:\tmp\DeepSeekPP-Fix331032-pre331033-20260916`；GitHub `c99119f` + Release `v1.14.0-fix3.3.10.33`（Latest，README 顶部改 .33 Current）；本文档 §0/§3/§5/§7 | 全回归 54/54、双重建 206/206 零差异、重复打补丁 fail-closed。踩坑：正式目录被占用导致 `shutil.rmtree` 失败（已改为先 patch 到临时树再 `cp -r` 覆盖，§6 建议 patcher 勿以正式目录为 dst） | 用户实测 `.33`（§5-0） |
 | 2026-09-16 深夜 | 用户报“继续只执行一会再次中断”，Arena Agent 取证（快照 `edsnap-331033-20260916-2319`，`ldb_extract.py` 加 cramjam 全量解表）→ 判定为用户运行中发消息触发 .33107 手动接管（非缺陷）；顺带修 run_command 假失败 + 中断可见；按 §4 发布 **Fix 3.3.10.34**；写用户指南 | 正式目录 → 1.14.0.39；ZIP `.34` 13,946,628 B SHA `ECBCB43D…29FA`；回退点 `D:\tmp\DeepSeekPP-Fix331033-pre331034-20260916`；GitHub `cce959e` + Release `v1.14.0-fix3.3.10.34`（Latest）；仓库/正式目录新增 `USAGE-zh_CN.md`；分析文档 `docs/mcp-deepseekpp-manual-supersede.md`；本文档 §0/§2.8/§3/§5/§7 | 新套件 24/24，全回归 55/55，双重建 208/208 零差异，重复打补丁 fail-closed | 用户按 `USAGE-zh_CN.md` 使用并实测 `.34` |
+
+
+### 2026-09-17 · Fix3.3.10.35 发布准备
+
+- 核实实际小 JPEG 读图链路；加入 v7 两端修复、安全原生维护与22项维护测试、独立后台边界 fixture、哈希锁定重建及统一版本门禁；README/USAGE/Release 说明同步。未在本步上传 GitHub或修改已工作的原生安装。
+
+### 2026-09-17 · .35 离线门禁完成
+
+- 20/20工程检查、6/6语法、22/22自动读图、16/16实际后台边界、22/22原生维护、55/55旧回归均通过。公开 .34 archive 与历史 Windows 行尾差异被哈希门禁识别；构建器显式转换，Git 属性固定目标字节。当前 ShunCode 原生只读检查为 ALREADY，未修改安装。新增忽略规则防止提交缓存、本地备份和诊断日志；脱敏报告与操作指南同步。
+
+- 发布前扫描发现旧交接正文保留了历史 MCP 服务器地址；当前文档已使用占位符脱敏。本次没有重写已公开 Git 历史；若历史地址承载仍有效的访问凭据，应另外轮换，而不是认为删改最新文档即可撤回历史信息。

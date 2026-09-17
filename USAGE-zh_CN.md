@@ -1,15 +1,17 @@
 # DeepSeek++ ShunCode MCP Fix3 · 安装、配置与使用指南
 
-适用版本：**1.14.0.39 / Fix 3.3.10.34**（2026-09-16）
+> **自动读图 / ShunCode 覆盖安装恢复**：参见 [专用操作步骤](docs/ShunCode-read_image-图像通道-改造与维护.md)。升级后先 `--check`，仅 NEED 时退出程序后 `--apply`，再重启 ShunCode、重载浏览器扩展并新开 DeepSeek 页面；不要把旧安装文件覆盖进新产品。当前版本的小 JPEG 链路已实测，未验证所有大小/格式。
+
+适用版本：**1.14.0.40 / Fix 3.3.10.35**（2026-09-17）
 
 ---
 
 ## 1. 安装（Edge / Chrome 解压加载）
 
-1. 下载 Release 里的 `DeepSeekPP-1.14.0-ShunCode-MCP-Fix3.3.10.34.zip`，解压到一个**固定目录**（例如 `D:\learn\DeepSeekPP-1.14.0-ShunCode-MCP-Fix3`）。以后升级直接覆盖这个目录即可。
+1. 下载 Release 里的 `DeepSeekPP-1.14.0-ShunCode-MCP-Fix3.3.10.35.zip`，解压到一个**固定目录**（例如 `D:\learn\DeepSeekPP-1.14.0-ShunCode-MCP-Fix3`）。以后升级先备份，再更新这个目录，并完成第 3 步重载/重开页面。
 2. 打开 `edge://extensions`（Chrome 为 `chrome://extensions`）→ 右上角开启 **开发人员模式** → **加载解压缩的扩展** → 选择上面的目录。
 3. 若已装过旧版：在扩展卡片上点 **重新加载**，然后**关闭所有已打开的 DeepSeek 标签页**再新开（旧标签页里跑的还是旧脚本）。
-4. 扩展卡片上应显示版本 `1.14.0.39`，名称带 `Fix 3.3.10.34`。
+4. 扩展卡片上应显示版本 `1.14.0.40`，名称带 `Fix 3.3.10.35`。
 
 ---
 

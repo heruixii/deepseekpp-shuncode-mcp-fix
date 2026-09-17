@@ -1,0 +1,13 @@
+# Local caches, receipts, backup files and release artifacts are not source.
+__pycache__/
+*.py[cod]
+.venv/
+node_modules/
+*.log
+*.v?_bak
+*.bak_readimage
+*.readimage-*.tmp
+.deepseekpp-shuncode-backups/
+/*.zip
+/SHA256SUMS.txt
+/_readimg_src.*

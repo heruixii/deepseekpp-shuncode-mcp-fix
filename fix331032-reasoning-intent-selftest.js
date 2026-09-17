@@ -32,9 +32,9 @@ console.log("=================================================");
 
 // ---- group 1: build integrity ---------------------------------------------
 console.log("\n[1] build integrity");
-ok("manifest version is 1.14.0.39", manifest.version === "1.14.0.39", manifest.version);
-ok("manifest version_name is Fix 3.3.10.34",
-   manifest.version_name === "1.14.0 ShunCode MCP Fix 3.3.10.34", manifest.version_name);
+ok("manifest version is 1.14.0.40", manifest.version === "1.14.0.40", manifest.version);
+ok("manifest version_name is Fix 3.3.10.35",
+   manifest.version_name === "1.14.0 ShunCode MCP Fix 3.3.10.35", manifest.version_name);
 ok("safe-final reasoning guard present",
    src.indexOf("if(!Sz(i)&&DPP_TOOL_INTENT_TEXT_331021(String(r??``))&&!(Array.isArray(t)&&t.some(e=>e?.result?.ok===!0)))return null;") !== -1);
 ok("diag flush-all returns a promise",
