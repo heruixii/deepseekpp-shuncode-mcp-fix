@@ -455,6 +455,6 @@ inline agent loop 末尾的 `u&&_1()`（`window.location.reload()`）与之竞�
 
 - 改动：`fix3-policy.js` 触发线 64,000；`background.js Zo()` 在 structuredContent 存在时把 `content[]` 的 image 块（仅 type/mimeType/data，≤4，且不覆盖自有 `content`）并入 `output.content`；`content.js` v7 note 两条原因提示 + .36 视觉规则中英文点名 `include_data_uri`/降采样。不触碰授权。
 - 验证：`tools/validate-fix331043.py` passed:true（28 checks / 71 进程 / 58 套件）；`dspp-image-block-v43-selftest.js` 19/19；篡改基线/源/重复打补丁 fail-closed；独立重建一致；live 58/58。
-- 发布：commit `50a4b47`，tag `v1.14.0-fix3.3.10.43`，Release Latest；ZIP 9,176,427 B / 154 条目，SHA-256 `bcc4a30ec42d5a717c03d9b4e48fe1d01e81fa0d253e100a1fd9e101b437f986`；ZIP 内 7 运行时文件与 live 一致。回下载校验见下一条。
+- 发布：commit `50a4b47`，tag `v1.14.0-fix3.3.10.43`，Release Latest；ZIP 9,176,427 B / 154 条目，SHA-256 `bcc4a30ec42d5a717c03d9b4e48fe1d01e81fa0d253e100a1fd9e101b437f986`；ZIP 内 7 运行时文件与 live 一致。回下载完成，字节 = 本地 = SHA256SUMS（`bcc4a30e…`）。
 - `USAGE-zh_CN.md` 新增 §2.2b（Max Result Bytes 7000000 / include_data_uri 默认 true），触发线数字更新。
 - **待浏览器验收**。
