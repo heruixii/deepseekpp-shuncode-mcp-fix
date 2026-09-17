@@ -350,4 +350,14 @@ inline agent loop 末尾的 `u&&_1()`（`window.location.reload()`）与之竞�
 - .38（1.14.0.43，15:06 部署）：`DPP_REQUIRE_UPLOAD_CONTEXT_V7` 去掉过期 `sender.url` 会话比较，新增 `dppListenerChatSessionId` 会话锁；离线 20/64，浏览器 15:22/15:27/15:43 三次 upload_ok→refs→ack。background `76df1046…`。
 - .39（1.14.0.44，15:41 部署）：main-world 直写 `dpp_mw_bridge_diag_v10`（10 插桩点，仅枚举/布尔/计数）；首轮显示新对话首条消息 tools=24、桥正常，“服务器不可用”为 DeepSeek `generation_err`。
 - .40（1.14.0.45，15:51 部署）：`go()` 的 `Y.observe(document.body)` 改为 body 缺失时延后到 DOMContentLoaded；4 组专项 + 22/67 全过。main-world `e63b1676…`。
-- 15:5x 发布：用户授权后按 §4 打包（.36 ZIP 布局 + 6 个改动文件 + docs/tools），`SHA256SUMS.txt`，tag `v1.14.0-fix3.3.10.40`，Release Latest。未做：黑曜石同步；Athena 目录（已 DSPP-free，勿动）。
+- 15:5x 发布：用户授权后按 §4 打包（.36 ZIP 布局 + 6 个改动文件 + docs/tools），`SHA256SUMS.txt`，tag `v1.14.0-fix3.3.10.40`，Release Latest。黑曜石同步见下一条；Athena 目录（已 DSPP-free，勿动）。
+
+### 2026-09-17T16:2x+08:00 · 黑曜石同步完成 + 16:00 五次中断取证
+
+- 黑曜石 `dspp/00`–`03` 四篇入口已同步到 .40/1.14.0.45（顶部横幅 + 状态行 + .40 发布回执，.36 回执降为历史）；原文备份 `dspp/_backup-20260917-fix40/`；私有库，不推送。
+- 取证快照 `D:/tmp/svg-vision-fix40-20260917-161111`，窗口 15:58–16:08，5 个 agent loop（`265aff17`/`0a410c9c`/`4a13371b`/`bc169888`/`888f44d3`）。
+- **五次全部以 `turn_decision=unexecuted_work_limit_331036` 结束（扩展侧安全停止，非网络）**：窗口内 0 条 `xhr_error/abort/timeout`、0 条 `httpOk:false`、0 条 `generation_err`、0 条 `AGENT_LOOP_ERROR`；桥 `send_hook tools=24 / bridge=true`、`run_ready` 每轮正常。
+- 直接原因：模型在 `<mcp_t_…_run_command>` 用对前缀名（15 次 `tool_call` 成功执行）后，对读图始终裸写 `<read_image>`（28 次 `unregistered_tool_tag_331033 errorMessage=read_image`，首轮另有 4 次裸 `<run_command>`）。裸标签不在注册表（注册名是 `mcp_t_9a351af5_…_read_image`），被 .33 检测器判为未注册→`visual_preflight_331036` 纠偏；同一 step 内 3 次 tool-intent 纠偏后触发 `DPP_TOOL_INTENT_NUDGE_MAX_331021` → 停止并输出"DeepSeek 连续 3 次明确表示要调用工具，但仍未输出可执行 tool call"。
+- 助推因素：(a) .36 `DPP_VISUAL_RULES_331036` / `DPP_VISUAL_RETRY_331036` 提示词多次以裸名 `read_image` 要求调用，未给真实标签名；(b) `DPP_UNREGISTERED_TAG_STEERING_331033` 对裸 ShunCode 标签一律指向 `mcp_discover`，而此处工具明明已在目录中（应改为提示精确前缀标签），提示自相矛盾，模型反复空转。
+- 本窗口无 read_image v7 / upload gate 新行——因为 read_image 一次都没真正执行到，.38 上传链路未被触及；不是回归。
+- 建议 .41（未实施、待用户裁定）：① 检测器命中裸 ShunCode 名且注册表中存在 `*_${base}` 前缀工具时，纠偏文案改为"请使用精确标签 `<mcp_t_…_base>`"，不再引导 discover；② 视觉规则/重试文案带上运行时真实的 read_image 注册名；③ 可选：解析层把裸 ShunCode 标签别名到唯一匹配的前缀工具（行为变更，需单独门禁）。不涉及授权检查。
