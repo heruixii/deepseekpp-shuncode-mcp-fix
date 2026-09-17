@@ -1,3 +1,7 @@
+> **✅ 2026-09-18 状态更新（Fix 3.3.10.44 / 1.14.0.49 已发布为 GitHub Latest）**：.43 首次现场证明 `read_image` 图像块已进入视觉通道（模型据图产出 SVG），但 ShunCode 仍被悄悄降为 adaptive（`descriptorCount 20` 而非 24）——根因是 `fix3-policy.promptExposureSettings` 把 9 个**内置**本地工具（约 17.3 KB）也计入 64,000 触发线（49,240 + 17,319 = 66,559），且侧边栏显示的「直接」只是默认值、从未落盘。**.44**：触发线只统计 MCP 描述符；另把 DeepSeek `finish_reason=rate_limit_reached` 暴露给 Agent 循环——限流的空回合不再重放、直接以明确的限流提示停止。`background.js` / `main-world.js` 与 .43 逐字节相同，授权检查零改动。validator 31 checks / 73 进程 / 59 套件全过，专项 41/41。详见 [`docs/RELEASE-Fix3.3.10.44.md`](docs/RELEASE-Fix3.3.10.44.md)、[`docs/mcp-deepseekpp-fix43-first-run-20260918.md`](docs/mcp-deepseekpp-fix43-first-run-20260918.md)。
+>
+> **历史横幅（.43 / .42 / .41 / .40）**：.43 让 `include_data_uri:false` 的 `read_image` 也能进视觉通道（[`RELEASE-Fix3.3.10.43.md`](docs/RELEASE-Fix3.3.10.43.md)）；.42 修暴露漂移（显式模式受尊重、8 槽/24 KB、`resolution` 白名单）；.41 裸标签纠正；.40 见下一段。
+>
 > **✅ 2026-09-17 状态更新（Fix 3.3.10.40 / 1.14.0.45 已发布为 GitHub Latest；.36 的浏览器视觉上传阻塞已修复并验收通过）**：.36 现场 `UPLOAD_DEEPSEEK_IMAGE` 被后台授权门以 `runtime_message_unauthorized` 拒绝。.37 固定枚举诊断定位到唯一命中条件 `ctx_sender_tab_session_mismatch`：`chrome.runtime.onMessage` 的 `sender.url` 冻结于文档提交时刻，DeepSeek 同文档 History 切换会话后与 `tab.url` 不一致直到 F5。**.38** 将会话身份改以浏览器 tab URL 为准并锁定监听时会话（其余检查全部保留，授权检查未删除或弱化），浏览器三次 `upload_ok→refs=1→ack=1` 并得到真实视觉回答。.39 增加不经桥的 MAIN-world 诊断 `dpp_mw_bridge_diag_v10`；.40 修复 `main-world.js` 技能弹窗 `observe(null)` 启动竞态。**.37–.40 合并发布为 `v1.14.0-fix3.3.10.40`**（ZIP SHA-256 `8b40e9ff5d35be0a9c585565af6019f2ea52beb42e680b40b898fa9fb724b358`），仓库 tools/ 含全部 hash 锁 builder 与验证器。 详见 [`docs/mcp-deepseekpp-visual-blocker-20260917.md`](docs/mcp-deepseekpp-visual-blocker-20260917.md)（§9–§14）、[`docs/mcp-deepseekpp-upload-gate-fix38.md`](docs/mcp-deepseekpp-upload-gate-fix38.md)、[`docs/mcp-deepseekpp-mw-bridge-diag-v10.md`](docs/mcp-deepseekpp-mw-bridge-diag-v10.md)、[`docs/mcp-deepseekpp-skill-popup-observe-fix40.md`](docs/mcp-deepseekpp-skill-popup-observe-fix40.md)、[`docs/RELEASE-Fix3.3.10.40.md`](docs/RELEASE-Fix3.3.10.40.md)。
 >
 > **目录分离**：DSPP 全部文档、维护脚本与私有取证已从个人 `Athena计划` 工作区迁出。本仓库 `docs/` 与 `tools/` 即唯一真源；私有取证/参考图/备份位于本地 `local/`（已 `.gitignore`，不发布）。项目交接总入口：[`DeepSeekPP-Fix3-项目交接文档.md`](./DeepSeekPP-Fix3-项目交接文档.md)。
@@ -21,11 +25,16 @@
 
 | 文档 | 用途 |
 |---|---|
+| [RELEASE-Fix3.3.10.44.md](docs/RELEASE-Fix3.3.10.44.md) | **最新**：.44 发布说明（内置工具不再计入 MCP 降级触发线；限流显式停止） |
+| [mcp-deepseekpp-fix43-first-run-20260918.md](docs/mcp-deepseekpp-fix43-first-run-20260918.md) | .43 首次现场复盘：视觉通道打通 / descriptorCount 20 根因 / 限流不可见 |
+| [RELEASE-Fix3.3.10.43.md](docs/RELEASE-Fix3.3.10.43.md) / [mcp-deepseekpp-fix42-first-run-20260917.md](docs/mcp-deepseekpp-fix42-first-run-20260917.md) | .43 发布说明 / .42 首次现场复盘 |
+| [RELEASE-Fix3.3.10.42.md](docs/RELEASE-Fix3.3.10.42.md) / [mcp-deepseekpp-exposure-drift-fix42.md](docs/mcp-deepseekpp-exposure-drift-fix42.md) | .42 暴露漂移修复 |
+| [RELEASE-Fix3.3.10.41.md](docs/RELEASE-Fix3.3.10.41.md) / [mcp-deepseekpp-bare-tool-tag-fix41.md](docs/mcp-deepseekpp-bare-tool-tag-fix41.md) | .41 裸标签纠正 |
 | [mcp-deepseekpp-visual-blocker-20260917.md](docs/mcp-deepseekpp-visual-blocker-20260917.md) | .36 浏览器视觉上传阻塞取证、后台授权链、§9 现场根因、接手步骤 |
 | [mcp-deepseekpp-upload-gate-diag-v9.md](docs/mcp-deepseekpp-upload-gate-diag-v9.md) | .37：上传门禁固定枚举诊断（构建/验收/读取） |
 | [mcp-deepseekpp-upload-gate-fix38.md](docs/mcp-deepseekpp-upload-gate-fix38.md) | .38 门禁修复（会话身份以 tab URL 为准）：本机 live 已部署、浏览器验收通过，Release 未发 |
 | [mcp-deepseekpp-mw-bridge-diag-v10.md](docs/mcp-deepseekpp-mw-bridge-diag-v10.md) | .39 MAIN-world 桥诊断（不经桥、localStorage），本机 live 已部署 |
-| [mcp-deepseekpp-skill-popup-observe-fix40.md](docs/mcp-deepseekpp-skill-popup-observe-fix40.md) | **最新**：.40 技能弹窗 `observe(null)` 启动竞态修复，本机 live 已部署 |
+| [mcp-deepseekpp-skill-popup-observe-fix40.md](docs/mcp-deepseekpp-skill-popup-observe-fix40.md) | .40 技能弹窗 `observe(null)` 启动竞态修复，本机 live 已部署 |
 | [RELEASE-Fix3.3.10.40.md](docs/RELEASE-Fix3.3.10.40.md) | **.37–.40 合并 Release 说明（v1.14.0-fix3.3.10.40）** |
 | [mcp-deepseekpp-visual-workflow-v8.md](docs/mcp-deepseekpp-visual-workflow-v8.md) | .36 实现、离线验证、部署与发布回执 |
 | [RELEASE-Fix3.3.10.36.md](docs/RELEASE-Fix3.3.10.36.md) / [RELEASE-Fix3.3.10.35.md](docs/RELEASE-Fix3.3.10.35.md) | 发布说明 |
@@ -335,11 +344,11 @@ Prompt Exposure / Exposure Mode: Direct
 Connect Timeout: 10000
 Request Timeout: 120000
 Discovery Timeout: 20000
-Max Result Bytes: 128000
+Max Result Bytes: 128000（要直读几 MB 原图改 7000000，改完必须点保存）
 Max Tool Count: 32
 ```
 
-由于 ShunCode 工具数量较少，推荐使用 **Direct**。Adaptive 仍然可用，但没有必要为了十几个工具额外引入 capability 中转。
+由于 ShunCode 工具数量较少，推荐使用 **Direct**（`.44` 起单台 ShunCode 无论是否手选都不会再被自动降级；手选一次「直接」可额外让 `.42` 的显式守卫落盘）。Adaptive 仍然可用，但没有必要为了十几个工具额外引入 capability 中转。
 
 ## 安装
 
