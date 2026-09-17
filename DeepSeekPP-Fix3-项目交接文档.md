@@ -4,6 +4,8 @@
 
 > **2026-09-17 15:51 当前接手入口（优先于下方全部旧状态）**：本机 live `D:/learn/DeepSeekPP-1.14.0-ShunCode-MCP-Fix3` 已运行 **Fix 3.3.10.40 / 1.14.0.45**；GitHub 已发布 **`v1.14.0-fix3.3.10.40`（Latest）**：ZIP `DeepSeekPP-1.14.0-ShunCode-MCP-Fix3.3.10.40.zip` 9,109,365 B SHA-256 `8b40e9ff…b358`，99 个运行时文件与验收候选逐字节一致，回退点 `D:\tmp\DeepSeekPP-Fix331036-pre331040-20260917`。.36 的浏览器视觉上传阻塞（`runtime_message_unauthorized`）已由 **.38** 修复并验收通过：根因是 `DPP_REQUIRE_UPLOAD_CONTEXT_V7` 拿冻结于文档提交时刻的 `sender.url` 会话段与 `tab.url` 比较（.37 诊断现场命中 `ctx_sender_tab_session_mismatch`），现改以浏览器 tab URL 为准并锁定监听时会话，其余检查全部保留；浏览器三次 `upload_ok→refs=1→ack=1`。.39 加 MAIN-world 直写诊断 `dpp_mw_bridge_diag_v10`；.40 修 `main-world.js` 技能弹窗 `observe(null)`。每级都有 hash 锁 builder/validator（`tools/apply-fix33103[7-9|40].py`、`validate-…`），基线须用干净 .36 树 `D:/tmp/deepseekpp-base36`；每级 live 备份与回执在 `D:/tmp/deepseekpp-fix33103N-20260917/`。待办：(a) 已完成发布（`docs/RELEASE-Fix3.3.10.40.md`）；(b) 15:1x 曾出现一次“新对话首条消息无工具、扩展零日志”未复现，再现时读 `dpp_mw_bridge_diag_v10`；(c) 黑曜石 dspp 未同步 .37–.40。详见 `docs/mcp-deepseekpp-visual-blocker-20260917.md` §9–§14、`docs/mcp-deepseekpp-upload-gate-fix38.md`、`docs/mcp-deepseekpp-mw-bridge-diag-v10.md`、`docs/mcp-deepseekpp-skill-popup-observe-fix40.md`。
 
+> **2026-09-18 04:0x 当前接手入口（优先于下方全部旧状态）**：live = **Fix 3.3.10.44 / 1.14.0.49**，已发布 Latest（用户授权“做所有事情”）。.43 首次现场：视觉通道打通（12 张读图全部 capture→upload_ok→request_ack，模型据图写出 `svg-out/index.html`），但 Agent 请求 `descriptorCount=20`（9 内置 + 8 adaptive 槽 + 3 目录）而非 24——根因 `promptExposureSettings` 把 9 个内置本地工具（zh-CN 17,319 B）也计入 64,000 触发线（49,240+17,319=66,559），且 UI「直接」只是默认值、从未落盘（无 `deepseek_pp_mcp_capability_settings` 键），.42 的显式守卫无从生效；另 23:42–23:51 三次 `finish_reason=rate_limit_reached` 空流对 Agent 不可见，`HR()` 重放后以「invalid message id」收场。.44：policy 只统计 `provider.kind==='mcp'`；content.js 流诊断帧带 `finish`、`HR()` 对“无文本 + rate_limit_reached”抛不可重试限流错误、`provider_terminal` 带 `finishReason`、中英文限流文案。validator 31/73/59 全过、专项 41/41（真实内置描述符 + 冻结的真实 ShunCode schema 复现 66,559 与现场 20 的形状）、fail-closed 三项、重建一致、live 59/59。ZIP 9,222,380 B / 162 条目 SHA `e300e535…90fe`，回下载一致。回退点 `D:/tmp/DeepSeekPP-Fix331043-pre331044-20260918`。**浏览器未验收**。文档：`docs/RELEASE-Fix3.3.10.44.md`、`docs/mcp-deepseekpp-fix43-first-run-20260918.md`。
+
 > **2026-09-17 22:5x 当前接手入口（优先于下方全部旧状态）**：live = **Fix 3.3.10.43 / 1.14.0.48**，已发布 Latest（用户授权）。.42 首次现场任务 complete 但"看不到图"：根因 `include_data_uri:false` 时 `background.js Zo()` 丢弃 `content[]` image 块（`:true` 时通道端到端成功，模型 reasoning 明确描述过画面）；原图 774 KB 超 `Max Result Bytes=128000`；.42 触发线 48,000 < 真实 49,240（我估算漏 gd=1024）。.43：`Zo()` 白名单复制 image 块到 `output.content`（v7 walker 已遍历该键，content.js 采集零改动）+ 触发线 64,000 + note/规则点名参数与上限。validator 28/71/58 全过、专项 19/19（含真实 v7 `capture()` 发出 UPLOAD_DEEPSEEK_IMAGE）、fail-closed 三项、重建一致。回退点 `D:/tmp/DeepSeekPP-Fix331042-pre331043-20260917`。**浏览器未验收**。文档：`docs/RELEASE-Fix3.3.10.43.md`、`docs/mcp-deepseekpp-fix42-first-run-20260917.md`。
 
 > **2026-09-17 21:4x 当前接手入口（优先于下方全部旧状态）**：live 已是 **Fix 3.3.10.42 / 1.14.0.47**。`.41` 发布后 20:53–20:56 同会话三次 `unexecuted_work_limit_331036` 复现，取证发现**根因在暴露层而非提示词**：`fix3-policy.promptExposureSettings` 把 ShunCode（15 工具 35,883 B > 28,000）从 direct 悄悄降为 adaptive（5 槽/14 KB），每轮按关键词重选，「继续」时 read_image 权重 0、视觉提示时 run_command 被挤掉，模型调用的总是上一轮还在的工具；裸标签别名（方案 D）对此无效。`.42`：触发线 48000 + 尊重显式 direct + adaptive 8 槽/24 KB + read_image floor 1000 + turn_diag 白名单加 `resolution`。证据与回执：`docs/mcp-deepseekpp-exposure-drift-fix42.md`。builder/validator `tools/*-fix331042.py`（22 checks/69 进程/57 套件全过，fail-closed 三项验证）。回退点 `D:/tmp/DeepSeekPP-Fix331041-pre331042-20260917`。**浏览器未验收**。已发布（用户预先授权）：commit `b19e0e0`、tag `v1.14.0-fix3.3.10.42`、Release Latest，ZIP 9,157,024 B / 147 条目，回下载 = 本地 = SHA256SUMS。
@@ -47,13 +49,13 @@
 | 项目 | 状态 |
 |---|---|
 | 在做什么 | 修复 **DeepSeek++ 浏览器扩展**在自动化执行任务时导致 **DeepSeek 网页崩溃 / "服务器暂不可用" / 任务中断** 的系列问题 |
-| 当前正式版 | **`1.14.0.48 / DeepSeek++ ShunCode MCP Fix 3.3.10.43`**（GitHub：main `50a4b47`，Release `v1.14.0-fix3.3.10.43` **Latest**，ZIP SHA `bcc4a30e…7f986`；live 218 文件） |
+| 当前正式版 | **`1.14.0.49 / DeepSeek++ ShunCode MCP Fix 3.3.10.44`**（GitHub：main `6c1a471`，Release `v1.14.0-fix3.3.10.44` **Latest**，ZIP SHA `e300e535…90fe`；live 219 文件） |
 | 正式目录 | `D:\learn\DeepSeekPP-1.14.0-ShunCode-MCP-Fix3`（Edge 解压加载） |
 | 最新成就 | **“继续/重试只口头答应不调工具”根因实锤并修复**：MCP 传输故障被完成门当作有效进展 → trace 误标 `complete` → 恢复网关永久拒绝接管；`.31` 双点修复（见 §2.5） |
-| 当前阶段 | **.43 已部署 live 并发布，待浏览器验收**：`background.js Zo()` 保留 MCP `content[]` image 块 → `include_data_uri:false` 也能进 v7 视觉通道；触发线 64,000（.42 的 48,000 低于真实 49,240）；v7 note / .36 视觉规则点名 `include_data_uri` 与 `Max Result Bytes` |
-| 下一步 | ①用户：重载扩展 → 关旧标签 → 新会话；侧边栏 ShunCode `Max Result Bytes` 改 7000000（直读 5 MB 原图）；跑参考图任务。判据：`dpp_read_image_diag_v7` 中 `include_data_uri:false` 的调用也出现 capture→upload_ok；`descriptorCount` 24。②旧观察项不变 |
+| 当前阶段 | **.44 已部署 live 并发布，待浏览器验收**：`fix3-policy.promptExposureSettings` 只统计 MCP 描述符（.43 及以前把 9 个内置工具约 17.3 KB 也计入 64,000 触发线 → 49,240+17,319=66,559 → 单台 ShunCode 仍被降为 adaptive，`descriptorCount 20`）；`content.js` 把 DeepSeek `finish_reason=rate_limit_reached` 暴露给 Agent 循环，限流空回合单次即停、不再重放。`background.js`/`main-world.js` 与 .43 逐字节相同 |
+| 下一步 | ①用户：重载扩展 → 关旧标签 → 新会话；侧边栏 ShunCode 工具暴露重新选一次「直接」（落盘 `deepseek_pp_mcp_capability_settings`）；要直读大图则编辑服务器把 `Max Result Bytes` 改 7000000 并**点保存**。判据：Agent 请求 `dpp_web_response_diag_331015.descriptorCount = 24`（9+15），`descriptorNames[9:12]` 为服务器顺序 `apply_patch, find_files, read_files`，无 `local:mcp_capability`；限流回合以限流文案停止且 `provider_terminal.finishReason=rate_limit_reached`。②旧观察项不变 |
 | 如果复现 | 对 Agent 说 **“查看新日志”**。崩溃自查：console 有无 `NotFoundError` 刷屏、`localStorage["dpp_dom_fence_diag_331030"]` 计数是否在涨；**“只口头答应不调工具”自查**：看 `dpp_inline_agent_traces` 末条 `status` 是否 `complete` 且末步无 `toolExecutions` |
-| 当前回退点 | `D:\tmp\DeepSeekPP-Fix331042-pre331043-20260917`（.42 冻结版，217 文件）；更早 `…Fix331041-pre331042…`、`…Fix331040-pre331041…` |
+| 当前回退点 | `D:\tmp\DeepSeekPP-Fix331043-pre331044-20260918`（.43 冻结版，218 文件）；更早 `…Fix331042-pre331043…`、`…Fix331041-pre331042…` |
 | 最新进展 | `.32` 实测失败（继续→零工具 complete / 中途 error）根因实锤 = **run_command 未进直连集 + 句柄别名残留 + 完成门零工具盲区**（§2.7）；`.33` 实测：Agent 本身正常，“只跑一会就中断”= **用户在运行中发新消息触发 .33107 手动接管**（§2.8）；`.34` 修假失败 + 中断可见 + 用户指南，已发布 |
 
 ---
@@ -457,4 +459,15 @@ inline agent loop 末尾的 `u&&_1()`（`window.location.reload()`）与之竞�
 - 验证：`tools/validate-fix331043.py` passed:true（28 checks / 71 进程 / 58 套件）；`dspp-image-block-v43-selftest.js` 19/19；篡改基线/源/重复打补丁 fail-closed；独立重建一致；live 58/58。
 - 发布：commit `50a4b47`，tag `v1.14.0-fix3.3.10.43`，Release Latest；ZIP 9,176,427 B / 154 条目，SHA-256 `bcc4a30ec42d5a717c03d9b4e48fe1d01e81fa0d253e100a1fd9e101b437f986`；ZIP 内 7 运行时文件与 live 一致。回下载完成，字节 = 本地 = SHA256SUMS（`bcc4a30e…`）。
 - `USAGE-zh_CN.md` 新增 §2.2b（Max Result Bytes 7000000 / include_data_uri 默认 true），触发线数字更新。
+- **待浏览器验收**。
+
+### 2026-09-18T04:0x+08:00 · .44 部署 + 发布（用户授权）
+
+- 取证：`D:/tmp/edsnap-331043-verify-20260918-0022`、`D:/tmp/edsnap-pre44-20260918-0235`；分析脚本 `D:/tmp/an43*.py`、`an44*.py`、`an45*.py`、`cost44.js`（用 live `background.js` 抽真实内置描述符算成本）。
+- 根因：P1 内置工具计入触发线 + UI 直接未持久化；P3 限流不可见（详见 `docs/mcp-deepseekpp-fix43-first-run-20260918.md`）。P2 `Max Result Bytes` 7,000,000 未落盘 = 表单未保存，非代码缺陷。
+- 改动：`fix3-policy.js` 1 处（MCP-only total）；`content.js` 5 处（`DPP_FINISH_REASON_331044`/`DPP_LAST_FINISH_REASON_331044` + 诊断帧 `finish`、`HR()` 限流即停、`provider_terminal.finishReason`、白名单、`DPP_RATE_LIMIT_STOP_331044` 文案）；`background.js`/`main-world.js` 不变。不触碰授权。
+- 验证：`tools/validate-fix331044.py` passed:true（31 checks / 73 进程 / 59 套件）；`dspp-exposure-builtin-v44-selftest.js` 41/41；篡改源锁/基线/重复打补丁 fail-closed；独立重建一致；live 59/59。
+- 发布：commit `6c1a471`，tag `v1.14.0-fix3.3.10.44`，Release Latest；ZIP 9,222,380 B / 162 条目，SHA-256 `e300e53572f940c6abd4a598f2caa48780c490a65320499697e4423f956890fe`；回下载字节与 SHA 一致；ZIP 内 7 运行时文件与 live 一致。
+- 文档：README 顶部横幅 + 文档索引 + 推荐配置；`USAGE-zh_CN.md` 适用版本/§2.2/§2.2b/§3.5 限流行；本交接文档；黑曜石 `dspp/00–03` 横幅（私有库不推送）。
+- 纠错：此前手记里“修后应为 27 = 9+15+3”有误——direct 模式 `_d()` 不注入目录项，应为 **24**。
 - **待浏览器验收**。
