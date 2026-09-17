@@ -1,4 +1,4 @@
-> **⚠️ 2026-09-17 状态更新（Fix 3.3.10.36 已发布，但浏览器视觉验收失败，尚未修复）**：磁盘已部署 .36 / 1.14.0.41，GitHub 发布不变。现场 SVG 参考图任务中，扩展三次取得图像字节（18,731 B ×2、2,168 B）后，`UPLOAD_DEEPSEEK_IMAGE` 在 2–9 ms 内被后台授权门以 `runtime_message_unauthorized` 拒绝，refs=0；与图片大小无关。已核实全部拒绝子条件与日志：失败发生在**新建对话（SPA 切换进入 `/a/chat/s/<id>`）**的会话，此前同一 background 在**直接加载的旧会话**中上传成功；具体命中的子条件（`sender.url`/`tab.url` 会话不一致、`documentId` 缺失或驻留旧脚本）尚待现场验证。**不要通过删除授权检查解决。** 详见 [`docs/mcp-deepseekpp-visual-blocker-20260917.md`](docs/mcp-deepseekpp-visual-blocker-20260917.md)。
+> **⚠️ 2026-09-17 状态更新（Fix 3.3.10.36 已发布；浏览器视觉上传阻塞根因已定位，.38 修复候选待部署）**：GitHub 发布仍为 .36。现场 SVG 参考图任务中 `UPLOAD_DEEPSEEK_IMAGE` 被后台授权门以 `runtime_message_unauthorized` 拒绝。.37（1.14.0.42，仅固定枚举诊断，已部署到本机 live）现场抓到唯一命中条件 `ctx_sender_tab_session_mismatch`：`chrome.runtime.onMessage` 的 `sender.url` 冻结于文档提交时刻，DeepSeek 同文档 History 切换会话后与 `tab.url` 不一致，直到 F5。.38（1.14.0.43）候选把会话身份改以浏览器 tab URL 为准并锁定监听时会话，离线验收全通过，**未部署、未发布**。**授权检查不得删除或弱化。** 详见 [`docs/mcp-deepseekpp-visual-blocker-20260917.md`](docs/mcp-deepseekpp-visual-blocker-20260917.md)、[`docs/mcp-deepseekpp-upload-gate-diag-v9.md`](docs/mcp-deepseekpp-upload-gate-diag-v9.md)、[`docs/mcp-deepseekpp-upload-gate-fix38.md`](docs/mcp-deepseekpp-upload-gate-fix38.md)。
 >
 > **目录分离**：DSPP 全部文档、维护脚本与私有取证已从个人 `Athena计划` 工作区迁出。本仓库 `docs/` 与 `tools/` 即唯一真源；私有取证/参考图/备份位于本地 `local/`（已 `.gitignore`，不发布）。项目交接总入口：[`DeepSeekPP-Fix3-项目交接文档.md`](./DeepSeekPP-Fix3-项目交接文档.md)。
 
@@ -21,7 +21,9 @@
 
 | 文档 | 用途 |
 |---|---|
-| [mcp-deepseekpp-visual-blocker-20260917.md](docs/mcp-deepseekpp-visual-blocker-20260917.md) | **最新**：.36 浏览器视觉上传阻塞取证、后台授权链、接手步骤 |
+| [mcp-deepseekpp-visual-blocker-20260917.md](docs/mcp-deepseekpp-visual-blocker-20260917.md) | .36 浏览器视觉上传阻塞取证、后台授权链、§9 现场根因、接手步骤 |
+| [mcp-deepseekpp-upload-gate-diag-v9.md](docs/mcp-deepseekpp-upload-gate-diag-v9.md) | .37：上传门禁固定枚举诊断（构建/验收/读取） |
+| [mcp-deepseekpp-upload-gate-fix38.md](docs/mcp-deepseekpp-upload-gate-fix38.md) | **最新**：.38 门禁修复候选（会话身份以 tab URL 为准），部署待授权 |
 | [mcp-deepseekpp-visual-workflow-v8.md](docs/mcp-deepseekpp-visual-workflow-v8.md) | .36 实现、离线验证、部署与发布回执 |
 | [RELEASE-Fix3.3.10.36.md](docs/RELEASE-Fix3.3.10.36.md) / [RELEASE-Fix3.3.10.35.md](docs/RELEASE-Fix3.3.10.35.md) | 发布说明 |
 | [mcp-deepseekpp-readimage-v7.md](docs/mcp-deepseekpp-readimage-v7.md) / [readimage-v6.md](docs/mcp-deepseekpp-readimage-v6.md) / [readimage-upload-boundary.md](docs/mcp-deepseekpp-readimage-upload-boundary.md) | read_image 上传链路 v6→v7 及后台授权边界 |

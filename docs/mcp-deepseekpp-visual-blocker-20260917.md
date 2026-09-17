@@ -205,3 +205,7 @@ live 已于 14:52 部署 .37/1.14.0.42（备份 `D:/tmp/deepseekpp-fix331037-202
 修复方向（.38，待授权）：会话身份以**浏览器可信的 `tab.url`** 为准（它已在 `TN` 与上传前后 `ASSERT_CURRENT` 通过 `tabs.get` 校验三次），`sender.url` 只保留来源/顶层 frame/同源校验，不再要求其会话段与 `tab.url` 相等；`documentId`、lifecycle、frameId=0、会话不变等检查全部保留。不接受 payload 自报会话。需新增正反例：同文档 SPA 切换后上传（应通过并绑定 tab 会话）、sender 为其他来源/iframe/其他扩展（仍拒绝）、上传期间 tab 导航（仍拒绝）。
 
 另：`chrome.storage.local['dpp_upload_gate_diag_v9']` 在本快照中尚未见到（可能未落盘或 service worker 写入时机），content 侧 `gate_reason` 已足够定位；部署 .38 前核实。
+
+## 10. .38 候选（未部署）
+
+已按第 9 节方向构建 .38（1.14.0.43）：`DPP_REQUIRE_UPLOAD_CONTEXT_V7` 不再拿过期的 `sender.url` 会话段与 tab 会话比较，改为锁定监听器首次看到的 tab 会话并要求 tabs.get 三次一致。离线验收 20 checks / 64 processes 全通过。详见 `docs/mcp-deepseekpp-upload-gate-fix38.md`。部署与浏览器验收待授权。
