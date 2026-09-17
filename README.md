@@ -23,7 +23,8 @@
 |---|---|
 | [mcp-deepseekpp-visual-blocker-20260917.md](docs/mcp-deepseekpp-visual-blocker-20260917.md) | .36 浏览器视觉上传阻塞取证、后台授权链、§9 现场根因、接手步骤 |
 | [mcp-deepseekpp-upload-gate-diag-v9.md](docs/mcp-deepseekpp-upload-gate-diag-v9.md) | .37：上传门禁固定枚举诊断（构建/验收/读取） |
-| [mcp-deepseekpp-upload-gate-fix38.md](docs/mcp-deepseekpp-upload-gate-fix38.md) | **最新**：.38 门禁修复候选（会话身份以 tab URL 为准），部署待授权 |
+| [mcp-deepseekpp-upload-gate-fix38.md](docs/mcp-deepseekpp-upload-gate-fix38.md) | .38 门禁修复（会话身份以 tab URL 为准）：本机 live 已部署、浏览器验收通过，Release 未发 |
+| [mcp-deepseekpp-mw-bridge-diag-v10.md](docs/mcp-deepseekpp-mw-bridge-diag-v10.md) | **最新**：.39 MAIN-world 桥诊断（“新对话首条消息无工具”取证），本机 live 已部署 |
 | [mcp-deepseekpp-visual-workflow-v8.md](docs/mcp-deepseekpp-visual-workflow-v8.md) | .36 实现、离线验证、部署与发布回执 |
 | [RELEASE-Fix3.3.10.36.md](docs/RELEASE-Fix3.3.10.36.md) / [RELEASE-Fix3.3.10.35.md](docs/RELEASE-Fix3.3.10.35.md) | 发布说明 |
 | [mcp-deepseekpp-readimage-v7.md](docs/mcp-deepseekpp-readimage-v7.md) / [readimage-v6.md](docs/mcp-deepseekpp-readimage-v6.md) / [readimage-upload-boundary.md](docs/mcp-deepseekpp-readimage-upload-boundary.md) | read_image 上传链路 v6→v7 及后台授权边界 |

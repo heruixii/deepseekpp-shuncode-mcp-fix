@@ -223,3 +223,7 @@ live 已于 14:52 部署 .37/1.14.0.42（备份 `D:/tmp/deepseekpp-fix331037-202
 - 15:27:05 首次 read_image 因绝对路径被 MCP 工作区策略拒绝（`PATH_OUTSIDE_WORKSPACE`，`tool_failed_or_truncated`，与扩展无关）；模型用 run_command 复制到 `./_refimg/probe64.jpg` 后 15:27:30 再调：`capture→upload_start(2168B)→upload_ok→request_refs=1→request_ack=1`，模型给出真实视觉描述。**.36 以来的视觉阻塞在 .38 下解除，验收条件全部满足。**
 - 用户复现“无工具”的确切路径：同一页面点“新对话”→直接发第一条消息 → 模型称没有工具；该页 F5 后工具恢复。快照中该新会话在扩展侧 preflight（连 `mw_send_hook_seen` 都没有）、turn、traces、web 侧 v7 **全部为零**，说明 main-world 的请求增强在该文档里未生效或 main↔content 桥已断（`vs()` 的 `m()` 在桥无效时静默返回 false，`requestAugmentedBody` 得 null，原始请求直发）。这是独立于授权门的问题，需要单独取证（该页面控制台 `[DeepSeek++]` 日志、`NAVIGATION_CHANGED→Q1()` 之后桥的重连）。
 - `main-world.js:321 observe(null)` 报错的上下文是 F5 之后（工具可用）的页面，进一步说明它对工具注入无影响，仅影响技能弹窗；另行小修。
+
+## 13. .39（1.14.0.44）诊断已部署，用于“新对话首条消息无工具”
+
+现有诊断全走桥，桥断则全无记录；.39 在 main-world 加直写 localStorage 的 `dpp_mw_bridge_diag_v10`（仅枚举/布尔/计数）。background/content 与 .38 相同。详见 `docs/mcp-deepseekpp-mw-bridge-diag-v10.md`。待用户复现后读取。
