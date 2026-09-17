@@ -4,8 +4,8 @@ const manifest=JSON.parse(fs.readFileSync(path.join(root,'manifest.json'),'utf8'
 let pass=0,total=0;function test(n,c,d=''){total++;if(c){pass++;console.log('PASS',n,d)}else{console.error('FAIL',n,d);process.exitCode=1}}
 function between(a,b){const i=content.indexOf(a),j=content.indexOf(b,i);if(i<0||j<0)throw Error(`missing ${a}`);return content.slice(i,j)}
 (async()=>{
-test('version',['1.14.0.33','1.14.0.34','1.14.0.35','1.14.0.36','1.14.0.37','1.14.0.38','1.14.0.40'].includes(manifest.version));
-test('version name',['1.14.0 ShunCode MCP Fix 3.3.10.28','1.14.0 ShunCode MCP Fix 3.3.10.29','1.14.0 ShunCode MCP Fix 3.3.10.30','1.14.0 ShunCode MCP Fix 3.3.10.31','1.14.0 ShunCode MCP Fix 3.3.10.32','1.14.0 ShunCode MCP Fix 3.3.10.33','1.14.0 ShunCode MCP Fix 3.3.10.35'].includes(manifest.version_name));
+test('version',['1.14.0.33','1.14.0.34','1.14.0.35','1.14.0.36','1.14.0.37','1.14.0.38','1.14.0.41'].includes(manifest.version));
+test('version name',['1.14.0 ShunCode MCP Fix 3.3.10.28','1.14.0 ShunCode MCP Fix 3.3.10.29','1.14.0 ShunCode MCP Fix 3.3.10.30','1.14.0 ShunCode MCP Fix 3.3.10.31','1.14.0 ShunCode MCP Fix 3.3.10.32','1.14.0 ShunCode MCP Fix 3.3.10.33','1.14.0 ShunCode MCP Fix 3.3.10.36'].includes(manifest.version_name));
 test('consumption aware helper marker',content.includes('function DPP_CAPABILITY_READY_331028'));
 test('old readiness helper removed',!content.includes('function DPP_CAPABILITY_READY_331027'));
 test('steering uses consumption-aware helper',content.includes('ready=DPP_CAPABILITY_READY_331028(n)'));

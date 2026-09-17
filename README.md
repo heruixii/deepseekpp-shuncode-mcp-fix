@@ -1,8 +1,19 @@
 > **📖 中文安装/配置/使用指南：[`USAGE-zh_CN.md`](./USAGE-zh_CN.md)** — 暴露模式选「直接：展示全部工具」；Agent 状态条显示运行中时不要发新消息，等它结束再发「继续」。
 
-> Current release: **Fix 3.3.10.35 / 1.14.0.40** — restores automatic `read_image` upload and file references for DeepSeek Web Agent; fixes the actual background authorization and sidepanel-setting boundary without opening other commands. A 130×160, 3043-byte JPEG passed the native image-block → upload → request-reference → acknowledgement path. This is a limited small-image check, not a blind/all-formats test. Adds safe ShunCode overwrite-install maintenance, backups/rollback, offline suites and hash-locked reconstruction. [Release notes](docs/RELEASE-Fix3.3.10.35.md) · [ShunCode recovery guide](docs/ShunCode-read_image-图像通道-改造与维护.md).
+> Current release: **Fix 3.3.10.36 / 1.14.0.41** — proactive visual workflows and a fix for false completion after reading an image. Long unregistered tool blocks no longer escape the old 20k-body/200k-text detector. Real stop/steering callbacks recover through authorized capability calls, with bounded failures instead of false completion. Visual ranking, initial/continuation guidance and a local-reference preflight are included; no permissions or native ShunCode runtime changes. **48 new workflow groups + existing suites passed; a fresh browser/model SVG task still needs verification after reload.** [Download / Release](https://github.com/heruixii/deepseekpp-shuncode-mcp-fix/releases/tag/v1.14.0-fix3.3.10.36) · [Release notes](docs/RELEASE-Fix3.3.10.36.md) · [Technical handover](docs/mcp-deepseekpp-visual-workflow-v8.md).
 
-## Fix 3.3.10.35：自动读图与覆盖安装后的恢复
+## Fix 3.3.10.36：主动视觉与长补丁续执行
+
+- 参考图/SVG/UI复刻、截图转网页、图像对比等任务：主动获取真实视觉依据，不等用户额外说“用 read_image”。已附当前输入的图片可直接观察；缺本地路径时询问，不猜测或扫描私人文件。系统提示或工具注入关闭时不会被擅自开启。
+- 自适应预算仍可能收缩“直接模式”的工具列表。本版提高 read_image 与相关写入工具的优先级；未暴露时使用真实 discover/describe/invoke，不凭空使用短标签。
+- 读图后输出长 `<apply_patch>` 但没有执行时，不再直接 complete；按真实工具/schema重发，并同时遵守局部与整轮上限。该修复不直接执行未知 raw patch，也不恢复用户主动停止的任务。
+- 成功读图不等于SVG制作完成；按要求完成生成/保存/验证，有授权渲染能力则看渲染结果复核，未做就说明。禁止冒称看图或用未经允许的trace/convert替代视觉重绘。
+- 本机黑曜石已按要求整理为 dspp：4当前入口、21原笔记归档、1历史索引；保留禁止伪作画规则。只发布脱敏维护结论，不上传私人笔记库。
+- 新48组视觉、22组读图、16组后台、22项原生维护、55套旧回归、14工程检查、6语法检查通过。**新版浏览器/模型端到端复测仍需用户重载后完成，不以离线测试代替。**
+
+
+
+## 历史：Fix 3.3.10.35：自动读图与覆盖安装后的恢复
 
 - 浏览器扩展：下载本版 ZIP → 解压/备份后更新 → 扩展页面“重新加载” → 关闭旧 DeepSeek 页面并新开已登录页面。
 - ShunCode 覆盖安装可能丢失原生 image 块。先运行 `python tools/shuncode-read-image-patch.py --dir "你的ShunCode内置扩展目录" --check`；**ALREADY 不写文件；仅 NEED 时保存工作、退出 ShunCode 后显式 --apply**，随后重启/重连并用非敏感小图验收。未知结构 BLOCKED 时停止，不把旧 runtime 覆盖进新安装。
@@ -11,7 +22,7 @@
 
 
 
-> Validation: dedicated Fix 3.3.10.34 suite **24/24 PASS** (includes the poisoned-output field case); all **55 self-test suites PASS** (`.33` baseline 54/54); hash-locked `.33 → .34` patcher (`tools/apply-fix331034.py`, 5-file SHA lock + 4 fail-closed anchors, refuses dst==src), re-apply fails closed, two independent rebuilds byte-identical (**208/208**). Manifest `1.14.0.39 / 1.14.0 ShunCode MCP Fix 3.3.10.34`. ZIP `DeepSeekPP-1.14.0-ShunCode-MCP-Fix3.3.10.35.zip` (13,946,628 B) SHA-256 `ECBCB43D8F07FD8961A7E0CDA676A59E1E1CC1B5C1F592CFB3AE6FB7A90329FA`.
+> Validation: dedicated Fix 3.3.10.34 suite **24/24 PASS** (includes the poisoned-output field case); all **55 self-test suites PASS** (`.33` baseline 54/54); hash-locked `.33 → .34` patcher (`tools/apply-fix331034.py`, 5-file SHA lock + 4 fail-closed anchors, refuses dst==src), re-apply fails closed, two independent rebuilds byte-identical (**208/208**). Manifest `1.14.0.39 / 1.14.0 ShunCode MCP Fix 3.3.10.34`. ZIP `DeepSeekPP-1.14.0-ShunCode-MCP-Fix3.3.10.36.zip` (13,946,628 B) SHA-256 `ECBCB43D8F07FD8961A7E0CDA676A59E1E1CC1B5C1F592CFB3AE6FB7A90329FA`.
 
 > Previous release: **Fix 3.3.10.33** — fixes the `.32` field failure "继续 → answers `complete` with zero tools / dies mid-task". LevelDB evidence (session `c0ba574e`, 2026-09-16) proved it was **not** a regression: every response was HTTP 200 with no DOM-fence or transport counters. Layer 1: the adaptive capability picker (`background.js` `_d/Sd/Cd`) ranks MCP descriptors purely by keyword overlap with the user prompt, so `继续` / `A` never selected `run_command` (the injected direct set was `apply_patch/find_files/get_command_output/read_image`); the system prompt still told the model to emit `<run_command>` raw bodies, the stream parser had no such tag and dropped the block as text (turn_diag `textChars` vs visible text: 347→39, 196→0, 309→0, 223→0, 268→0, 1315→57, 657→17, 790→31 on all eight failing turns). Layer 2: the `.19` temporary alias is removed only in its own `finally`; when the model consumed the same handle through `mcp_invoke` directly, the alias survived and the next direct call failed with `mcp_capability_handle_replayed`, a code outside the `.31` transport set, so the loop fell into generic nudges and died at the limit. Layer 3: `<task_complete>` with zero tool executions passed `DPP_COMPLETION_GATE_31` unconditionally. `.33` (A) adds a rank floor for core ShunCode tools (`DPP_CORE_TOOL_FLOOR_331033`: run_command +1600, get_command_output/read_files +1000, apply_patch/search_files/list_directory +700) so they survive the 5-slot adaptive cut regardless of wording; (B1) retires aliases whose capability was consumed by any `mcp_invoke`; (B2) adds handle-lifecycle codes to the transport-failure set with targeted steering ("re-discover, then invoke next turn"); (C1) detects unregistered tool tags (`DPP_UNREGISTERED_TOOL_TAG_331033`, diag `unregistered_tool_tag_331033`) and treats them as tool intent with steering that explains the tag was ignored; (C2) rejects a zero-tool `<task_complete>` on continuation prompts or when reasoning carries tool intent (`zero_tool_complete_331033`). The .25/.27 "visible final wins", .31 transport gate and .32 safe-final guard are all asserted unchanged.
 

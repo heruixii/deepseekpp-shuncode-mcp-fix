@@ -1,6 +1,6 @@
 # ShunCode 覆盖安装后的 read_image 检查与恢复
 
-更新：2026-09-17 · 配套 DeepSeekPP Fix 3.3.10.35 / 扩展版本 1.14.0.40。
+更新：2026-09-17 · 配套 DeepSeekPP Fix 3.3.10.36 / 扩展版本 1.14.0.41。
 
 ## 两段链路，分别维护
 
@@ -58,7 +58,7 @@ python tools/shuncode-read-image-patch.py --dir "D:\shuncode\ShunCode\resources\
 ### 4. 重启、重连、重载两端
 
 1. 重新启动 ShunCode，确认 MCP 服务/连接重新建立；若检查为 ALREADY 但产品刚覆盖安装，也应确保当前进程加载的是新磁盘文件。
-2. 安装/更新 DeepSeekPP **Fix 3.3.10.35（1.14.0.40）**。浏览器 `edge://extensions` 或 `chrome://extensions` 打开开发者模式，加载 Release 的扩展 ZIP 解压后含 `manifest.json` 的目录。已有同目录安装可备份后更新该目录，再点“重新加载”；不要无故删除浏览器存储。
+2. 安装/更新 DeepSeekPP **Fix 3.3.10.36（1.14.0.41）**。浏览器 `edge://extensions` 或 `chrome://extensions` 打开开发者模式，加载 Release 的扩展 ZIP 解压后含 `manifest.json` 的目录。已有同目录安装可备份后更新该目录，再点“重新加载”；不要无故删除浏览器存储。
 3. 关闭旧 DeepSeek 页面并新开 `https://chat.deepseek.com/`，确认已登录。旧页面可能仍运行旧 content script，单改磁盘文件不够。
 4. 按 [中文使用指南](../USAGE-zh_CN.md) 配置 MCP；直接展示全部工具模式可保持工具暴露明确。Agent 运行时不要发“继续”打断它。
 
@@ -92,3 +92,7 @@ python tools/shuncode-read-image-patch.py --dir "D:\shuncode\ShunCode\resources\
 - 此维护脚本只支持明确识别的代码形状；如果新产品改为另一种实现，可能正确地返回 BLOCKED，需要适配，不能宣称通用自动修复所有 ShunCode 版本。
 - 旧文档中的“128KB 通道上限”不是当前已证明的通用上限。当前一次真实验收为 **130×160、3043 B JPEG**；没有新增的大图、所有格式或 API 后端验收。
 - DeepSeekPP v7 当前实现有本地大小/格式限制；实际可用大小还受 MCP、浏览器、DeepSeek 上传接口和模型影响。本说明不承诺扩大任何服务限制。
+
+## .36 视觉工作流补充
+
+另一张244×300、11,923 B JPEG的传输也已成功；其后因长未注册工具块误结束的问题由.36修复，不是重打原生补丁。新版主动选工具与SVG任务的模型验收仍需重载后复测。成功 read_image 结果不证明图像身份或重绘质量，详见 [本版技术交接](mcp-deepseekpp-visual-workflow-v8.md)。

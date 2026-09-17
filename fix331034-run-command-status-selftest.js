@@ -31,9 +31,9 @@ console.log("Fix 3.3.10.34 run_command status / manual supersede suite");
 console.log("=========================================================");
 
 console.log("\n[1] build integrity");
-ok("manifest version is 1.14.0.40", manifest.version === "1.14.0.40", manifest.version);
-ok("manifest version_name is Fix 3.3.10.35",
-   manifest.version_name === "1.14.0 ShunCode MCP Fix 3.3.10.35", manifest.version_name);
+ok("manifest version is 1.14.0.41", manifest.version === "1.14.0.41", manifest.version);
+ok("manifest version_name is Fix 3.3.10.36",
+   manifest.version_name === "1.14.0 ShunCode MCP Fix 3.3.10.36", manifest.version_name);
 ok("header parser present", src.indexOf("function DPP_RUN_COMMAND_STATUS_331034(") !== -1);
 ok("normalizer uses header parser", src.indexOf("DPPStatus331034=DPP_RUN_COMMAND_STATUS_331034(n)") !== -1);
 ok("r1 accepts a reason", src.indexOf("function r1(DPPReason331034){") !== -1);
