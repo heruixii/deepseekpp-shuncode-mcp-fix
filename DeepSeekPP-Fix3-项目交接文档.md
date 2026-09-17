@@ -1,12 +1,19 @@
 # DeepSeek++ 扩展修复项目 · 交接文档
 
-> **2026-09-17 当前接手入口**：维护版 Fix3.3.10.36 / 1.14.0.41。已修复视觉任务主动流程和读图后长未注册工具块误完成；本机磁盘已部署，48视觉/22读图/16后台/22原生维护/55旧套件、14工程/6语法通过，浏览器重载后的新模型任务仍待验证。黑曜石奇思妙想已整理为dspp并保留21篇历史。当前实现与边界见 [技术交接](docs/mcp-deepseekpp-visual-workflow-v8.md)，分发见 [Release说明](docs/RELEASE-Fix3.3.10.36.md)；下方旧版记录按历史阅读。
+> **2026-09-17 目录分离**：本文件及全部 DSPP 文档/脚本/私有取证已从 `D:/learn/Athena计划` 迁出，独立于 Athena 计划维护；当前真源为公开仓库工作树 `D:/tmp/gh-deepseekpp`（docs/、tools/），私有取证在其 `local/`（已 gitignore，不上传）。
+
+> **2026-09-17 本轮浏览器验收失败（优先于下方此前待验状态）**：磁盘仍为.36/1.14.0.41，GitHub发布不变；本轮22步/30工具，3次取得图像字节后上传被 runtime_message_unauthorized 拒绝，refs=0，2,168字节也失败。其余直接读图含4次文件不存在、6次网络错误，并非全部success。当前MCP小图复核返回原生image块，不能归因于ShunCode始终剥离。具体后台拒绝子条件及浏览器驻留版本未取证；阻塞仍被记为complete待修。本次仅核查，未改运行代码或发布新版。 详见 docs/mcp-deepseekpp-visual-blocker-20260917.md。
+> 部署状态（脚本维护）：v8/.36正式磁盘已更新为1.14.0.41；content e66f24d5…f1ec，policy c8e843c8…c8c6，background不变。浏览器重载/新模型验收待进行，分发回执见v8文档；2026-09-17。
+
+> **2026-09-17 v8 当前接手入口**：Fix3.3.10.36 / 1.14.0.41 已部署本机磁盘，修复视觉主动工作流与长未注册工具块误完成；48视觉/22读图/16后台/22原生维护/55旧回归、14工程/6语法通过，正式文件复测48/22/16通过。浏览器尚需用户重载，新模型SVG端到端未验证；GitHub已正式发布 Latest v1.14.0-fix3.3.10.36，提交16a9219ff8dbd3601fedecfb459d1d5431e04248；三个远端附件下载SHA-256及API digest一致。黑曜石已将奇思妙想整理为dspp：4当前入口+21历史原稿+1历史索引，53处链接修复、131处校验，原始备份保留，未推送私人笔记库。详见 docs/mcp-deepseekpp-visual-workflow-v8.md。下方旧版状态按历史阅读。
+
+> 历史（v7修复前）：**2026-09-17 当前接手状态（优先于历史段落）**：基础 `.34 / 1.14.0.39` + read_image v6 已写盘；浏览器实测失败。2026-09-17 最新实测：3043 B图片已捕获；upload_start→upload_failed仅2ms，下一轮ref count=0。抽取真实background权限门复跑，DeepSeek内容脚本调用UPLOAD_DEEPSEEK_IMAGE必被runtime_message_unauthorized拒绝，上传处理器未进入。上一版22/22模拟上传测试漏掉真实sender权限边界；离线通过不等于链路可用。本次仅取证/更新文档，未改运行代码。详见 `docs/mcp-deepseekpp-readimage-upload-boundary.md`。 当前副本位于工作区；桌面/GitHub旧文档未同步。
 
 > **这份文档是项目的唯一交接入口。每次对项目做任何改动（修复、发版、验证、结论更新）后，都必须更新本文档**（改对应章节 + 在文末「更新记录」追加一条），保证任何人接手都能从本文档直接进入状态。
 >
 > - 创建时间：2026-09-16
 > - 创建方：Arena Agent（经 ShunCode Bridge MCP 连接本机）
-> - 信息来源：ChatGPT 分享对话《分析页面崩溃原因》(https://chatgpt.com/share/6aaa2f87-4e60-83ee-86c1-63215ea6b70d) + 本机工作区 `D:\learn\Athena计划`
+> - 信息来源：ChatGPT 分享对话《分析页面崩溃原因》(https://chatgpt.com/share/6aaa2f87-4e60-83ee-86c1-63215ea6b70d) + 本机工作区 `D:/tmp/gh-deepseekpp`
 
 ---
 
@@ -15,7 +22,7 @@
 | 项目 | 状态 |
 |---|---|
 | 在做什么 | 修复 **DeepSeek++ 浏览器扩展**在自动化执行任务时导致 **DeepSeek 网页崩溃 / "服务器暂不可用" / 任务中断** 的系列问题 |
-| 当前维护版本 | **1.14.0.41 / Fix3.3.10.36**；磁盘已部署、离线门禁通过，浏览器/模型新任务待重载复测；分发以本版Release为准 |
+| 当前正式版 | **`1.14.0.39 / DeepSeek++ ShunCode MCP Fix 3.3.10.34`**（GitHub 已同步：main `cce959e`，Release `v1.14.0-fix3.3.10.34` Latest；仓库新增 `USAGE-zh_CN.md` 用户指南） |
 | 正式目录 | `D:\learn\DeepSeekPP-1.14.0-ShunCode-MCP-Fix3`（Edge 解压加载） |
 | 最新成就 | **“继续/重试只口头答应不调工具”根因实锤并修复**：MCP 传输故障被完成门当作有效进展 → trace 误标 `complete` → 恢复网关永久拒绝接管；`.31` 双点修复（见 §2.5） |
 | 当前阶段 | **Fix 3.3.10.31 已发布，待用户实测验收**：专项 43/43、全回归 **50/50**、hash-lock 干净升级、篡改 fail-closed、独立重建 **201/201 零差异**。`.30` DOM 保险丝未回归 |
@@ -30,7 +37,7 @@
 
 ### 1.1 生态组成
 
-- **Athena 计划**（ShunCode 工作区 `D:\learn\Athena计划`）：桌面 AI 助手主项目（`main.py`、Live2D、GPT-SoVITS TTS、wxauto 微信自动化等目录）。MCP Bridge 默认工作区即此目录。
+- **Athena 计划**（ShunCode 工作区 `D:/tmp/gh-deepseekpp`）：桌面 AI 助手主项目（`main.py`、Live2D、GPT-SoVITS TTS、wxauto 微信自动化等目录）。MCP Bridge 默认工作区即此目录。
 - **DeepSeek++ 扩展（deepseek_pp）**：Edge 浏览器解压扩展，增强 DeepSeek 网页版——自动化任务队列、网页 Agent 连续执行、经 **MCP capability / mcp_invoke** 调用本机 ShunCode 工具、提示词/记忆注入、usage 统计、trace 诊断等。这是本修复工程的主体。
 - **ShunCode Bridge**：把 IDE/Agent 能力桥给网页 Agent，扩展崩溃问题长期集中在**网页 Agent / 恢复上下文**链路，而非 Bridge 本身。
 
@@ -42,7 +49,7 @@
 | 正式 ZIP（当前 .32） | `D:\learn\DeepSeekPP-1.14.0-ShunCode-MCP-Fix3.3.10.32.zip`（13,920,096 B，204 文件） |
 | 当前 ZIP SHA-256 | `7C52B0C5721CD63CC4ACA4A3DF07A986F980DD6508ACC2BE55FB7324BD100D8C` |
 | 回退点（每次发版前冻结上一版） | `D:\tmp\DeepSeekPP-Fix3310XX-pre3310YY-20260916` |
-| 工作区（Athena） | `D:\learn\Athena计划` |
+| 工作区（Athena） | `D:/tmp/gh-deepseekpp` |
 | 稳定化计划 | 项目内的稳定化计划文档，每版追加一节，目前到 **第 27 节** |
 
 ---
@@ -173,7 +180,7 @@ inline agent loop 末尾的 `u&&_1()`（`window.location.reload()`）与之竞�
 2. **次因·句柄生命周期**：`.19` 别名只在自身 `finally` 里移除；模型直接用 `mcp_invoke` 消费同一句柄后别名残留 → `mcp_capability_handle_replayed`；该码不在 `.31` 传输失败集 → 通用 nudge → 3 次上限 → error（loop `61ad9dfd`）。
 3. **三因·完成门盲区**：`<task_complete>` 零工具时 `DPP_COMPLETION_GATE_31` 无条件放行（loop `02f8e7f5`）；剥剩几十字且无意图短语时走 `final`（loop `1eeb8389`）。
 
-**`.33` 修复（A/B1/B2/C1/C2）**、证据表、验证步骤见 `D:\learn\Athena计划\docs\mcp-deepseekpp-capability-exposure.md`。
+**`.33` 修复（A/B1/B2/C1/C2）**、证据表、验证步骤见 `docs/mcp-deepseekpp-capability-exposure.md`。
 **未升级前的绕过**：侧边栏 MCP → ShunCode 服务器模式 `adaptive`→`direct`，或固定 `run_command/get_command_output/read_files/apply_patch`。
 
 ## 2.8 `.33` 上线后“继续只执行一会又中断”（已实证，2026-09-16 23:12–23:18，快照 `D:\tmp\edsnap-331033-20260916-2319`）
@@ -182,7 +189,7 @@ inline agent loop 末尾的 `u&&_1()`（`window.location.reload()`）与之竞�
 
 顺带发现两处真缺陷 → `.34`：**E** `DPP_NORMALIZE_RUN_COMMAND_RESULT_33108` 全文扫 `status=failed`，命令输出含该字样（grep 扩展源码）时 `completed/0` 被判 `run_command_failed`（3 次）；**F** 手动打断只显示「已停止」、无诊断。
 
-取证工具升级：`D:\tmp\ldb_extract.py` 现支持 `cramjam` 解 snappy（需用 Python 3.11：`C:\Users\29066\AppData\Local\Programs\Python\Python311\python.exe`），.ldb 表全量可读（19 键）。详见 `D:\learn\Athena计划\docs\mcp-deepseekpp-manual-supersede.md`。
+取证工具升级：`D:\tmp\ldb_extract.py` 现支持 `cramjam` 解 snappy（需用 Python 3.11：`C:\Users\29066\AppData\Local\Programs\Python\Python311\python.exe`），.ldb 表全量可读（19 键）。详见 `docs/mcp-deepseekpp-manual-supersede.md`。
 
 ## 3. 修复历程（Fix 3.3.10.11 → 3.3.10.34）
 
@@ -252,7 +259,7 @@ inline agent loop 末尾的 `u&&_1()`（`window.location.reload()`）与之竞�
 
 ---
 
-## 5. 下一步工作（接手从这里开始）
+## 5. 历史下一步工作（.31 时点；当前请先读顶部接手状态）
 
 1. **【先做】`.31` 用户实测验收**：`edge://extensions` 重新加载解压扩展 → **彻底关闭旧 DeepSeek 标签页后开新页** → 跑一个需要多步工具的任务，中途制造 MCP 断连（关掉 ngrok/Bridge 数秒）。**预期**：不再一句“我继续”就结束；应看到自动重试同一工具调用；若连续 3 次失败，任务应停在**错误**状态（非完成），此时恢复网关可接管，隔一会儿发“继续”能真实续跑。验证点：`dpp_agent_turn_diag_331021` 应出现 `tool_transport_failure_331031` / `tool_transport_failure_limit_331031` 决策记录。
 2. **【降为观察项】GPU 141 A/B**（机器级，独立于网页崩溃问题；每步后连续跑 2~3 个同等级任务看 WER 是否还新增 141）：
@@ -302,23 +309,36 @@ inline agent loop 末尾的 `u&&_1()`（`window.location.reload()`）与之竞�
 | 2026-09-16 晚 | Arena Agent 实施并发布 **Fix 3.3.10.31**：按 §4 全套发布链（冻结回退点 → hash-lock patcher → 专项套件 → 全回归 → 独立重建 → 落正式目录 → ZIP） | 正式目录 → 1.14.0.36（202 文件）；`D:\learn\DeepSeekPP-1.14.0-ShunCode-MCP-Fix3.3.10.31.zip` SHA `B3C9C512…B2F540`；回退点 `D:\tmp\DeepSeekPP-Fix331030-pre331031-20260916`；新套件 `fix331031-transport-failure-selftest.js`；本文档 §0/§3/§5/§7 | **修复已落地**：传输故障不再判 final（最多续跑 3 次后落 error）；恢复水位只计真实成功。专项 43/43、全回归 50/50（基线 .30 为 49/49）、篡改与重复打补丁 fail-closed、独立重建 201/201 零差异；只改 content.js+manifest+2 locales+22 版本门套件 | 用户实测（§5-1）；通过后考虑候选 .32 分片化 |
 | 2026-09-16 | 3.3.10.32 | reasoning 已宣告但未发出的工具调用被误提升为终局答案；同时修复 reload 与批刷诊断的竞态（使故障可观测）。回归 51/51，独立重建 203/203 零差异。ZIP SHA256 7C52B0C5…0D8C | 已交付，待用户实测 |
 | 2026-09-16 晚 | Arena Agent 将 `.31`+`.32` 同步至 GitHub `heruixii/deepseekpp-shuncode-mcp-fix`：工作副本 `D:\tmp\gh-deepseekpp`，`.31` 取自冻结树 `D:\tmp\DeepSeekPP-Fix331031-pre331032-20260916`（202 文件），`.32` 取自正式目录（204 文件）；README 顶部改 `.32` Current / `.31` Previous / `.30` Historical；创建 Release `v1.14.0-fix3.3.10.32`（Latest）附 ZIP | commits `49f9fb5`（.31，30 文件）、`e42c61a`（.32，31 文件）、`495cef7`（README）、`c3fb35d`（本文档）；Release 资产 `DeepSeekPP-1.14.0-ShunCode-MCP-Fix3.3.10.32.zip` 13,920,096 B，SHA `7C52B0C5…0D8C` 已写入 notes；本文档 §0/§1.2/§5/§7 | GitHub 追平至 `.32`；仓库与正式树逐文件比对：仅 `.gitattributes` 声明的行尾差异，无内容差异；仓库多出 `.gitattributes` 与本交接文档两文件（预期）。踩坑复现一次：Windows Python 不认 `/c/...` 路径（§6 已记） | 待用户实测 `.32`（§5）；`.31` 未单独建 Release（内容已含于 .32 notes） |
-| 2026-09-16 晚 | Arena Agent 响应 `.32` 实测失败：快照 `D:\tmp\edsnap-331032-20260916`，新写 `ldb_extract.py` 直接解 WAL，五条诊断链交叉比对（turn_diag `textChars` vs trace 可见文本） | 未改正式目录；产物 `D:\learn\Athena计划\docs\mcp-deepseekpp-capability-exposure.md`、`D:\tmp\fix331033\apply-fix331033.py`、`fix331033-capability-exposure-selftest.js`、干跑树 `D:\tmp\DeepSeekPP-Fix331033-dry`；本文档 §0/§2.7/§3/§5/§7 | **根因实锤（非回归）**：自适应暴露按提示词关键词选工具，`继续` 选不中 `run_command` → `<run_command>` 标签被解析器剥成文本；别名指向已消费句柄 → `mcp_capability_handle_replayed` 无定向纠偏；零工具 `task_complete` 放行。`.33` 五处修复干跑：node --check 4/4、新套件 53/53、全回归 54/54 | 待用户确认后跑 §4 发布链落 `.33`；未升级前把 ShunCode 服务器切 `direct` 模式 |
+| 2026-09-16 晚 | Arena Agent 响应 `.32` 实测失败：快照 `D:\tmp\edsnap-331032-20260916`，新写 `ldb_extract.py` 直接解 WAL，五条诊断链交叉比对（turn_diag `textChars` vs trace 可见文本） | 未改正式目录；产物 `docs/mcp-deepseekpp-capability-exposure.md`、`D:\tmp\fix331033\apply-fix331033.py`、`fix331033-capability-exposure-selftest.js`、干跑树 `D:\tmp\DeepSeekPP-Fix331033-dry`；本文档 §0/§2.7/§3/§5/§7 | **根因实锤（非回归）**：自适应暴露按提示词关键词选工具，`继续` 选不中 `run_command` → `<run_command>` 标签被解析器剥成文本；别名指向已消费句柄 → `mcp_capability_handle_replayed` 无定向纠偏；零工具 `task_complete` 放行。`.33` 五处修复干跑：node --check 4/4、新套件 53/53、全回归 54/54 | 待用户确认后跑 §4 发布链落 `.33`；未升级前把 ShunCode 服务器切 `direct` 模式 |
 | 2026-09-16 晚 | 用户确认“全部修复”，Arena Agent 按 §4 发布 **Fix 3.3.10.33**：冻结 `.32` 回退点 → patcher 落正式目录 → 双独立重建比对 → 全回归 → ZIP → GitHub commit + Release | 正式目录 → 1.14.0.38（206 文件）；ZIP `D:\learn\DeepSeekPP-1.14.0-ShunCode-MCP-Fix3.3.10.33.zip` 13,933,248 B SHA `7A398F4F…B795`；回退点 `D:\tmp\DeepSeekPP-Fix331032-pre331033-20260916`；GitHub `c99119f` + Release `v1.14.0-fix3.3.10.33`（Latest，README 顶部改 .33 Current）；本文档 §0/§3/§5/§7 | 全回归 54/54、双重建 206/206 零差异、重复打补丁 fail-closed。踩坑：正式目录被占用导致 `shutil.rmtree` 失败（已改为先 patch 到临时树再 `cp -r` 覆盖，§6 建议 patcher 勿以正式目录为 dst） | 用户实测 `.33`（§5-0） |
 | 2026-09-16 深夜 | 用户报“继续只执行一会再次中断”，Arena Agent 取证（快照 `edsnap-331033-20260916-2319`，`ldb_extract.py` 加 cramjam 全量解表）→ 判定为用户运行中发消息触发 .33107 手动接管（非缺陷）；顺带修 run_command 假失败 + 中断可见；按 §4 发布 **Fix 3.3.10.34**；写用户指南 | 正式目录 → 1.14.0.39；ZIP `.34` 13,946,628 B SHA `ECBCB43D…29FA`；回退点 `D:\tmp\DeepSeekPP-Fix331033-pre331034-20260916`；GitHub `cce959e` + Release `v1.14.0-fix3.3.10.34`（Latest）；仓库/正式目录新增 `USAGE-zh_CN.md`；分析文档 `docs/mcp-deepseekpp-manual-supersede.md`；本文档 §0/§2.8/§3/§5/§7 | 新套件 24/24，全回归 55/55，双重建 208/208 零差异，重复打补丁 fail-closed | 用户按 `USAGE-zh_CN.md` 使用并实测 `.34` |
 
 
-### 2026-09-17 · Fix3.3.10.35 发布准备
+### 2026-09-17 · read_image v6 候选与维护文档
 
-- 核实实际小 JPEG 读图链路；加入 v7 两端修复、安全原生维护与22项维护测试、独立后台边界 fixture、哈希锁定重建及统一版本门禁；README/USAGE/Release 说明同步。未在本步上传 GitHub或修改已工作的原生安装。
+- 2026-09-17 收口：正式 content.js 已应用 v6，**901444 B**，SHA `251db07b3d1fc1aad31c492594b74bb11adac9143bde8032f120ce34d87d14d9`；background 未改。最终隔离报告 `D:/tmp/DeepSeekPP-readimage-v6-20260917/validation-final/report.json`：专项22/22组、旧回归55/55套件、工程检查30/30；应用后实际目标专项再次22/22。5个维护代码文件诊断返回0 error/0 warning，3个Python文件语法通过。原始 .34 `.v5_bak` 与修改前 v5 `.v6_bak` 均已核验。未重载浏览器、未实际上传图片、未发布GitHub/ZIP；端到端识图仍待用户验收。
 
-### 2026-09-17 · .35 离线门禁完成
+- 2026-09-17 批次三：隔离验证已通过：实际 helper/Jz **22/22 组**、扩展既有 **55/55 套件**，独立重建一致且树差异仅 content.js；默认只读、重复应用无写入、精确备份/回滚、输入/运行源篡改拒绝、坏语法拒绝、STALE_FILE 与模拟 I/O 失败回滚均通过。报告 `D:/tmp/DeepSeekPP-readimage-v6-20260917/validation/report.json`。追加部署状态自动维护行及其 apply/rollback 断言，避免未来回滚后页首仍称 v6 已部署；正式应用前再验证此维护逻辑。
 
-- 20/20工程检查、6/6语法、22/22自动读图、16/16实际后台边界、22/22原生维护、55/55旧回归均通过。公开 .34 archive 与历史 Windows 行尾差异被哈希门禁识别；构建器显式转换，Git 属性固定目标字节。当前 ShunCode 原生只读检查为 ALREADY，未修改安装。新增忽略规则防止提交缓存、本地备份和诊断日志；脱敏报告与操作指南同步。
+- 2026-09-17 批次二：首个候选实际 helper + Jz 专项 **22/22 组通过**，Node 语法通过；候选 901444 B，SHA `251db07b3d1fc1aad31c492594b74bb11adac9143bde8032f120ce34d87d14d9`。增加 runtime/output 哈希锁、文档读取版本快照保护和独立离线验证器（55 个扩展旧套件 + patcher 篡改/回滚/事务故障测试）；接下来执行这些门。正式 content.js 仍为 v5；未重载/上传。
 
-- 发布前扫描发现旧交接正文保留了历史 MCP 服务器地址；当前文档已使用占位符脱敏。本次没有重写已公开 Git 历史；若历史地址承载仍有效的访问凭据，应另外轮换，而不是认为删改最新文档即可撤回历史信息。
+- 读取用户上传交接文档与工作区读图资料，核实 v5/原始备份/background 哈希。
+- 确认首次 toolExecutions 绕过事件捕获、上传回调未 await、全局队列无运行隔离。
+- 提交运行隔离的候选 helper、hash-lock patcher 与离线测试；禁用旧 v5 脚本写入入口。
+- 本批次不改正式 content.js；不会把离线候选或历史 .34 回归等同于读图成功。
+- 后续门槛、隐私边界、测试/回滚见 `docs/mcp-deepseekpp-readimage-v6.md`。
 
-### 2026-09-17 · Fix3.3.10.36
+### 2026-09-17T10:48:39+08:00 · read_image v6 应用
 
-- 核实11,923 B JPEG成功上传后长apply_patch未执行却final的故障；修复20k/200k检测窗口、完成门禁、局部与整轮纠偏上限，以及主动视觉路由/初始与续轮指引。
-- 48新组、22读图、16后台、22原生维护、55旧回归通过；14工程、6语法通过。实际磁盘复测48/22/16通过；不把旧版HTTP成功或离线结果当新版模型端到端验收。
-- 黑曜石整理为dspp，4当前入口+21历史原稿+1历史索引，53处链接修复、131处新链接校验；原始备份保留，私人库不推送至本仓库。README/USAGE/Release/技术交接同步。
+- content.js: `6ba876bd3b2cfa3f6328c328621d43d259a83f5298bb3f68d50ea21f9fe5c54b` → `251db07b3d1fc1aad31c492594b74bb11adac9143bde8032f120ce34d87d14d9`，901444 B。
+- 回退备份：`D:/learn/DeepSeekPP-1.14.0-ShunCode-MCP-Fix3/content-scripts/content.js.v6_bak`；background.js 保持 `ed5751c7dfa819e51bb8df24beea990c505db7eb6f7c3654fa58217177844f32`。
+- 本操作通过 Node 语法预检；离线行为测试见 v6 专项文档。
+- 未自动重载扩展、未执行真实图片上传、未发布 GitHub/ZIP；浏览器端到端验收仍待进行。
+
+### 2026-09-17T11:09:53+08:00 · read_image v7 apply
+
+- content.js: 902208 B, SHA `76c02e472300316dd537af587dc3630d13a45ef3bde0b03aca189f7d640586d4`。
+- background.js: 654147 B, SHA `4f89a4d8b8d92a0e8c8661fdc5fc3a1745f39e2de2fc3306e0b3d9e7c87e3abc`。
+- 两文件备份为各自 `.v7_bak`（v6）；本操作含双文件语法校验和文档回执。
+- 未修改侧栏开关、未重载浏览器、未进行真实图片上传；端到端验收仍待进行。
+

@@ -1,5 +1,9 @@
 # 视觉工作流 v8：主动读图与长工具块误结束修复
 
+> **2026-09-17 目录分离**：本文件及全部 DSPP 文档/脚本/私有取证已从 `D:/learn/Athena计划` 迁出，独立于 Athena 计划维护；当前真源为公开仓库工作树 `D:/tmp/gh-deepseekpp`（docs/、tools/），私有取证在其 `local/`（已 gitignore，不上传）。
+
+> **2026-09-17 本轮浏览器验收失败（优先于下方此前待验状态）**：磁盘仍为.36/1.14.0.41，GitHub发布不变；本轮22步/30工具，3次取得图像字节后上传被 runtime_message_unauthorized 拒绝，refs=0，2,168字节也失败。其余直接读图含4次文件不存在、6次网络错误，并非全部success。当前MCP小图复核返回原生image块，不能归因于ShunCode始终剥离。具体后台拒绝子条件及浏览器驻留版本未取证；阻塞仍被记为complete待修。本次仅核查，未改运行代码或发布新版。 详见 docs/mcp-deepseekpp-visual-blocker-20260917.md。
+
 更新：2026-09-17。发布目标 **Fix3.3.10.36 / 1.14.0.41**。实现与离线门禁已完成，本机磁盘已部署 .36/1.14.0.41；浏览器仍需用户重新加载，分发状态见 GitHub Release。
 
 ## 现场核实
@@ -67,3 +71,9 @@
 ### 最终本机部署回执
 
 2026-09-17：正式磁盘五文件（content、policy、manifest、中英文locale）已统一到本版，background不变。原始五文件备份位于本机维护目录的 `live-backup/`；初次候选content另留备份。写入使用输入哈希预检、临时替换及普通异常回退；不是断电原子事务。没有重载浏览器、重启ShunCode或修改侧栏设置。部署后从正式文件复测48视觉/22读图/16后台通过；新模型SVG端到端仍待用户重载复测。
+
+### GitHub 最终发布回执
+
+2026-09-17 已正式发布 [Fix3.3.10.36 / 1.14.0.41](https://github.com/heruixii/deepseekpp-shuncode-mcp-fix/releases/tag/v1.14.0-fix3.3.10.36)，非草稿、非预发布，发布时为 Latest。提交 `16a9219ff8dbd3601fedecfb459d1d5431e04248`，tree `aed802b878454b77bb6d82cf463fb21bcd133e1f`。Git 导出树14工程检查及65测试进程通过；109文件ZIP逐字节对照且解压复测48/22/16/22通过。ZIP、验证JSON、SHA256SUMS三个远端附件下载哈希及API digest全部一致。
+
+ZIP SHA-256：`4ff3027c0112a3593fd53c47fa62f28f80c7d4e1cdc69eddc453abfd9b18c89b`。私人笔记的00/01/02当前入口已更新为48组/已部署/已发布，历史原稿及初始迁移回执不改。浏览器未重载，新模型SVG自动看图、后续制作与视觉质量仍待用户现场复测。

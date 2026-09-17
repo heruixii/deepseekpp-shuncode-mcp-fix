@@ -11,3 +11,5 @@ node_modules/
 /*.zip
 /SHA256SUMS.txt
 /_readimg_src.*
+# Private forensics, reference images, backups migrated from the Athena workspace (never published).
+/local/
