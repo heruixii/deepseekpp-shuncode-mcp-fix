@@ -1,6 +1,6 @@
 # DeepSeek++ Fix 3.3.10.38：上传门禁会话身份改以浏览器 tab URL 为准
 
-状态：候选已构建并通过离线验收（`D:/tmp/deepseekpp-fix331038-20260917/candidate2`，`validation2/report.json`：20 checks / 64 test processes 全通过）。**尚未部署到 live、未发布 Release。**
+状态：candidate2 已于 2026-09-17 15:06 部署到本机 live（1.14.0.43，备份 `live-backup/`，回执 `live-deployment.json`），**浏览器验收通过**（15:22 与 15:27 两次 `upload_ok→refs=1→ack=1`，模型给出真实视觉回答，无 `gate_reason`）。离线验收 `validation2/report.json`：20 checks / 64 test processes 全通过。**GitHub Release 未发布。**
 
 ## 1. 修什么
 

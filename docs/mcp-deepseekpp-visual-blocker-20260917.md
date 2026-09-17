@@ -217,3 +217,9 @@ live 已于 14:52 部署 .37/1.14.0.42（备份 `D:/tmp/deepseekpp-fix331037-202
 - 用户报告：**新会话不调用工具，旧会话可用**。会话 `095d92ba…` 在扩展侧所有诊断（preflight/turn/traces/usage）与页面侧 v7 中**零出现**，即该文档里 main-world 的请求拦截根本没有触发，与授权门无关。
 - 同时扩展错误面板出现 `main-world.js:321 Uncaught TypeError: Failed to execute 'observe' on 'MutationObserver': parameter 1 is not of type 'Node'`，上下文即 `095d92ba…`。定位：`go()` 中 `Y.observe(document.body,…)`（技能弹窗 DOM 监听），main-world 以 `document_start` 注入，`SYNC_HOOK_STATE` 在 `<body>` 尚不存在时到达则 `document.body===null`。`main-world.js` 与 .36 基线字节一致（.37/.38 未改动），属既有启动竞态。`Sa({toolDescriptors})` 在 `mo()` 之前已执行，因此该异常单独并不足以解释“无工具”，但它证明此文档里 SYNC 到达早于 body。
 - 待核实：新会话是如何创建的（同页“新对话”按钮 / 新标签页 / 地址栏），以及该页 DSPP 是否被会话级过滤（quarantine / 手动页面过滤）跳过。修 `go()` 需等 body 存在再 observe，作为独立小修，不并入 .38。
+
+## 12. .38 浏览器验收通过（15:27）；“新对话首条消息无工具”为独立缺陷
+
+- 15:27:05 首次 read_image 因绝对路径被 MCP 工作区策略拒绝（`PATH_OUTSIDE_WORKSPACE`，`tool_failed_or_truncated`，与扩展无关）；模型用 run_command 复制到 `./_refimg/probe64.jpg` 后 15:27:30 再调：`capture→upload_start(2168B)→upload_ok→request_refs=1→request_ack=1`，模型给出真实视觉描述。**.36 以来的视觉阻塞在 .38 下解除，验收条件全部满足。**
+- 用户复现“无工具”的确切路径：同一页面点“新对话”→直接发第一条消息 → 模型称没有工具；该页 F5 后工具恢复。快照中该新会话在扩展侧 preflight（连 `mw_send_hook_seen` 都没有）、turn、traces、web 侧 v7 **全部为零**，说明 main-world 的请求增强在该文档里未生效或 main↔content 桥已断（`vs()` 的 `m()` 在桥无效时静默返回 false，`requestAugmentedBody` 得 null，原始请求直发）。这是独立于授权门的问题，需要单独取证（该页面控制台 `[DeepSeek++]` 日志、`NAVIGATION_CHANGED→Q1()` 之后桥的重连）。
+- `main-world.js:321 observe(null)` 报错的上下文是 F5 之后（工具可用）的页面，进一步说明它对工具注入无影响，仅影响技能弹窗；另行小修。
