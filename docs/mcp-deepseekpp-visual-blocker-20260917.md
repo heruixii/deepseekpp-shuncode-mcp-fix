@@ -169,3 +169,22 @@ Arena共享工作区 `/home/user` 有 `mcp.sh`、`rpy.sh`（run_command 传脚�
 - 会话对照：11:53:25 成功上传发生在会话 `dc7f7509…`（08:24 起即存在，页面以该 URL 直接加载）；12:40 三次失败均在会话 `5b81964d…`，其首条 completion 即本轮开始 12:37:43——即本轮从“新对话”经 SPA pushState 进入 `/a/chat/s/5b81…`。两次使用同一 background.js（mtime 11:09:53）。
 - 因此最强假设为：新对话 SPA 切换后 `sender.url` 与 `tab.url` 会话段不一致（或 `documentId` 为空）。**尚未证实**，不能排除驻留旧 content script。零代码验证方法：重载扩展后分别在（a）直接加载旧会话 URL、（b）新对话→首条消息 两种场景各跑一次 read_image，对照 `dpp_read_image_diag_v7`。
 - 2026-09-17 下午已将 DSPP 全部文档/脚本/私有取证从 `D:/learn/Athena计划` 迁至 `D:/tmp/gh-deepseekpp`（docs/ tools/ local/），迁移回执 `D:/tmp/dspp-migrate-20260917/receipt.json`（含原文件备份与哈希）。
+
+## 8. 2026-09-17 14:26–14:35 用户现场三场景验证（零代码，扩展已重载为 1.14.0.41）
+
+数据源：快照 `D:/tmp/svg-vision-verify-20260917-143703/`（web localStorage `dpp_read_image_diag_v7`，需 snappy 解块；extension `dpp_inline_agent_traces`/`dpp_web_response_diag_331015`）。私有，不发布。
+
+| 场景 | 会话 | 时间 | 结果 |
+|---|---|---|---|
+| A 地址栏直接加载旧会话 URL | `dc7f7509…` | 14:26:25 / 14:26:52 / 14:27:05 / 14:27:35 | capture→upload_start(2,168 / 2,168 / 18,731 / 36,076 B)→**runtime_message_unauthorized**（1–19 ms），refs=0 |
+| B 新对话（SPA 切换） | `f41cba92…` | 14:28:55 / 14:29:29 / 14:29:38 | 同上，三次全部被拒 |
+| C 同一会话 F5 刷新后 | `f41cba92…` | 14:33:53 | capture→upload_start(2,168 B)→**upload_ok**(14:33:57)→request_refs=1→request_ack=1；模型给出真实画面描述 |
+
+结论：
+- **第 7 节“新对话 SPA 切换导致会话不一致”的假设被推翻**：A 是直接加载的旧会话，同样失败；且 11:53 同一会话、同一 background 曾成功。
+- 失败与图片大小、会话新旧无关，与**文档实例**相关：A 与 B 处于同一 document（B 由 A 的页面 SPA 新建），全部失败；F5 产生的新 document 全部成功；上午成功的也是另一 document。即某个在 document 生命周期内固定的 sender/tab 属性不满足授权门，重新加载文档后恢复。
+- 待区分的候选（均在门内、均是同一错误码）：`sender.documentLifecycle` 非 `active`（如地址栏预渲染后激活的文档）、`sender.documentId` 缺失、`sender.url` 与 `tab.url` 会话段不一致、`tabs.get` 返回的 `url` 缺失。仅凭现有日志无法再细分——后台把所有拒绝压成同一码，这正是第 5 节第 1 条要补的固定原因码。
+- 步骤 2 的“可绕过”结论：用户侧临时规避 = 任务开始前 **F5 刷新 DeepSeek 页面**；这不是修复。
+- 另：C 之后 14:34:59 的追问轮以 `unregistered_tool_continue_331036`×3 → `unexecuted_work_limit_331036` 结束为 error，属 .36 长块门在无工具追问时的误触发，需单独记录，不与上传阻塞混淆。
+
+下一步（待用户授权）：制作 .37 候选，仅在后台授权门增加固定原因枚举（`gate_stage` + 布尔位：hasTab/frameId0/lifecycleActive/hasDocumentId/senderSession/tabSession/sessionsEqual/tabsGetOk），写入 `chrome.storage.local` 有界环形数组并随响应返回 `reason`；不记录 URL/token/sender 原文，不放宽任何检查；配套 16 组后台边界测试扩展与新的版本基线。
