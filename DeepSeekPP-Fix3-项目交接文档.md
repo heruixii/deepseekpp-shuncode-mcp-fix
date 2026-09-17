@@ -4,6 +4,8 @@
 
 > **2026-09-17 15:51 当前接手入口（优先于下方全部旧状态）**：本机 live `D:/learn/DeepSeekPP-1.14.0-ShunCode-MCP-Fix3` 已运行 **Fix 3.3.10.40 / 1.14.0.45**；GitHub 已发布 **`v1.14.0-fix3.3.10.40`（Latest）**：ZIP `DeepSeekPP-1.14.0-ShunCode-MCP-Fix3.3.10.40.zip` 9,109,365 B SHA-256 `8b40e9ff…b358`，99 个运行时文件与验收候选逐字节一致，回退点 `D:\tmp\DeepSeekPP-Fix331036-pre331040-20260917`。.36 的浏览器视觉上传阻塞（`runtime_message_unauthorized`）已由 **.38** 修复并验收通过：根因是 `DPP_REQUIRE_UPLOAD_CONTEXT_V7` 拿冻结于文档提交时刻的 `sender.url` 会话段与 `tab.url` 比较（.37 诊断现场命中 `ctx_sender_tab_session_mismatch`），现改以浏览器 tab URL 为准并锁定监听时会话，其余检查全部保留；浏览器三次 `upload_ok→refs=1→ack=1`。.39 加 MAIN-world 直写诊断 `dpp_mw_bridge_diag_v10`；.40 修 `main-world.js` 技能弹窗 `observe(null)`。每级都有 hash 锁 builder/validator（`tools/apply-fix33103[7-9|40].py`、`validate-…`），基线须用干净 .36 树 `D:/tmp/deepseekpp-base36`；每级 live 备份与回执在 `D:/tmp/deepseekpp-fix33103N-20260917/`。待办：(a) 已完成发布（`docs/RELEASE-Fix3.3.10.40.md`）；(b) 15:1x 曾出现一次“新对话首条消息无工具、扩展零日志”未复现，再现时读 `dpp_mw_bridge_diag_v10`；(c) 黑曜石 dspp 未同步 .37–.40。详见 `docs/mcp-deepseekpp-visual-blocker-20260917.md` §9–§14、`docs/mcp-deepseekpp-upload-gate-fix38.md`、`docs/mcp-deepseekpp-mw-bridge-diag-v10.md`、`docs/mcp-deepseekpp-skill-popup-observe-fix40.md`。
 
+> **2026-09-17 21:4x 当前接手入口（优先于下方全部旧状态）**：live 已是 **Fix 3.3.10.42 / 1.14.0.47**。`.41` 发布后 20:53–20:56 同会话三次 `unexecuted_work_limit_331036` 复现，取证发现**根因在暴露层而非提示词**：`fix3-policy.promptExposureSettings` 把 ShunCode（15 工具 35,883 B > 28,000）从 direct 悄悄降为 adaptive（5 槽/14 KB），每轮按关键词重选，「继续」时 read_image 权重 0、视觉提示时 run_command 被挤掉，模型调用的总是上一轮还在的工具；裸标签别名（方案 D）对此无效。`.42`：触发线 48000 + 尊重显式 direct + adaptive 8 槽/24 KB + read_image floor 1000 + turn_diag 白名单加 `resolution`。证据与回执：`docs/mcp-deepseekpp-exposure-drift-fix42.md`。builder/validator `tools/*-fix331042.py`（22 checks/69 进程/57 套件全过，fail-closed 三项验证）。回退点 `D:/tmp/DeepSeekPP-Fix331041-pre331042-20260917`。**浏览器未验收**；发布状态见 §7 末条。
+
 > **2026-09-17 20:5x 当前接手入口（优先于下方全部旧状态）**：`.41` 已发布（Latest）且浏览器验收通过；本条只做收尾：①黑曜石 `dspp/00`–`03` 已同步到 .41/1.14.0.46（备份 `dspp/_backup-20260917-fix41/`，私有库不推送）；②仓库工作树 3 个未跟踪 `.bak-*` 文档备份移入 `local/_doc_backups_20260917/`（gitignored）；③桌面副本 `C:\Users\29066\Desktop\DeepSeekPP-Fix3-项目交接文档.md` 已用本文件覆盖（仅镜像，真源仍是仓库）；④§0 TL;DR 已更新到 .41。**运行代码未改、未发新版**。剩余观察项见 §0「下一步」。
 
 > **2026-09-17 17:0x 当前接手入口（优先于下方全部旧状态）**
@@ -43,13 +45,13 @@
 | 项目 | 状态 |
 |---|---|
 | 在做什么 | 修复 **DeepSeek++ 浏览器扩展**在自动化执行任务时导致 **DeepSeek 网页崩溃 / "服务器暂不可用" / 任务中断** 的系列问题 |
-| 当前正式版 | **`1.14.0.46 / DeepSeek++ ShunCode MCP Fix 3.3.10.41`**（GitHub：main `80500c6`，Release `v1.14.0-fix3.3.10.41` Latest，tag 指向 `2dec8a8`；正式目录 216 文件） |
+| 当前正式版 | **`1.14.0.47 / DeepSeek++ ShunCode MCP Fix 3.3.10.42`**（live 已写入，217 文件；GitHub 发布状态见 §7 末条） |
 | 正式目录 | `D:\learn\DeepSeekPP-1.14.0-ShunCode-MCP-Fix3`（Edge 解压加载） |
 | 最新成就 | **“继续/重试只口头答应不调工具”根因实锤并修复**：MCP 传输故障被完成门当作有效进展 → trace 误标 `complete` → 恢复网关永久拒绝接管；`.31` 双点修复（见 §2.5） |
-| 当前阶段 | **Fix 3.3.10.41 已发布并通过浏览器验收**（19:53 loop `924059bb` task_complete，裸 `<read_image>` 0 次）；黑曜石 dspp 已同步 .41。`.34→.41` 之间的 .35–.40 见 §7 对应记录 |
-| 下一步 | ①日常使用观察 `.41`：`unregistered_tool_tag_331033.resolution` 枚举尚未现场观测、首次 read_image `mcp_tool_result_error` 观察项；②本文 §2/§3 的 .35–.41 机制节尚未补写（当前只在 §7 与 `docs/` 任务书中）；③旧观察项：GPU 141、整值重写通道分片化 |
+| 当前阶段 | **Fix 3.3.10.42 已部署 live，待浏览器验收**：.41 后 20:53–20:56 三连断的真实根因 = 工具暴露漂移（ShunCode 15 工具 35.9 KB > 28 KB 自动降级线 → 被悄悄改成 adaptive 5 槽，每轮工具表随提示词漂移，模型调用上一轮还在的工具）。.42 改暴露层（policy/background）+ 修 .41 `resolution` 白名单 bug |
+| 下一步 | ①**用户实测 `.42`**（重载扩展 → 关旧标签 → 新会话 → 参考图任务 + 「继续」；判据 `web_response_diag.descriptorCount==24`、无 `unexecuted_work_limit_331036`）；②旧观察项：首次 read_image `mcp_tool_result_error`、GPU 141、整值重写通道分片化 |
 | 如果复现 | 对 Agent 说 **“查看新日志”**。崩溃自查：console 有无 `NotFoundError` 刷屏、`localStorage["dpp_dom_fence_diag_331030"]` 计数是否在涨；**“只口头答应不调工具”自查**：看 `dpp_inline_agent_traces` 末条 `status` 是否 `complete` 且末步无 `toolExecutions` |
-| 当前回退点 | `D:\tmp\DeepSeekPP-Fix331040-pre331041-20260917`（.40 冻结版，215 文件）；更早 `D:\tmp\DeepSeekPP-Fix331036-pre331040-20260917` |
+| 当前回退点 | `D:\tmp\DeepSeekPP-Fix331041-pre331042-20260917`（.41 冻结版，216 文件）；更早 `…Fix331040-pre331041…`、`…Fix331036-pre331040…` |
 | 最新进展 | `.32` 实测失败（继续→零工具 complete / 中途 error）根因实锤 = **run_command 未进直连集 + 句柄别名残留 + 完成门零工具盲区**（§2.7）；`.33` 实测：Agent 本身正常，“只跑一会就中断”= **用户在运行中发新消息触发 .33107 手动接管**（§2.8）；`.34` 修假失败 + 中断可见 + 用户指南，已发布 |
 
 ---
@@ -423,3 +425,11 @@ inline agent loop 末尾的 `u&&_1()`（`window.location.reload()`）与之竞�
 - 20:53–20:56 同一会话三个 loop 全部 `unexecuted_work_limit_331036`（裸 `run_command`×4、`read_image`×4×2），纠偏路径在跑但模型不改；网络正常。详见 `docs/mcp-deepseekpp-bare-tool-tag-recurrence-20260917.md`。
 - 发现 .41 改点 C 缺陷：`resolution` 字段被 turn_diag 白名单丢弃，现场永不落盘。
 - 结论：A/B 提示词路线不够，建议 .42 做方案 D（唯一匹配时别名直执）+ 修 C；待用户裁定。
+
+### 2026-09-17T21:4x+08:00 · .42 工具暴露漂移修复（已部署 live，待验收）
+
+- 根因：见顶部 21:4x 入口与 `docs/mcp-deepseekpp-exposure-drift-fix42.md` §1–2。`USAGE-zh_CN.md` §2.2 原“只启用 ShunCode 不会触发降级”一句为错误陈述，已更正。
+- 改动：`fix3-policy.js` 两处字面量（触发线 48000；仅未显式设置模式的服务器可被降级）、`background.js` 三处（默认/上限 8 槽 24 KB；`read_image` floor 1000）、`content.js` 一处（turn_diag 白名单 `resolution`）；三份已发布套件的字面量断言适配；新增 `dspp-exposure-drift-v42-selftest.js` 21/21。
+- 验证：validator passed:true（22/69/57）；篡改基线/篡改源/重复打补丁 fail-closed；独立重建两次一致；live 57/57；live 与 .41 回退点相比仅 6 运行时文件 + 版本门套件不同。
+- 部署插曲：候选树含仓库布局的 docs/tools 额外文件，首次覆盖后按 .41 回退点恢复布局，只替换 7 个运行时文件 + 套件，最终 217 文件。
+- 未验收、发布状态见下一条。
