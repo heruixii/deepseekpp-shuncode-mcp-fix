@@ -14,3 +14,7 @@ manifest.json -text
 _locales/en/messages.json -text
 _locales/zh_CN/messages.json -text
 tools/fixtures/readimage-v6-background.txt -text
+
+# Hash-lock inventories must stay byte-stable (LF) across clones.
+tools/*-source-sha256.json text eol=lf
+tools/*-baseline-sha256.json text eol=lf

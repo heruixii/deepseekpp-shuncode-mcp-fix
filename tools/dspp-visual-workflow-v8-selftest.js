@@ -81,7 +81,7 @@ test('unrelated plain final remains final',()=>assert.equal(decisionBox('二分�
 test('generic tool-intent is not lost when visible-text heuristic says final',()=>assert.equal(decisionBox('继续执行工具',{prompt:'普通任务',otherIntent:true}).stop,false));
 test('exhausted global budget is failure before the next local nudge',()=>{const r=decisionBox(longPatch,{results:[successfulRead],globalLimit:true});assert.equal(r.stop,true);assert.equal(r.box.oe,true);assert.match(r.box.se,/global/);assert.equal(r.decision,'unexecuted_work_limit_331036')});
 test('global budget also bounds visual preflight',()=>{const r=decisionBox('准备继续',{globalLimit:true});assert.equal(r.stop,true);assert.equal(r.box.oe,true);assert.equal(r.box.ie,null)});
-test('real steering consumes visualMissing state',()=>{assert(content.includes('let e=!!y.visualMissing||!!y.unregisteredTag'));assert(content.includes('y.visualMissing&&(i=`${DPP_VISUAL_RETRY_331036(d)}'))});
+test('real steering consumes visualMissing state',()=>{assert(content.includes('let e=!!y.visualMissing||!!y.unregisteredTag'));assert(content.includes('y.visualMissing&&(i=`${DPP_VISUAL_RETRY_331036(d,'))});
 test('real picker ranks image and writing capability for recreation',()=>{
  const box={};vm.createContext(box);vm.runInContext(policy,box);
  vm.runInContext(['DPP_CORE_TOOL_FLOOR_331033','Cd','Td','Dd','Ed'].map(n=>fn(bg,n)).join('\n'),box);

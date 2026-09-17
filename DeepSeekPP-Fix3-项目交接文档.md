@@ -4,6 +4,15 @@
 
 > **2026-09-17 15:51 当前接手入口（优先于下方全部旧状态）**：本机 live `D:/learn/DeepSeekPP-1.14.0-ShunCode-MCP-Fix3` 已运行 **Fix 3.3.10.40 / 1.14.0.45**；GitHub 已发布 **`v1.14.0-fix3.3.10.40`（Latest）**：ZIP `DeepSeekPP-1.14.0-ShunCode-MCP-Fix3.3.10.40.zip` 9,109,365 B SHA-256 `8b40e9ff…b358`，99 个运行时文件与验收候选逐字节一致，回退点 `D:\tmp\DeepSeekPP-Fix331036-pre331040-20260917`。.36 的浏览器视觉上传阻塞（`runtime_message_unauthorized`）已由 **.38** 修复并验收通过：根因是 `DPP_REQUIRE_UPLOAD_CONTEXT_V7` 拿冻结于文档提交时刻的 `sender.url` 会话段与 `tab.url` 比较（.37 诊断现场命中 `ctx_sender_tab_session_mismatch`），现改以浏览器 tab URL 为准并锁定监听时会话，其余检查全部保留；浏览器三次 `upload_ok→refs=1→ack=1`。.39 加 MAIN-world 直写诊断 `dpp_mw_bridge_diag_v10`；.40 修 `main-world.js` 技能弹窗 `observe(null)`。每级都有 hash 锁 builder/validator（`tools/apply-fix33103[7-9|40].py`、`validate-…`），基线须用干净 .36 树 `D:/tmp/deepseekpp-base36`；每级 live 备份与回执在 `D:/tmp/deepseekpp-fix33103N-20260917/`。待办：(a) 已完成发布（`docs/RELEASE-Fix3.3.10.40.md`）；(b) 15:1x 曾出现一次“新对话首条消息无工具、扩展零日志”未复现，再现时读 `dpp_mw_bridge_diag_v10`；(c) 黑曜石 dspp 未同步 .37–.40。详见 `docs/mcp-deepseekpp-visual-blocker-20260917.md` §9–§14、`docs/mcp-deepseekpp-upload-gate-fix38.md`、`docs/mcp-deepseekpp-mw-bridge-diag-v10.md`、`docs/mcp-deepseekpp-skill-popup-observe-fix40.md`。
 
+> **2026-09-17 17:0x 当前接手入口（优先于下方全部旧状态）**
+>
+> - **已完成**：**Fix 3.3.10.41 / 1.14.0.46 已部署到 live**（216 文件），修复裸 ShunCode 工具标签导致的 `unexecuted_work_limit_331036` 空转停止。只改 `content.js`；background / main-world 与 .40 逐字节一致。
+> - **验收**：新专项 34/34；`validate-fix331041.py` **passed:true**（31 checks / 69 processes / 56 suites）；v8 48/48；live 全量 56/56；三类篡改均 fail-closed；独立重建 228/228 零差异。
+> - **产物**：`content.js` SHA `fabe7c7ca8283044caf31c909398f53f74d8d6be189b21d4f3a9c9463f16cb01`；回退点 `D:/tmp/DeepSeekPP-Fix331040-pre331041-20260917`（.40 冻结 215 文件）；工具 `tools/apply-fix331041.py`、`validate-fix331041.py`、`dspp-bare-tool-tag-v41{,-selftest}.js`、`fix331041-source-sha256.json`。
+> - **浏览器验收：已于 19:53 通过**（loop `924059bb`：`task_complete`、5 步 5 工具、read_image 真实执行 ok=True、裸标签 0 次、`unexecuted_work_limit_331036` 17:00 后零条）。快照 `D:/tmp/edsnap-331041-verify-20260917`，详 §6.5。原待办 —— 重载扩展 + 关旧标签开新页，跑参考图任务；期望 `unregistered_tool_tag_331033` 的 `resolution=exact_hint`、不再出现 `unexecuted_work_limit_331036`、出现 `dpp_read_image_diag_v7` 的 `upload_ok→refs→ack`。**未打 ZIP / 未打 tag / 未发 Release**（需授权）；黑曜石 dspp 未同步 .41。
+> - **实施中的关键经验（后人必读）**：v8 套件会把 `DPP_VISUAL_RULES/RETRY_331036`、`vo()`、`shouldStopAfterTurn`、`DPP_UNREGISTERED_TAG_STEERING_331033` **分别抽出单独 eval**，任何外部 helper 引用都会 `ReferenceError`（本轮踩中 4 次）。四处改点均已**内联自包含**，validator 新增 `no_external_v41_ref_in_eval_regions` 固定该约束。另：注册名匹配**不写死 serverId 段数**（任务书原定 `{4}` 会在换 server 时静默失效）。
+> - **详见**：`docs/mcp-deepseekpp-bare-tool-tag-fix41.md` §6 回执。
+
 > **2026-09-17 16:30 当前接手入口（优先于下方全部旧状态）— 交给下一个智能体**
 >
 > - **已完成**：.40 / 1.14.0.45 已部署且 GitHub Latest（见下一条 15:51 入口）；黑曜石 dspp 已同步 .40。
@@ -374,3 +383,20 @@ inline agent loop 末尾的 `u&&_1()`（`window.location.reload()`）与之竞�
 
 - 新增 `docs/mcp-deepseekpp-bare-tool-tag-fix41.md`：16:00 五次中断的取证表、根因（裸 `<read_image>` 标签 × 自相矛盾提示词 × 3 次 tool-intent 纠偏上限）、.41 方案 A/B/C、实施与验收流程。
 - 顶部新增 16:30 接手入口，列出下一个智能体的阅读顺序与硬约束。未改运行代码，未发布。
+
+### 2026-09-17T17:0x+08:00 · .41 裸工具标签修复（已部署，待浏览器验收）
+
+- 实施 `docs/mcp-deepseekpp-bare-tool-tag-fix41.md` 的 A/B/C（D 未做）：纠偏文案给出精确注册标签、视觉规则/重试文案注入真实 read_image 名、`unregistered_tool_tag_331033` 新增 `resolution` 三值枚举。
+- 链式 builder `tools/apply-fix331041.py`（先跑 .40 builder 再打 .41 补丁，中间树用后即删）+ 哈希锁 `fix331041-source-sha256.json`；基线仍为干净 `.36` 树。
+- 1.14.0.46 / Fix 3.3.10.41 已写入 live（216 文件）；只改 content.js；回退点 `D:/tmp/DeepSeekPP-Fix331040-pre331041-20260917`（215 文件）。
+- 验收：专项 34/34、validator passed:true（31/69/56）、v8 48/48、live 56/56、三类篡改 fail-closed、独立重建 228/228 零差异。
+- 偏离任务书两处（已验证、已记入 §6.2）：① 注册名匹配不写死 serverId 段数；② 四处改点必须内联自包含（v8 套件单独 eval）。
+- 经用户授权修改已发布套件 `tools/dspp-visual-workflow-v8-selftest.js` 第 84 行字面量断言以适配新参数，断言意图不变。
+- 未打 ZIP、未打 tag、未发 Release；黑曜石 dspp 未同步。浏览器未验收前不声称故障已修复。
+
+### 2026-09-17T19:5x+08:00 · .41 浏览器验收通过
+
+- 快照 `D:/tmp/edsnap-331041-verify-20260917`（19:56 取，`001036.log` 1,979,281 B）；`dpp_agent_turn_diag_331021` seq 11736，窗口 16:04:26–19:54:11。
+- 19:53 loop `924059bb`：`status=complete`、5 步 5 工具，链路 read_image(首次 `mcp_tool_result_error`) → run_command → **read_image ok=True** → run_command → `task_complete`。
+- **关键证据**：`unregistered_tool_tag_331033` 在 17:00 后 **零条**（10 条全为 16:04–16:07 的 .40 旧数据）——模型直接用了注册全名，纠偏路径未被触发；A/B 达到目的。`unexecuted_work_limit_331036` 同期 0 次（.40 时五次全中）。
+- 诚实边界：改点 C 的 `resolution` 枚举**现场未观测到**（模型未再写裸标签，无触发机会），仅有离线自测覆盖；本次为单次验收，不等于全面回归；首次 read_image 报 `mcp_tool_result_error` 已记为观察项。

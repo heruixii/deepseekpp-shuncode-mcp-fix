@@ -51,6 +51,63 @@
 5. 浏览器验收（用户做）：同一类参考图任务；期望 `dpp_agent_turn_diag_331021` 中不再出现 `unexecuted_work_limit_331036`，并出现 read_image 真实执行 → `dpp_read_image_diag_v7` `upload_ok→refs→ack`。
 6. 文档：本文 §6 回执 + 交接文档 §7 + `README`/`docs/RELEASE-Fix3.3.10.41.md`；发布仍需用户明确授权（§4 规范）。
 
-## 6. 回执
+## 6. 回执（2026-09-17 实施完成 + 浏览器验收通过）
 
-（待 .41 实施后填写：源/产物哈希、自测计数、部署时间、浏览器验收结果。）
+### 6.1 产物
+- live `D:/learn/DeepSeekPP-1.14.0-ShunCode-MCP-Fix3` = **1.14.0.46 / Fix 3.3.10.41**，216 文件。
+- `content-scripts/content.js`：**916638 B**，SHA-256 `fabe7c7ca8283044caf31c909398f53f74d8d6be189b21d4f3a9c9463f16cb01`。
+- `background.js` / `content-scripts/main-world.js` **与 .40 逐字节一致**（`76df1046…` / `e63b1676…`）——本版只改 content.js。
+- 回退点：`D:/tmp/DeepSeekPP-Fix331040-pre331041-20260917`（.40 冻结 215 文件）。
+- 工具：`tools/apply-fix331041.py`、`tools/validate-fix331041.py`、`tools/dspp-bare-tool-tag-v41.js`、`tools/dspp-bare-tool-tag-v41-selftest.js`、哈希锁 `tools/fix331041-source-sha256.json`。
+
+### 6.2 实施结果与方案差异
+- A/B/C 均已实现；D（裸标签别名直执）**未做**，符合任务书。
+- **与任务书的两处必要偏离**（均经验证）：
+  1. **不写死 serverId 段数**。任务书的 `/^mcp_t_[a-z0-9]+(?:_[a-z0-9]+){4}_${base}$/` 会在换 MCP server（段数不是 5）时静默退回 discover 文案。实现改为 **`mcp_t_` 前缀 + `_${base}` 后缀锚定 + 唯一性校验**，套件内已用短/长 server id 两例覆盖。
+  2. **所有改点必须内联自包含**。v8 套件会把 `DPP_VISUAL_RULES/RETRY_331036`、`vo()`、`shouldStopAfterTurn`、`DPP_UNREGISTERED_TAG_STEERING_331033` **分别抽出单独 eval**，引用外部 helper 必报 `ReferenceError`（实际踩中 4 次）。因此解析逻辑与文案均在这四处**内联展开**，`dspp-bare-tool-tag-v41.js` 仅作为单元测试与参考实现。validator 已加 `no_external_v41_ref_in_eval_regions` 固定这条约束。
+- **修改了一个已发布套件**（经用户授权）：`tools/dspp-visual-workflow-v8-selftest.js` 第 84 行的字面量断言
+  `DPP_VISUAL_RETRY_331036(d)` → `DPP_VISUAL_RETRY_331036(d,`。断言意图（steering 确实消费 visualMissing）不变，仅适配 B 方案新增参数。
+
+### 6.3 验收计数（离线）
+| 项 | 结果 |
+|---|---|
+| 新专项 `dspp-bare-tool-tag-v41-selftest.js` | **34/34** |
+| `validate-fix331041.py` 总门 | **passed: true**，31 checks / 69 test processes / 56 legacy suites，零 FAIL |
+| v8 视觉套件 | **48/48**（exit 0） |
+| live 目录全量套件 | **56/56** |
+| `node --check` 四核心 | 全通过 |
+| 篡改基线 / 篡改源工具 / 重复打补丁 | 均 **fail-closed**，不写输出 |
+| 独立重建两次 | 228/228 零差异，且与候选逐字节一致 |
+
+### 6.5 浏览器实测结果（2026-09-17 19:53，快照 `D:/tmp/edsnap-331041-verify-20260917`）
+
+**结论：通过。** 快照取自 19:56（`001036.log` 1,979,281 B），磁盘 manifest 为 `1.14.0.46 / Fix 3.3.10.41`。
+诊断键 `dpp_agent_turn_diag_331021` 推进至 seq 11736、窗口覆盖 16:04:26–19:54:11，判定链确在执行。
+
+19:53 loop `924059bb` 为 `.41` 部署后首次视觉任务：
+
+| 验收项 | `.40`（16:00 五次） | `.41`（19:53） |
+|---|---|---|
+| 结束决策 | 五次全 `unexecuted_work_limit_331036` | **`task_complete`** |
+| trace 状态 | error / 空转 | **complete，5 步 5 工具** |
+| 裸 `<read_image>` | 28 次 | **0 次** |
+| `unexecuted_work_limit_331036` | 5 | **0**（17:00 后零条） |
+| read_image 真实执行 | 一次都没有 | **step2 ok=True** |
+
+执行链：`read_image`（首次 `mcp_tool_result_error`）→ `run_command` → **`read_image` ok=True** → `run_command` → `task_complete`。
+
+**最关键的证据**：`unregistered_tool_tag_331033` 在 17:00 之后 **一条都没有**（10 条全停在 16:04–16:07 的 `.40` 旧数据）——
+模型直接用了正确的注册全名，纠偏路径根本没被触发，A/B 两个改点达到目的。
+
+**诚实边界（未被现场验证的部分）**：
+1. **改点 C 的 `resolution` 枚举现场未观测到**（全为 `None`，来自 16:0x 旧行）。因为模型压根没再写裸标签，该字段没有触发机会；
+   其正确性目前**仅有离线自测覆盖**。不影响修复成立，但不能算已实测。
+2. 19:53:44–57 出现 3 次 `completion_gate` + `reemit_continuation`，是完成门拦下未真正完工的收尾，属既有机制正常工作。
+3. 首次 read_image 返回 `mcp_tool_result_error`（重试即成功）。若后续频繁出现首调失败，应单独立项排查。
+4. 本次为单个任务的单次验收，不等于全面回归。
+
+### 6.4 待办
+- ~~浏览器验收（用户）~~ → **已于 19:53 通过，见 §6.5**。原步骤：`edge://extensions` 重新加载解压扩展 → 彻底关闭旧 DeepSeek 标签页 → 开新标签页，跑同类参考图任务。
+  期望：`dpp_agent_turn_diag_331021` 不再出现 `unexecuted_work_limit_331036`；`unregistered_tool_tag_331033` 行的 `resolution` 应为 `exact_hint`；并出现 read_image 真实执行 → `dpp_read_image_diag_v7` `upload_ok→refs→ack`。
+- **未发布**：未打 ZIP、未打 tag、未发 Release（需用户明确授权）。黑曜石 dspp 未同步 .41。
+- **诚实边界**：以上全为离线证据。A/B 是否真能让模型改用精确标签，**必须等浏览器实测**；未测到 read_image 真实执行前，不能声称故障已修复。
