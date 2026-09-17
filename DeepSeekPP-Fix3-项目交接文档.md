@@ -400,3 +400,11 @@ inline agent loop 末尾的 `u&&_1()`（`window.location.reload()`）与之竞�
 - 19:53 loop `924059bb`：`status=complete`、5 步 5 工具，链路 read_image(首次 `mcp_tool_result_error`) → run_command → **read_image ok=True** → run_command → `task_complete`。
 - **关键证据**：`unregistered_tool_tag_331033` 在 17:00 后 **零条**（10 条全为 16:04–16:07 的 .40 旧数据）——模型直接用了注册全名，纠偏路径未被触发；A/B 达到目的。`unexecuted_work_limit_331036` 同期 0 次（.40 时五次全中）。
 - 诚实边界：改点 C 的 `resolution` 枚举**现场未观测到**（模型未再写裸标签，无触发机会），仅有离线自测覆盖；本次为单次验收，不等于全面回归；首次 read_image 报 `mcp_tool_result_error` 已记为观察项。
+
+### 2026-09-17T20:1x+08:00 · .41 已发布（用户授权）
+
+- commit `2dec8a8` 推送 `origin/main`；tag `v1.14.0-fix3.3.10.41`；GitHub Release 已为 **Latest**。
+- 附件 ZIP 9,136,857 B / 140 条目，SHA-256 `efabab74bc7e29ee41a14f65367f31b06d1ae94c9f78dd2583dd8f0005f71a11`；回下载字节 = 本地产物 = SHA256SUMS 声明值，三者一致。
+- 从 clone 独立重建：哈希锁 3/3 通过，7 个运行时文件与 live 逐字节一致 —— 第三方可复现。
+- 修正 `.gitattributes`：哈希锁 JSON 锁定 `eol=lf`，否则 clone 后 CRLF 转换会让下游 builder 自检失败。
+- 待办：黑曜石 dspp 同步 .41；`resolution` 枚举仍待现场观测；首次 read_image `mcp_tool_result_error` 为观察项。

@@ -111,3 +111,13 @@
   期望：`dpp_agent_turn_diag_331021` 不再出现 `unexecuted_work_limit_331036`；`unregistered_tool_tag_331033` 行的 `resolution` 应为 `exact_hint`；并出现 read_image 真实执行 → `dpp_read_image_diag_v7` `upload_ok→refs→ack`。
 - **未发布**：未打 ZIP、未打 tag、未发 Release（需用户明确授权）。黑曜石 dspp 未同步 .41。
 - **诚实边界**：以上全为离线证据。A/B 是否真能让模型改用精确标签，**必须等浏览器实测**；未测到 read_image 真实执行前，不能声称故障已修复。
+
+### 6.6 发布回执（2026-09-17 20:1x，经用户授权）
+
+- commit `2dec8a8` → `origin/main`；tag **`v1.14.0-fix3.3.10.41`**；Release **Latest**（draft=false, prerelease=false）。
+- 附件 `DeepSeekPP-1.14.0-ShunCode-MCP-Fix3.3.10.41.zip` **9,136,857 B / 140 条目**，SHA-256 `efabab74bc7e29ee41a14f65367f31b06d1ae94c9f78dd2583dd8f0005f71a11`；`SHA256SUMS.txt` 114 B。
+- **端到端校验**：从 GitHub 回下载的字节 = 本地产物 = `SHA256SUMS.txt` 声明值，三者一致。
+- **第三方可复现**：从仓库 clone 后哈希锁 3/3 校验通过，用 clone 里的 builder 由干净 .36 基线重建，7 个运行时文件与 live **逐字节一致**。
+- 顺带修正：`.gitattributes` 补上 `tools/*-source-sha256.json` / `*-baseline-sha256.json` 的 `text eol=lf`。原先 `.json` 无规则，会被 `core.autocrlf` 转成 CRLF，**导致下游 clone 后哈希锁必失配**。
+- ZIP 为发布布局（照 .40 清单），已断言**不包含** `local/` 私有取证、快照或 `.log`；发布说明不写自身 ZIP 哈希（避免自引用悡论）。
+- 黑曜石 dspp **未同步 .41**。
