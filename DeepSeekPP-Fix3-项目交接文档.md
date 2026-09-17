@@ -4,6 +4,8 @@
 
 > **2026-09-17 15:51 当前接手入口（优先于下方全部旧状态）**：本机 live `D:/learn/DeepSeekPP-1.14.0-ShunCode-MCP-Fix3` 已运行 **Fix 3.3.10.40 / 1.14.0.45**；GitHub 已发布 **`v1.14.0-fix3.3.10.40`（Latest）**：ZIP `DeepSeekPP-1.14.0-ShunCode-MCP-Fix3.3.10.40.zip` 9,109,365 B SHA-256 `8b40e9ff…b358`，99 个运行时文件与验收候选逐字节一致，回退点 `D:\tmp\DeepSeekPP-Fix331036-pre331040-20260917`。.36 的浏览器视觉上传阻塞（`runtime_message_unauthorized`）已由 **.38** 修复并验收通过：根因是 `DPP_REQUIRE_UPLOAD_CONTEXT_V7` 拿冻结于文档提交时刻的 `sender.url` 会话段与 `tab.url` 比较（.37 诊断现场命中 `ctx_sender_tab_session_mismatch`），现改以浏览器 tab URL 为准并锁定监听时会话，其余检查全部保留；浏览器三次 `upload_ok→refs=1→ack=1`。.39 加 MAIN-world 直写诊断 `dpp_mw_bridge_diag_v10`；.40 修 `main-world.js` 技能弹窗 `observe(null)`。每级都有 hash 锁 builder/validator（`tools/apply-fix33103[7-9|40].py`、`validate-…`），基线须用干净 .36 树 `D:/tmp/deepseekpp-base36`；每级 live 备份与回执在 `D:/tmp/deepseekpp-fix33103N-20260917/`。待办：(a) 已完成发布（`docs/RELEASE-Fix3.3.10.40.md`）；(b) 15:1x 曾出现一次“新对话首条消息无工具、扩展零日志”未复现，再现时读 `dpp_mw_bridge_diag_v10`；(c) 黑曜石 dspp 未同步 .37–.40。详见 `docs/mcp-deepseekpp-visual-blocker-20260917.md` §9–§14、`docs/mcp-deepseekpp-upload-gate-fix38.md`、`docs/mcp-deepseekpp-mw-bridge-diag-v10.md`、`docs/mcp-deepseekpp-skill-popup-observe-fix40.md`。
 
+> **2026-09-17 20:5x 当前接手入口（优先于下方全部旧状态）**：`.41` 已发布（Latest）且浏览器验收通过；本条只做收尾：①黑曜石 `dspp/00`–`03` 已同步到 .41/1.14.0.46（备份 `dspp/_backup-20260917-fix41/`，私有库不推送）；②仓库工作树 3 个未跟踪 `.bak-*` 文档备份移入 `local/_doc_backups_20260917/`（gitignored）；③桌面副本 `C:\Users\29066\Desktop\DeepSeekPP-Fix3-项目交接文档.md` 已用本文件覆盖（仅镜像，真源仍是仓库）；④§0 TL;DR 已更新到 .41。**运行代码未改、未发新版**。剩余观察项见 §0「下一步」。
+
 > **2026-09-17 17:0x 当前接手入口（优先于下方全部旧状态）**
 >
 > - **已完成**：**Fix 3.3.10.41 / 1.14.0.46 已部署到 live**（216 文件），修复裸 ShunCode 工具标签导致的 `unexecuted_work_limit_331036` 空转停止。只改 `content.js`；background / main-world 与 .40 逐字节一致。
@@ -41,13 +43,13 @@
 | 项目 | 状态 |
 |---|---|
 | 在做什么 | 修复 **DeepSeek++ 浏览器扩展**在自动化执行任务时导致 **DeepSeek 网页崩溃 / "服务器暂不可用" / 任务中断** 的系列问题 |
-| 当前正式版 | **`1.14.0.39 / DeepSeek++ ShunCode MCP Fix 3.3.10.34`**（GitHub 已同步：main `cce959e`，Release `v1.14.0-fix3.3.10.34` Latest；仓库新增 `USAGE-zh_CN.md` 用户指南） |
+| 当前正式版 | **`1.14.0.46 / DeepSeek++ ShunCode MCP Fix 3.3.10.41`**（GitHub：main `80500c6`，Release `v1.14.0-fix3.3.10.41` Latest，tag 指向 `2dec8a8`；正式目录 216 文件） |
 | 正式目录 | `D:\learn\DeepSeekPP-1.14.0-ShunCode-MCP-Fix3`（Edge 解压加载） |
 | 最新成就 | **“继续/重试只口头答应不调工具”根因实锤并修复**：MCP 传输故障被完成门当作有效进展 → trace 误标 `complete` → 恢复网关永久拒绝接管；`.31` 双点修复（见 §2.5） |
-| 当前阶段 | **Fix 3.3.10.31 已发布，待用户实测验收**：专项 43/43、全回归 **50/50**、hash-lock 干净升级、篡改 fail-closed、独立重建 **201/201 零差异**。`.30` DOM 保险丝未回归 |
-| 下一步 | ①**用户实测 `.31`**（断连后发“继续”应真实重发工具调用）；②剩余整值重写通道分片化（候选 .32）；③`.29` 验收闭环 + `.30`/`.31` 补稳定化计划节；④GPU 141 观察项 |
+| 当前阶段 | **Fix 3.3.10.41 已发布并通过浏览器验收**（19:53 loop `924059bb` task_complete，裸 `<read_image>` 0 次）；黑曜石 dspp 已同步 .41。`.34→.41` 之间的 .35–.40 见 §7 对应记录 |
+| 下一步 | ①日常使用观察 `.41`：`unregistered_tool_tag_331033.resolution` 枚举尚未现场观测、首次 read_image `mcp_tool_result_error` 观察项；②本文 §2/§3 的 .35–.41 机制节尚未补写（当前只在 §7 与 `docs/` 任务书中）；③旧观察项：GPU 141、整值重写通道分片化 |
 | 如果复现 | 对 Agent 说 **“查看新日志”**。崩溃自查：console 有无 `NotFoundError` 刷屏、`localStorage["dpp_dom_fence_diag_331030"]` 计数是否在涨；**“只口头答应不调工具”自查**：看 `dpp_inline_agent_traces` 末条 `status` 是否 `complete` 且末步无 `toolExecutions` |
-| 当前回退点 | `D:\tmp\DeepSeekPP-Fix331033-pre331034-20260916`（.33 冻结版，206 文件） |
+| 当前回退点 | `D:\tmp\DeepSeekPP-Fix331040-pre331041-20260917`（.40 冻结版，215 文件）；更早 `D:\tmp\DeepSeekPP-Fix331036-pre331040-20260917` |
 | 最新进展 | `.32` 实测失败（继续→零工具 complete / 中途 error）根因实锤 = **run_command 未进直连集 + 句柄别名残留 + 完成门零工具盲区**（§2.7）；`.33` 实测：Agent 本身正常，“只跑一会就中断”= **用户在运行中发新消息触发 .33107 手动接管**（§2.8）；`.34` 修假失败 + 中断可见 + 用户指南，已发布 |
 
 ---
@@ -408,3 +410,10 @@ inline agent loop 末尾的 `u&&_1()`（`window.location.reload()`）与之竞�
 - 从 clone 独立重建：哈希锁 3/3 通过，7 个运行时文件与 live 逐字节一致 —— 第三方可复现。
 - 修正 `.gitattributes`：哈希锁 JSON 锁定 `eol=lf`，否则 clone 后 CRLF 转换会让下游 builder 自检失败。
 - 待办：黑曜石 dspp 同步 .41；`resolution` 枚举仍待现场观测；首次 read_image `mcp_tool_result_error` 为观察项。
+
+### 2026-09-17T20:5x+08:00 · .41 收尾（黑曜石同步 / 备份清理 / 镜像刷新）
+
+- 黑曜石 `C:/Users/29066/Documents/GitHub/ALTRKIE-/dspp/00`–`03` 四篇加 .41 顶部横幅、状态行改 .41/1.14.0.46、新增 .41 发布回执（.40 回执降为历史）；原文备份 `dspp/_backup-20260917-fix41/`。私有库，不推送。
+- 仓库工作树未跟踪备份 `交接文档.md.bak-20260917-pre41` / `-prefill41` / `docs/…fix41.md.bak-20260917-prefill` 移入 `local/_doc_backups_20260917/`（`.gitignore` 已含 `/local/`），`git status` 恢复干净。
+- 桌面镜像副本由仓库真源覆盖（此前为 .34 旧版）。§0 TL;DR 五行更新到 .41。
+- 未改运行代码、未打包、未发版。诚实边界：本条为文档/笔记维护，不新增任何关于 .41 行为的证据。
