@@ -136,7 +136,7 @@ test('foreign loop cannot finalize active trace', lifecycleContext.failActive('o
   test('detached runner catch finalizes active trace', startWrapper.includes('DPP_AGENT_FAIL_ACTIVE_33108(e.loopId,n)'));
 
   const stopArea = between('function r1(DPPReason331034)', 'async function i1(e)');
-  test('pagehide best-effort stop is installed', stopArea.includes('window.addEventListener(`pagehide`,()=>{t1()&&r1()})'));
+  test('pagehide best-effort stop is installed', stopArea.includes('window.addEventListener(`pagehide`,()=>{t1()&&r1(`pagehide`)})'));
 
   const toolWrapper = between('function Uz(e,t,d)', 'var Wz=');
   test(

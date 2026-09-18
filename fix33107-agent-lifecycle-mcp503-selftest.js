@@ -5,7 +5,7 @@ let pass=0,fail=0;function t(n,c,d=''){console.log(`${c?'PASS':'FAIL'} ${n}${d?'
 function between(a,b){const i=src.indexOf(a),j=src.indexOf(b,i+a.length);if(i<0||j<0)throw Error('range missing '+a+' -> '+b);return src.slice(i,j)}
 const code=between('function DPP_MCP_TRANSIENT_VERIFICATION_33107','function Uz(');
 const ctx={String,Promise,setTimeout,clearTimeout};ctx.DPP_TOOL_EFFECT_31=(name,payload)=>payload?.effect||(['find_files','read_files','search_files','list_directory'].includes(name)?'verification':'neutral');vm.createContext(ctx);vm.runInContext(code+';Object.assign(globalThis,{tr:DPP_MCP_TRANSIENT_VERIFICATION_33107,delay:DPP_MCP_RETRY_DELAY_33107});',ctx);
-const err=(status,retryable=true)=>({ok:false,error:{code:'mcp_http_error',message:`MCP server returned HTTP ${status}.`,retryable}});
+const err=(status,retryable=true)=>({ok:false,error:{code:'mcp_http_error',message:`MCP server returned HTTP ${status}.`,retryable,details:{externalOutcome:'not_dispatched',retrySafe:true}}});
 t('503 verification retryable',ctx.tr('find_files',{},err(503))===true);
 t('502 verification retryable',ctx.tr('read_files',{},err(502))===true);
 t('504 verification retryable',ctx.tr('search_files',{},err(504))===true);

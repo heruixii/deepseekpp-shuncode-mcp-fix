@@ -1,0 +1,17 @@
+/* .47: quiet, truthful task console; never modify DeepSeek-owned DOM. */
+.dpp-agent-container{padding:14px 16px!important;margin:12px 0;border:1px solid var(--dpp-ui-border,rgba(127,127,127,.22));border-radius:12px;background:var(--dpp-ui-surface,transparent);box-shadow:0 2px 8px rgba(0,0,0,.035)}
+.dpp-agent-container .dpp-agent-status-line{display:flex;flex-wrap:wrap;gap:8px!important;align-items:center;min-height:30px}
+.dpp-agent-container .dpp-agent-status-badge{font-size:11px;font-weight:650;padding:3px 8px;border-radius:6px;background:rgba(127,127,127,.10)}
+.dpp-agent-container .dpp-agent-status-text{font-size:13px;font-weight:500;flex:1;min-width:140px}
+.dpp-agent-container .dpp-agent-status-detail{display:block!important;font-size:11px;color:var(--dpp-ui-text-muted);margin:7px 0 0;line-height:1.7;white-space:pre-line;overflow-wrap:anywhere}
+.dpp-agent-container .dpp-agent-progress-track{display:none!important}
+.dpp-agent-container .dpp-agent-details-btn,.dpp-agent-container .dpp-agent-stop-btn{font-size:12px;padding:5px 9px;border-radius:6px}
+.dpp-agent-container .dpp-agent-stream{border-top:1px solid var(--dpp-ui-border,rgba(127,127,127,.2));margin-top:12px!important;padding-top:8px;max-height:480px;overflow:auto}
+.dpp-agent-container .dpp-agent-final-answer{font-size:14px;line-height:1.75;margin-top:14px}
+.dpp-agent-container[data-console-phase="error"] .dpp-agent-status-badge{color:#b94e38;background:rgba(194,84,50,.1)}
+.dpp-agent-container[data-console-phase="complete"] .dpp-agent-status-badge{color:#278567;background:rgba(39,133,103,.1)}
+.dpp-agent-container .dpp-agent-tool-summary{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:12px}
+.dpp-startup-notice-331047{position:fixed;z-index:2147483000;right:20px;bottom:24px;width:min(380px,calc(100vw - 40px));box-sizing:border-box;padding:16px 18px;border:1px solid #bb9160;border-radius:12px;background:#fffaf2;color:#423522;box-shadow:0 8px 32px #0002;font:13px/1.65 system-ui,sans-serif}
+.dpp-startup-notice-331047 strong{font-size:14px}.dpp-startup-notice-331047 p{margin:7px 0 12px}.dpp-startup-notice-331047 button{border:1px solid #bca98a;background:transparent;color:inherit;border-radius:6px;padding:4px 10px;cursor:pointer}
+@media(prefers-color-scheme:dark){.dpp-startup-notice-331047{background:#29261f;color:#efdfc7;border-color:#78664b}}
+@media(max-width:600px){.dpp-agent-container{padding:10px 12px!important}.dpp-agent-container .dpp-agent-stream{max-height:320px}}

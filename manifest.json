@@ -53,7 +53,8 @@
     "https://oauth2.googleapis.com/*",
     "https://www.googleapis.com/*",
     "https://login.microsoftonline.com/*",
-    "https://graph.microsoft.com/*"
+    "https://graph.microsoft.com/*",
+    "https://unlimited-underline-lunchroom.ngrok-free.dev/*"
   ],
   "icons": {
     "128": "icon/128.png",
@@ -88,7 +89,7 @@
   "side_panel": {
     "default_path": "sidepanel.html"
   },
-  "version": "1.14.0.41",
+  "version": "1.14.0.53",
   "web_accessible_resources": [
     {
       "matches": [
@@ -109,5 +110,5 @@
       ]
     }
   ],
-  "version_name": "1.14.0 ShunCode MCP Fix 3.3.10.36"
+  "version_name": "1.14.0 ShunCode MCP Fix 3.3.10.48"
 }

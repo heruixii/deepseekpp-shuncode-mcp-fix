@@ -10,10 +10,10 @@ ok(content.includes('function DPP_AGENT_CHECKPOINT_333(e){return(e+1)%4===0}'),'
 ok(content.includes('DPP_TRIM_AGENT_TRACES_333(i)'),'trace byte trim wired');
 ok(content.includes('t=65536'),'trace byte cap present and further tightened');
 ok(content.includes('status:`streaming`,text:``,toolExecutions:[],responseMessageId:null,collapsed:!1}),{persist:!1}'),'step start is memory-only');
-ok(content.includes('status:`executing_tools`}),{persist:!1})'),'tool detected is memory-only');
+ok(content.includes('dppPendingCalls331048:[...new Set('),'tool dispatch is checkpointed as uncertain in .48');
 ok(content.includes('{reasoning:r}),{persist:!1})'),'reasoning chunks are memory-only');
 ok(content.includes('{text:r,...r?{status:`streaming`}:{}}),{persist:!1})'),'text chunks are memory-only');
-ok(content.includes('r?{immediate:!0}:{persist:!1}'),'completed steps checkpoint only on cadence');
+ok(content.includes('{immediate:!0}),DPP_AGENT_STATUS_TOUCH_331010'),'completed steps checkpoint immediately in .48');
 ok(content.includes('await D0(n)'),'loop completion still forces final persistence');
 ok(content.includes('status:`error`,totalSteps:e.stepIndex,error:e.error}),{immediate:!0})'),'loop errors still force persistence');
 ok(content.includes('DPP_DUPLICATE_TEXT_333(e.detail,e.output)'),'trace compaction dedupes result payload');
@@ -50,7 +50,7 @@ const trimmed=tctx.__trim(traces,262144);
 ok(trimmed.length<traces.length&&trimmed.at(-1).id==='7','trace cap drops oldest records and keeps newest');
 ok(trimmed.length===1||tctx.__bytes(trimmed)<=262144,'trace cap respects byte budget unless one record alone exceeds it');
 
-// Stress model: 19 results like the failing Obsidian run, 5 complete steps + error.
+// Historical .33 cadence fixture only (not a .48 write-frequency claim): 19 results like the failing Obsidian run, 5 complete steps + error.
 const oldResults=Array.from({length:19},(_,i)=>{const tx=`tool-${i}-`+'y'.repeat(2200);return {name:'run_command',result:{ok:true,summary:'MCP tool executed',detail:JSON.stringify([{type:'text',text:tx}]),output:[{type:'text',text:tx}]}}});
 const newResults=oldResults.map(x=>({...x,result:ctx.__LH(x.result,{})}));
 const oldTrace={steps:[{toolExecutions:oldResults}],finalText:'',error:''};

@@ -31,15 +31,15 @@ console.log("Fix 3.3.10.34 run_command status / manual supersede suite");
 console.log("=========================================================");
 
 console.log("\n[1] build integrity");
-ok("manifest version is 1.14.0.41", manifest.version === "1.14.0.41", manifest.version);
-ok("manifest version_name is Fix 3.3.10.36",
-   manifest.version_name === "1.14.0 ShunCode MCP Fix 3.3.10.36", manifest.version_name);
+ok("manifest version is 1.14.0.53", manifest.version === "1.14.0.53", manifest.version);
+ok("manifest version_name is Fix 3.3.10.46",
+   manifest.version_name === "1.14.0 ShunCode MCP Fix 3.3.10.48", manifest.version_name);
 ok("header parser present", src.indexOf("function DPP_RUN_COMMAND_STATUS_331034(") !== -1);
 ok("normalizer uses header parser", src.indexOf("DPPStatus331034=DPP_RUN_COMMAND_STATUS_331034(n)") !== -1);
 ok("r1 accepts a reason", src.indexOf("function r1(DPPReason331034){") !== -1);
 ok("manual supersede records turn_diag", src.indexOf("decision:`manual_supersede_331034`") !== -1);
 ok("manual supersede passes localized reason", src.indexOf("return r1(DPP_MANUAL_SUPERSEDE_TEXT_331034(") !== -1);
-ok("pagehide path still plain r1()", src.indexOf("window.addEventListener(`pagehide`,()=>{t1()&&r1()})") !== -1);
+ok("pagehide path records explicit reason", src.indexOf("window.addEventListener(`pagehide`,()=>{t1()&&r1(`pagehide`)})") !== -1);
 ok(".33 core-tool floor still present", fs.readFileSync(path.join(ROOT, "background.js"), "utf8").indexOf("DPP_CORE_TOOL_FLOOR_331033") !== -1);
 ok(".33 zero-tool gate still present", src.indexOf("q(`zero_tool_complete_331033`,!1)") !== -1);
 

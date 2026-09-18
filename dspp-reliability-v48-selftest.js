@@ -1,0 +1,90 @@
+'use strict';
+const fs=require('fs'),path=require('path'),vm=require('vm'),assert=require('assert/strict');
+const root=process.argv[2]||__dirname,C=fs.readFileSync(path.join(root,'content-scripts/content.js'),'utf8'),M=fs.readFileSync(path.join(root,'content-scripts/main-world.js'),'utf8'),B=fs.readFileSync(path.join(root,'background.js'),'utf8');
+let count=0;function check(name,ok){assert.ok(ok,name);count++;console.log('PASS',name)}
+function between(s,a,b){const i=s.indexOf(a),j=s.indexOf(b,i+a.length);assert(i>=0&&j>i,a);return s.slice(i,j)}
+function context(x={}){const c={console,Map,Set,Date,JSON,Object,Array,String,Number,Math,Promise,TextEncoder,Error,...x};vm.createContext(c);return c}
+const recovery=between(M,'var DPP_GENERATION_ERR_RECOVERY_331020=','function Sa(');
+const storage=new Map();let clock=100000;
+const localStorage={getItem:k=>storage.get(k)??null,setItem:(k,v)=>storage.set(k,v),removeItem:k=>storage.delete(k),key:i=>[...storage.keys()][i],get length(){return storage.size}};
+function recover(){const x=context({localStorage,Date:{now:()=>clock},DPP_PREFLIGHT_331018:()=>{}});vm.runInContext(recovery,x);return x}
+const failed=(aid,uid)=>({assistantMessageId:aid,dppRequestMessageId331048:uid,dppStreamFinished331015:false,dppControlTrail331017:[{path:'finish_reason',value:'generation_err'}]});
+const meta={chatSessionId:'s1',requestId:'request',parentMessageId:100,originalPrompt:'PRIVATE_PROMPT'};
+(async()=>{
+ let x=recover();x.DPP_TRACK_GENERATION_RESULT_331020(meta,failed(198,197));
+ check('branch-only state persists, no prompts/grants',storage.size===1&&!JSON.stringify([...storage]).includes('PRIVATE_PROMPT')&&!JSON.stringify([...storage]).includes('authorization'));
+ x=recover();check('wrong session cannot consume edit recovery',x.DPP_RECOVERY_MODE_331020({chatSessionId:'s2',requestRoute331048:'editMessage',targetMessageId331048:197})===null);
+ check('wrong user message cannot consume edit recovery',x.DPP_RECOVERY_MODE_331020({chatSessionId:'s1',requestRoute331048:'editMessage',targetMessageId331048:195})===null);
+ check('unknown route cannot consume missing-parent state',x.DPP_RECOVERY_MODE_331020({chatSessionId:'s1',targetMessageId331048:197})===null);
+ check('edit retry survives page rebuild and matches request-message ID',x.DPP_RECOVERY_MODE_331020({chatSessionId:'s1',requestRoute331048:'editMessage',targetMessageId331048:197})==='compact');
+ check('consumed state remains consumed across reload',recover().DPP_RECOVERY_MODE_331020({chatSessionId:'s1',parentMessageId:198})===null);
+ x.DPP_TRACK_GENERATION_RESULT_331020({...meta,dppRequestDiag331015:{recoveryMode:'compact'}},failed(200,197));
+ x=recover();check('regenerate exact assistant branch gets raw fallback',x.DPP_RECOVERY_MODE_331020({chatSessionId:'s1',requestRoute331048:'regenerate',targetMessageId331048:200})==='passthrough');
+ x.DPP_TRACK_GENERATION_RESULT_331020(meta,failed(202,null));check('missing server user-ID does not guess edit linkage',x.DPP_RECOVERY_MODE_331020({chatSessionId:'s1',requestRoute331048:'editMessage',targetMessageId331048:201})===null);
+ check('normal completion still matches exact assistant parent',x.DPP_RECOVERY_MODE_331020({chatSessionId:'s1',parentMessageId:202})==='compact');
+ x.DPP_TRACK_GENERATION_RESULT_331020(meta,failed(204,203));clock+=600001;check('expired hints fail closed after reload',recover().DPP_RECOVERY_MODE_331020({chatSessionId:'s1',parentMessageId:204})===null);
+ storage.set('dpp-recovery-331048:s1','{"mode":"compact","expectedParentMessageId":204,"expiresAt":999999999}');check('malformed persisted state rejected',recover().DPP_RECOVERY_MODE_331020({chatSessionId:'s1',parentMessageId:204})===null);
+ x=recover();for(let i=0;i<50;i++)x.DPP_TRACK_GENERATION_RESULT_331020({...meta,chatSessionId:'many'+i},failed(2,1));check('storage entries bounded',storage.size<=32);
+ x=context({localStorage:{getItem(){throw Error('blocked')},setItem(){throw Error('blocked')},removeItem(){throw Error('blocked')}},Date:{now:()=>clock},DPP_PREFLIGHT_331018:()=>{}});vm.runInContext(recovery,x);x.DPP_TRACK_GENERATION_RESULT_331020(meta,failed(2,1));check('storage disabled retains in-page recovery',x.DPP_RECOVERY_MODE_331020({...meta,parentMessageId:2})==='compact');
+ const j=context({crypto:{randomUUID:()=> 'r'},U:{toolDescriptors:[]},de:()=>false,Ma:()=>({}),c:v=>Number.isInteger(v)?v:null});vm.runInContext(between(M,'function ja(','function Ma('),j);
+ const jm=j.ja(JSON.stringify({chat_session_id:'s',message_id:197,prompt:'text'}),{requestRoute331048:'editMessage'});check('real request parser captures edit target without fabricating parent',jm.targetMessageId331048===197&&jm.parentMessageId===null&&jm.requestRoute331048==='editMessage');
+ check('fetch route and XHR route both carried',M.includes('ja(n.body,{requestRoute331048:a})')&&M.includes('ja(e,{requestRoute331048:r})'));
+ check('SSE request-message ID reaches response completion',M.includes('dppRequestMessageId331048:n.requestMessageId'));
+ check('recovery has no network replay',!recovery.includes('fetch(')&&!recovery.includes('.send('));
+ // Test actual initialization helper and full production Fu, not a copied retry policy.
+ const init=between(B,'async function DPP_MCP_INITIALIZE_331048','async function Fu(');
+ let initCalls=0,dispatches=0,errors=1;
+ const transient=()=>Object.assign(Error('MCP server returned HTTP 503.'),{code:'mcp_http_error',retryable:true});
+ const b=context({setTimeout:(f)=>setTimeout(f,1),clearTimeout,bc:async()=>({id:'server',enabled:true,execution:{enabled:true},timeouts:{requestMs:1000},limits:{maxResultBytes:10000}}),Pu:async()=>({descriptors:[{id:'d',name:'run_command',provider:{kind:'mcp'},execution:{enabled:true}}]}),Ho:x=>x,Fa:async()=>true,Ou:()=>({}),Mo:async()=>{initCalls++;if(errors-->0)throw transient()},Po:async()=>{dispatches++;return {ok:true,summary:'done'}},Ru:()=>{}});
+ vm.runInContext(init+between(B,'async function Fu(','async function Iu('),b);
+ const call={id:'call',name:'run_command',provider:{kind:'mcp',id:'server'},payload:{command:'DO NOT EXECUTE IN TEST'}},desc={id:'d',name:'run_command',provider:{kind:'mcp',id:'server'}};
+ let result=await b.Fu(call,desc);check('503 initialization retries once inside original invocation',initCalls===2&&dispatches===1&&result.ok===true);
+ errors=10;initCalls=0;dispatches=0;result=await b.Fu(call,desc);check('repeated init 503 never dispatches a tool',initCalls===2&&dispatches===0&&result.ok===false);
+ check('exhausted init result blocks outer replay and reports outcome',result.error.retryable===false&&result.error.details.externalOutcome==='not_dispatched');
+ errors=0;initCalls=0;dispatches=0;b.Po=async()=>{dispatches++;return {ok:false,error:{code:'mcp_http_error',retryable:true,details:{externalOutcome:'ambiguous',retrySafe:false}}}};result=await b.Fu(call,desc);check('tools/call ambiguous failure never replayed by initializer',initCalls===1&&dispatches===1&&!result.ok);
+ let attempts=0;await assert.rejects(()=>b.DPP_MCP_INITIALIZE_331048(async()=>{attempts++;throw Object.assign(Error('HTTP 500'),{code:'mcp_http_error',retryable:true})}));check('HTTP500 initialization not retried',attempts===1);
+ const ac=new AbortController();ac.abort();attempts=0;await assert.rejects(()=>b.DPP_MCP_INITIALIZE_331048(async()=>{attempts++},ac.signal));check('aborted initializer does not start',attempts===0);
+ const ac2=new AbortController();attempts=0;await assert.rejects(()=>b.DPP_MCP_INITIALIZE_331048(async()=>{attempts++;ac2.abort();throw transient()},ac2.signal));check('abort after first failure prevents retry',attempts===1);
+ const runtime=between(C,'function DPP_BUDGET_DESCRIPTORS_331048','function kU(');
+ const cr=context({DPP_TOOL_NAME_33:s=>s,DPP_COMMON_DESCRIPTOR_33:()=>({provider:{kind:'mcp'},inputSchema:{properties:{exclude:{type:'array'}}}})});vm.runInContext(runtime+between(C,'function DPP_WEB_BASE_3','async function DPP_RECORD_PARSE_DIAG_1140'),cr);
+ const err={ok:false,error:{code:'mcp_http_error',retryable:true}};
+ check('actual generic retry classifier blocks same-ID MCP read retry',cr.DPP_WEB_SAFE_RETRY_3({name:'read_image'},err)===false);
+ check('MCP provider blocks unnamed retryable failures',cr.DPP_WEB_SAFE_RETRY_3({name:'read_image',provider:{kind:'mcp'}},{ok:false,error:{retryable:true}})===false);
+ check('mutation cannot be retried',cr.DPP_WEB_SAFE_RETRY_3({name:'run_command'},err)===false);
+ vm.runInContext(between(C,'function DPP_MCP_TRANSIENT_VERIFICATION_33107','function Uz('),cr);cr.DPP_TOOL_EFFECT_31=()=> 'verification';
+ check('outer fresh-ID wrapper rejects unknown outcome',cr.DPP_MCP_TRANSIENT_VERIFICATION_33107('read_files',{},err)===false);
+ check('outer wrapper rejects ambiguous outcome',cr.DPP_MCP_TRANSIENT_VERIFICATION_33107('read_files',{}, {...err,error:{...err.error,details:{externalOutcome:'ambiguous',retrySafe:true}}})===false);
+ // Actual i2 transport entrypoint: prove only one MCP send on the exact old 503 reproducer.
+ let sends=0;Object.assign(cr,{DPP_COMMON_PREFLIGHT_33:()=>null,C1:()=>({id:'grant'}),gq:async c=>c,EQ:()=> 's',bX:null,o2:async()=>{sends++;return err},s2:x=>x,DPP_NORMALIZE_RUN_COMMAND_RESULT_33108:(c,r)=>r,jr:()=>false});
+ vm.runInContext(between(C,'async function i2(','function a2('),cr);await cr.i2({name:'read_image',id:'turn:7:xml:0'},'grant');check('actual i2 performs one send, no tool_call_replayed chain',sends===1);
+ const search={name:'search_files',id:'q',payload:{pattern:'hello',exclude:['**/vendor/**']}};
+ const scoped=cr.DPP_SEARCH_CALL_331048(search);check('search adds only supported NUL filters',scoped.payload.exclude.length===3&&scoped.payload.exclude.includes('**/[Nn][Uu][Ll]'));
+ check('search keeps original payload immutable and query intact',search.payload.exclude.length===1&&scoped.payload.pattern==='hello'&&scoped.id==='q');
+ check('search normalization is idempotent',cr.DPP_SEARCH_CALL_331048(scoped).payload.exclude.length===3);
+ check('search exclusions disclosed even on failure',cr.DPP_SEARCH_RESULT_331048(scoped,err).ok===false&&cr.DPP_SEARCH_RESULT_331048(scoped,err).detail.includes('not searched'));
+ check('non-search tools are unchanged',cr.DPP_SEARCH_CALL_331048(call)===call);
+ cr.DPP_COMMON_DESCRIPTOR_33=()=>({provider:{kind:'mcp'},inputSchema:{properties:{}}});check('unsupported exclude parameter is never invented',cr.DPP_SEARCH_CALL_331048(search)===search);
+ // Production trace repository under shared lock: out-of-order writes and concurrent tabs.
+ let rows=[];let queue=Promise.resolve(),locks=0;
+ const tc=context({navigator:{locks:{request:(_k,fn)=>{locks++;const p=queue.then(fn);queue=p.catch(()=>{});return p}}},Qo:()=>({readAlreadyLocked:async()=>JSON.parse(JSON.stringify(rows)),writeAfterReadAlreadyLocked:async a=>{rows=JSON.parse(JSON.stringify(a))}}),wi:fn=>fn(),yU:{decode:x=>x},OU:86400000,Zo:()=>({}),DU:'traces',DPP_TRIM_AGENT_TRACES_333:x=>x});
+ vm.runInContext(runtime+between(C,'function kU(','var AU=kU();'),tc);
+ const repo1=tc.kU({}),repo2=tc.kU({}),trace={id:'a',loopId:'loop',createdAt:clock,updatedAt:clock,dppWriter331048:'owner',dppRevision331048:1,steps:[],totalSteps:0,totalTools:0,status:'running'};
+ await repo1.upsert(trace,clock);await repo1.upsert({...trace,updatedAt:clock+10,dppRevision331048:3,steps:[{index:0,status:'complete',toolExecutions:[{callId:'tool1',result:{ok:true}}]}]},clock);
+ await repo2.upsert({...trace,updatedAt:clock+5,status:'stopping'},clock);check('stale stopping write cannot overwrite newer execution',rows[0].status==='running'&&rows[0].steps.length===1);
+ await repo2.upsert({...trace,updatedAt:clock+99,dppRevision331048:99,dppWriter331048:'foreign',status:'stopping'},clock);check('different page owner cannot terminate active trace',rows[0].status==='running');
+ await Promise.all([repo1.upsert({...trace,id:'b'},clock),repo2.upsert({...trace,id:'c'},clock)]);check('concurrent tab writes retain both trace IDs',rows.some(x=>x.id==='b')&&rows.some(x=>x.id==='c')&&locks>=5);
+ const counted=tc.DPP_TRACE_COUNTS_331048({steps:[{index:10,toolExecutions:[{},{}]}],initialExecutions:[{}],totalTools:1,totalSteps:8});check('persisted counters follow recorded execution ledger',counted.totalTools===3&&counted.totalSteps===11);
+ tc.T0=(t,index,x)=>({...t,steps:[{index,...x}]});const pending={steps:[],dppPendingCalls331048:['tool1','tool2']};const done=tc.DPP_TRACE_TOOL_331048(pending,{stepIndex:0,execution:{callId:'tool1',result:{ok:true}}});const done2=tc.DPP_TRACE_TOOL_331048(done,{stepIndex:0,execution:{callId:'tool1',result:{ok:true}}});check('tool completion checkpoint deduplicates by call ID',done2.totalTools===1&&done2.steps[0].toolExecutions.length===1);
+ check('only completed call removed from uncertain ledger',done2.dppPendingCalls331048.length===1&&done2.dppPendingCalls331048[0]==='tool2');
+ check('actual tool completion persists before DOM work',C.includes('C0(t=>DPP_TRACE_TOOL_331048(t,e),{immediate:!0});let t=ZB(Q)'));
+ check('pagehide explicitly categorized',C.includes('t1()&&r1(`pagehide`)')&&C.includes('dppStopReason331048:'));
+ check('stop flushes buffered stream before final snapshot',C.includes('function r1(DPPReason331034){FX(),o1();p1();'));
+ check('resume includes uncertain IDs and no-replay instruction',C.includes('uncertainCallIds:e.dppPendingCalls331048??[]')&&C.includes('never replay a consumed call ID'));
+ check('compaction does not alter execution authorization descriptors',C.includes('toolDescriptors:r.descriptors,activeLocalSkillDir:d.activeLocalSkillDir'));
+ const schema=between(C,'function DPP_COMPACT_SCHEMA_331020','function DPP_STARTUP_STATUS_331047');vm.runInContext(schema,cr);
+ const descriptors=[{id:'d',name:'read_files',invocationName:'read_files',description:'x'.repeat(18000),inputSchema:{type:'object',required:['path'],properties:{path:{type:'string',maxLength:1000}},additionalProperties:false}}];
+ const reduced=cr.DPP_BUDGET_DESCRIPTORS_331048(descriptors);check('oversized descriptor context is compacted without schema loss',JSON.stringify(reduced).length<1000&&reduced[0].inputSchema.properties.path.maxLength===1000&&reduced[0].inputSchema.required[0]==='path');
+ check('small descriptor context unchanged',cr.DPP_BUDGET_DESCRIPTORS_331048(reduced)===reduced);
+ check('UI explains reopen and server-history boundary',C.includes('关闭重开不会清除服务端历史'));
+ console.log(`DSPP_RELIABILITY_V48_PASS ${count}/${count}`);
+})().catch(e=>{console.error(e);process.exit(1)});

@@ -1,0 +1,12 @@
+{
+  "dspp-startup-ui-v47.js": "4d26aee81ee438a6a4339209f947665208fb29d6245ea5a179b4ba846a1bb6ac",
+  "dspp-task-ui-v47.css": "a6ba7807835a17b7aa948d6ac76e0ccd3ece549d5dc8fb5a8d64c1046c2807a3",
+  "dspp-schema-v47.js": "ad064368c3d71701853d8bd80b69605a26b71f7124f8c0a4b16d0c33336f969a",
+  "apply-fix331047.py": "8585711eb5b9f4c9c8352d4cd3f7e72e6bc916c5e81353ff46380a2b56e6984a",
+  "dspp-startup-ui-v47-selftest.js": "90295a2fc343e4db2877fc59c94115a1354d3f0fbc635f2091e1c255dc514c18",
+  "apply-fix331046.py": "3b4f9911a94d305552000818d3b7ae1752b87f5d7ba0e1961b4da8580465f588",
+  "fix331046-source-sha256.json": "53c6c8fa7c3c410a1c8ef487a4ec2cb949966207f1c91c572bdf459496a21eaa",
+  "validate-fix331047.py": "d69578f845e74f91f893abd1d0cb4c47fcc05c77626bc2f356e0a61b0086f844",
+  "dspp-mw-bridge-diag-v47-selftest.js": "7e55877d66ad9a41ccee0f0cfc3e1fe66130b1aa3b4ffab926f77f8eea6aeb16",
+  "dspp-mw-bridge-diag-v10-selftest.js": "9d1f83f6b9d8345d65c4438915cae6669910aa4e5a67bb937c82e33284fbf025"
+}

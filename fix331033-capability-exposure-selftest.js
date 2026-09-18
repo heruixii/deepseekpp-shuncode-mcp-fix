@@ -34,9 +34,9 @@ console.log("=======================================");
 
 // ---- [1] build integrity ----------------------------------------------------
 console.log("\n[1] build integrity");
-ok("manifest version is 1.14.0.41", manifest.version === "1.14.0.41", manifest.version);
-ok("manifest version_name is Fix 3.3.10.36",
-   manifest.version_name === "1.14.0 ShunCode MCP Fix 3.3.10.36", manifest.version_name);
+ok("manifest version is 1.14.0.53", manifest.version === "1.14.0.53", manifest.version);
+ok("manifest version_name is Fix 3.3.10.46",
+   manifest.version_name === "1.14.0 ShunCode MCP Fix 3.3.10.48", manifest.version_name);
 ok("background has core-tool rank floor", bg.indexOf("function DPP_CORE_TOOL_FLOOR_331033(") !== -1);
 ok("background Cd() applies the floor", bg.indexOf("s=(r?1e4:0)+DPP_CORE_TOOL_FLOOR_331033(e);") !== -1);
 ok("content has handle-code set", src.indexOf("var DPP_HANDLE_ERROR_CODES_331033=") !== -1);
@@ -100,7 +100,7 @@ console.log("\n[2] adaptive exposure rank floor");
      f({ name: "run_command", invocationName: "mcp_t_9a351af5_0998_48c5_b6be_7f0d1ee53257_run_command" }) === 1600);
   ok("get_command_output gets 1000", f({ name: "get_command_output", invocationName: "mcp_x_get_command_output" }) === 1000);
   ok("apply_patch gets 700", f({ name: "apply_patch", invocationName: "mcp_x_apply_patch" }) === 700);
-  ok("read_image gets 0", f({ name: "read_image", invocationName: "mcp_x_read_image" }) === 0);
+  ok("read_image gets 1000 (Fix 3.3.10.42)", f({ name: "read_image", invocationName: "mcp_x_read_image" }) === 1000);
   ok("unrelated tool gets 0", f({ name: "web_search", invocationName: "web_search" }) === 0);
   // Simulate the picker ordering with the real Cd/Td/Dd and an empty intent ("继续")
   const c2 = { globalThis: {} };

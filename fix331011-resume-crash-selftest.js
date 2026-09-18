@@ -68,7 +68,7 @@ const request = { originalPrompt: '继续任务', chatSessionId: 'chat' };
 const prompt = context.light(request, [trace]);
 
 test('version includes or supersedes crash hotfix', Number(manifest.version.split('.').at(-1)) >= 16);
-test('version name includes or supersedes crash hotfix', /Fix 3\.3\.10\.(?:11|12|13|14|15|16|17|18|19|20|21|22|23|24|25|26|27|28|29|30|31|32|33|34|35|36)$/.test(manifest.version_name));
+test('version name includes or supersedes crash hotfix', /Fix 3\.3\.10\.(?:11|12|13|14|15|16|17|18|19|20|21|22|23|24|25|26|27|28|29|30|31|32|33|34|35|36|37|38|39|40|41|42|43|44|45|46|47|48)$/.test(manifest.version_name));
 test('safe resume prompt is generated', typeof prompt === 'string' && prompt.includes('safe resume'));
 test('safe resume prompt is hard capped', prompt.length <= 2400, `chars=${prompt.length}`);
 test('raw DSML control markup is stripped', !prompt.includes('DSML') && !prompt.includes('<｜'));

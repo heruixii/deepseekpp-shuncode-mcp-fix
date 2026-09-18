@@ -1,3 +1,9 @@
+> **当前版本：Fix 3.3.10.48 / 1.14.0.53（2026-09-18）** — 修复编辑/重开恢复、MCP503安全重试、任务checkpoint与NUL搜索；整合 .45–.47 本机修复。64套回归、新专项50项、部署后64套测试通过。**真实浏览器/模型验收待重载后完成；不承诺 DeepSeek 后端不再 generation_err。** [安装包与校验](https://github.com/heruixii/deepseekpp-shuncode-mcp-fix/releases/tag/v1.14.0-fix3.3.10.48) · [发布说明](docs/RELEASE-Fix3.3.10.48.md) · [实施/回退](docs/mcp-deepseekpp-reliability-fix48-20260918.md)。
+
+> 升级：先等任务停止并记录未确认工具，再到 `edge://extensions` 重载扩展，确认 **1.14.0.53**；关闭旧标签并重新打开。重开旧会话不会清空服务端历史，反复失败请用简短交接摘要新建会话。
+
+## 历史版本记录（以下旧状态不代表当前版本）
+
 > **✅ 2026-09-18 状态更新（Fix 3.3.10.44 / 1.14.0.49 已发布为 GitHub Latest）**：.43 首次现场证明 `read_image` 图像块已进入视觉通道（模型据图产出 SVG），但 ShunCode 仍被悄悄降为 adaptive（`descriptorCount 20` 而非 24）——根因是 `fix3-policy.promptExposureSettings` 把 9 个**内置**本地工具（约 17.3 KB）也计入 64,000 触发线（49,240 + 17,319 = 66,559），且侧边栏显示的「直接」只是默认值、从未落盘。**.44**：触发线只统计 MCP 描述符；另把 DeepSeek `finish_reason=rate_limit_reached` 暴露给 Agent 循环——限流的空回合不再重放、直接以明确的限流提示停止。`background.js` / `main-world.js` 与 .43 逐字节相同，授权检查零改动。validator 31 checks / 73 进程 / 59 套件全过，专项 41/41。详见 [`docs/RELEASE-Fix3.3.10.44.md`](docs/RELEASE-Fix3.3.10.44.md)、[`docs/mcp-deepseekpp-fix43-first-run-20260918.md`](docs/mcp-deepseekpp-fix43-first-run-20260918.md)。
 >
 > **历史横幅（.43 / .42 / .41 / .40）**：.43 让 `include_data_uri:false` 的 `read_image` 也能进视觉通道（[`RELEASE-Fix3.3.10.43.md`](docs/RELEASE-Fix3.3.10.43.md)）；.42 修暴露漂移（显式模式受尊重、8 槽/24 KB、`resolution` 白名单）；.41 裸标签纠正；.40 见下一段。
@@ -8,7 +14,7 @@
 
 > **📖 中文安装/配置/使用指南：[`USAGE-zh_CN.md`](./USAGE-zh_CN.md)** — 暴露模式选「直接：展示全部工具」；Agent 状态条显示运行中时不要发新消息，等它结束再发「继续」。
 
-> Current release: **Fix 3.3.10.36 / 1.14.0.41** — proactive visual workflows and a fix for false completion after reading an image. Long unregistered tool blocks no longer escape the old 20k-body/200k-text detector. Real stop/steering callbacks recover through authorized capability calls, with bounded failures instead of false completion. Visual ranking, initial/continuation guidance and a local-reference preflight are included; no permissions or native ShunCode runtime changes. **48 new workflow groups + existing suites passed; a fresh browser/model SVG task still needs verification after reload.** [Download / Release](https://github.com/heruixii/deepseekpp-shuncode-mcp-fix/releases/tag/v1.14.0-fix3.3.10.36) · [Release notes](docs/RELEASE-Fix3.3.10.36.md) · [Technical handover](docs/mcp-deepseekpp-visual-workflow-v8.md).
+> Historical release: **Fix 3.3.10.36 / 1.14.0.41** — proactive visual workflows and a fix for false completion after reading an image. Long unregistered tool blocks no longer escape the old 20k-body/200k-text detector. Real stop/steering callbacks recover through authorized capability calls, with bounded failures instead of false completion. Visual ranking, initial/continuation guidance and a local-reference preflight are included; no permissions or native ShunCode runtime changes. **48 new workflow groups + existing suites passed; a fresh browser/model SVG task still needs verification after reload.** [Download / Release](https://github.com/heruixii/deepseekpp-shuncode-mcp-fix/releases/tag/v1.14.0-fix3.3.10.36) · [Release notes](docs/RELEASE-Fix3.3.10.36.md) · [Technical handover](docs/mcp-deepseekpp-visual-workflow-v8.md).
 
 ## Fix 3.3.10.36：主动视觉与长补丁续执行
 
@@ -25,7 +31,7 @@
 
 | 文档 | 用途 |
 |---|---|
-| [RELEASE-Fix3.3.10.44.md](docs/RELEASE-Fix3.3.10.44.md) | **最新**：.44 发布说明（内置工具不再计入 MCP 降级触发线；限流显式停止） |
+| [RELEASE-Fix3.3.10.44.md](docs/RELEASE-Fix3.3.10.44.md) | 历史：.44 发布说明（内置工具不再计入 MCP 降级触发线；限流显式停止） |
 | [mcp-deepseekpp-fix43-first-run-20260918.md](docs/mcp-deepseekpp-fix43-first-run-20260918.md) | .43 首次现场复盘：视觉通道打通 / descriptorCount 20 根因 / 限流不可见 |
 | [RELEASE-Fix3.3.10.43.md](docs/RELEASE-Fix3.3.10.43.md) / [mcp-deepseekpp-fix42-first-run-20260917.md](docs/mcp-deepseekpp-fix42-first-run-20260917.md) | .43 发布说明 / .42 首次现场复盘 |
 | [RELEASE-Fix3.3.10.42.md](docs/RELEASE-Fix3.3.10.42.md) / [mcp-deepseekpp-exposure-drift-fix42.md](docs/mcp-deepseekpp-exposure-drift-fix42.md) | .42 暴露漂移修复 |

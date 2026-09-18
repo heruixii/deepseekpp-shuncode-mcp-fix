@@ -18,3 +18,29 @@ tools/fixtures/readimage-v6-background.txt -text
 # Hash-lock inventories must stay byte-stable (LF) across clones.
 tools/*-source-sha256.json text eol=lf
 tools/*-baseline-sha256.json text eol=lf
+
+# Preserve vendored mixed EOL bytes; treat CRLF as line endings, not trailing blanks.
+*.js whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+*.json whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+
+# Source-hash locked builders and fixtures must retain exact worktree bytes in archives.
+tools/* -text
+tools/* whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+
+# Bundled selftests are also part of the independently validated runtime inventory.
+/*selftest*.js -text
+
+# Additional vendored assets whose original bytes include CRLF.
+/LICENSE -text
+/sandbox-offscreen.html -text
+/sandbox-runner.html -text
+/sidepanel.html -text
+/wxt.svg -text
+/assets/sidepanel-BkVdfIM0.css -text
+/bundled-skills/catalog.json -text
+/docs/fix331035-validation.json -text
+/pyodide/pyodide.asm.mjs -text
+/pyodide/pyodide.mjs -text
+
+# All imported CRLF files still enforce real trailing blanks and EOF checks.
+* whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol

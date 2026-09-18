@@ -1,0 +1,10 @@
+{
+  "apply-fix331048.py": "18e76163e2f2115b5224d58922d0f75c8503fe70088279f067f492506748d14c",
+  "validate-fix331048.py": "e7eee368ad1f61d03cf88261d485810f1eb52c9e3c6a9d501f627cc2a1654453",
+  "dspp-recovery-v48.js": "d8cb27abd494fc24decf30578f34d2457d29a34b4e1cef81a3c2fecac19cabf6",
+  "dspp-runtime-v48.js": "cdaa986dcb23d7ce1a60498c83d9f1595f221937608b15bab6e2f19e4dbea953",
+  "dspp-mcp-init-v48.js": "024af2fb3f7d3bb53fafbc5158962b0846eda85f92fcce36c3416173c196eb01",
+  "dspp-reliability-v48-selftest.js": "ecaeea1406a6c5b0ba8a673f8634c4b2b0f92f5d51b560804f5c49b4a117dbb8",
+  "apply-fix331047.py": "8585711eb5b9f4c9c8352d4cd3f7e72e6bc916c5e81353ff46380a2b56e6984a",
+  "fix331047-source-sha256.json": "d03869973578e17d2ab790114ae28a345a48bf9db4e18fc5c61fb0f06bde2558"
+}

@@ -46,6 +46,6 @@ ok(bg.split('Object.keys(a.calls).length>=DPP_AUTH_CALL_LIMIT_334(a)').length-1=
 ok(content.includes('dpp_tool_storm_blocked')&&content.includes('dpp_tool_parameter_unsafe'),'new errors classified explicitly');
 // Hard-limit recovery must not recommend re-authorization.
 const clsSrc=between(content,'function DPP_ERROR_CLASS_3','function DPP_CAPABILITY_WINDOW_32');const ectx={String};vm.createContext(ectx);vm.runInContext(clsSrc+';globalThis.cls=DPP_ERROR_CLASS_3;',ectx);let cls=ectx.cls({code:'tool_authorization_call_limit',retryable:false});ok(cls.stage==='tool_storm_guard'&&cls.action==='stop_tool_calls_and_summarize','authorization call limit is terminal, not refreshable');
-ok(content.includes('async read(){return wi(async()=>{let e=await t.readAlreadyLocked(),n=DPP_TRIM_AGENT_TRACES_333(e);return n.length!==e.length&&await t.writeAfterReadAlreadyLocked(n),n})}'),'stale oversized traces are trimmed on read under lock');
+ok(content.includes('async read(){return DPP_TRACE_LOCK_331048(()=>wi(async()=>{let e=await t.readAlreadyLocked(),n=DPP_TRIM_AGENT_TRACES_333(e);return n.length!==e.length&&await t.writeAfterReadAlreadyLocked(n),n}))}'),'stale oversized traces are trimmed on read under lock');
 ok(content.includes('ZV(),await jX(),JX(k0()),t()&&'),'runtime-state startup triggers stale trace migration');
 console.log(`FIX334_TOOL_STORM_PASS ${pass}/${pass}`);
