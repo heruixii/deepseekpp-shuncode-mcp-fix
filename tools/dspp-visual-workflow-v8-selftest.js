@@ -8,8 +8,9 @@ const policy=fs.readFileSync(path.join(root,'fix3-policy.js'),'utf8');
 function cut(s,a,b){const i=s.indexOf(a),j=s.indexOf(b,i+a.length);assert(i>=0&&j>i,a);return s.slice(i,j)}
 function fn(s,name){const i=s.indexOf('function '+name+'(');assert(i>=0,name);let depth=0;for(let k=s.indexOf('{',i);k<s.length;k++){if(s[k]==='{')depth++;if(s[k]==='}'&&--depth===0)return s.slice(i,k+1)}throw Error(name)}
 const helpers=cut(content,'/* DPP_VISUAL_WORKFLOW_V8_BEGIN */','/* DPP_VISUAL_WORKFLOW_V8_END */');
+const v41=cut(content,'/* DPP_BARE_TOOL_TAG_V41_BEGIN','/* DPP_BARE_TOOL_TAG_V41_END */');
 const scanner=cut(content,'function DPP_UNREGISTERED_TOOL_TAG_331033(','function DPP_UNREGISTERED_TAG_STEERING_331033(');
-const shared={};vm.createContext(shared);vm.runInContext(helpers+scanner+';var DPP_SHUNCODE_TOOL_TAGS_331033=new Set(["apply_patch","read_image","run_command","read_files"]);',shared);
+const shared={};vm.createContext(shared);vm.runInContext(helpers+v41+scanner+';var DPP_SHUNCODE_TOOL_TAGS_331033=new Set(["apply_patch","read_image","run_command","read_files"]);',shared);
 let count=0;function test(name,body){body();count++;console.log('PASS '+name)}
 const prompt='参考 D:/workspace/reference.jpg 的图片，使用 HTML+CSS 精确重绘 SVG，制作可播放绘制过程的网页；禁止描摹算法 convert';
 const unregistered=new Set(['mcp_discover','mcp_invoke']);
@@ -18,7 +19,7 @@ const longPatch='<apply_patch>\n*** Begin Patch\n*** Add File: demo.html\n'+('+<
 function decisionBox(text,options={}){
  const decisions=[];
  const box={console,Map,Set,String,Array,Math,Date,
-  Yz:e=>e.text,te:'',v:new Map,DPPAliases331019:new Map,
+  Yz:e=>e.text,te:'',v:new Map([['mcp_t_shuncode_bridge_read_image',{}]]),DPPAliases331019:new Map,
   t:{originalPrompt:options.prompt??prompt},g:options.results??[],p:options.backend??'web',
   y:{currentTurnIsNudge:!!options.nudge,count:options.globalLimit?8:options.nudge?3:0,toolIntentNudgesInStep:options.atLimit?3:0,genericNudgesInStep:0},
   a:'synthetic-loop',s:'synthetic-session',b:1,ue:2,h:()=>9,Ce:{maxSteps:96,maxNudges:8},
@@ -32,7 +33,7 @@ function decisionBox(text,options={}){
   DPP_COMPLETION_GATE_31:()=>({ok:true}),DPP_ZERO_TOOL_COMPLETE_BLOCK_331033:()=>'',
   Gz:x=>x.replace(/<apply_patch>[\s\S]*?<\/apply_patch>/g,''),Az:()=>false,
   DPP_SHUNCODE_TOOL_TAGS_331033:new Set(['apply_patch','read_image','run_command'])};
- vm.createContext(box);vm.runInContext(helpers+scanner,box);
+ vm.createContext(box);vm.runInContext(helpers+v41+scanner,box);
  const actual=cut(content,'shouldStopAfterTurn:({message:e})=>{',',getSteeringMessages:async()=>').replace('shouldStopAfterTurn:','');
  vm.runInContext('var decide='+actual+';',box);
  const stop=box.decide({message:{text,content:options.toolCall?[{type:'toolCall'}]:[],stopReason:'stop'}});

@@ -1,0 +1,526 @@
+{
+  "release": "v1.14.0-fix3.3.10.45",
+  "passed": true,
+  "checks": [
+    {
+      "name": "runtime_changes_exactly_allowed",
+      "passed": true
+    },
+    {
+      "name": "independently_rebuilt_all_files",
+      "passed": true
+    },
+    {
+      "name": "no_extra_files",
+      "passed": true
+    },
+    {
+      "name": "gate_functions_unchanged",
+      "passed": true
+    },
+    {
+      "name": "allowlist_unchanged",
+      "passed": true
+    },
+    {
+      "name": "background_is_44_plus_4_edits",
+      "passed": true
+    },
+    {
+      "name": "mw_identical_to_44",
+      "passed": true
+    },
+    {
+      "name": "policy_identical_to_44",
+      "passed": true
+    },
+    {
+      "name": "content_is_44_plus_4_edits",
+      "passed": true
+    },
+    {
+      "name": "each_content_literal_applied_once",
+      "passed": true
+    },
+    {
+      "name": "each_bg_literal_applied_once",
+      "passed": true
+    },
+    {
+      "name": "policy_mcp_only_literal",
+      "passed": true
+    },
+    {
+      "name": "vc_excludes_limits_timeouts",
+      "passed": true
+    },
+    {
+      "name": "sc_auto_ju",
+      "passed": true
+    },
+    {
+      "name": "nu_self_heal",
+      "passed": true
+    },
+    {
+      "name": "update_refresh",
+      "passed": true
+    },
+    {
+      "name": "visual_missing_guard",
+      "passed": true
+    },
+    {
+      "name": "visual_absent_present",
+      "passed": true
+    },
+    {
+      "name": "no_auth_keywords_in_diff",
+      "passed": true
+    },
+    {
+      "name": "v43_Zo_still_present",
+      "passed": true
+    },
+    {
+      "name": "v41_block_still_present",
+      "passed": true
+    },
+    {
+      "name": "v41_suite_pinned_to_45_bg",
+      "passed": true
+    },
+    {
+      "name": "manifest_version",
+      "passed": true
+    },
+    {
+      "name": "manifest_host_permissions",
+      "passed": true
+    },
+    {
+      "name": "no_new_runtime_permissions",
+      "passed": true
+    },
+    {
+      "name": "locale:en",
+      "passed": true
+    },
+    {
+      "name": "locale:zh_CN",
+      "passed": true
+    },
+    {
+      "name": "61_suites",
+      "passed": true
+    },
+    {
+      "name": "python_ast:apply-fix331044.py",
+      "passed": true
+    },
+    {
+      "name": "python_ast:apply-fix331045.py",
+      "passed": true
+    },
+    {
+      "name": "python_ast:validate-fix331045.py",
+      "passed": true
+    }
+  ],
+  "tests": [
+    {
+      "name": "syntax-content.js",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "syntax-background.js",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "syntax-fix3-policy.js",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "syntax-main-world.js",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "skill-popup-observe",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "mw-bridge-diag-v10",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "upload-gate-v10",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "visual-workflow-v8",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "image-runtime-v7",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "image-boundary-v7",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "bare-tool-tag-v41",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "exposure-drift-v42",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "image-block-v43",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "exposure-builtin-v44",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "mcp-cache-v45",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "visual-absent-v45",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "dspp-bare-tool-tag-v41-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "dspp-exposure-builtin-v44-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "dspp-exposure-drift-v42-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "dspp-image-block-v43-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "dspp-mcp-cache-v45-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "dspp-visual-absent-v45-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix3-continuation-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix3-policy-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix3-web-policy-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix31-agent-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix32-capability-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix33-known-issues-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix33-stream-integration-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix331-stream-close-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix3310-dsml-storm-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix33101-quarantine-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix331010-status-errors-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix331011-resume-crash-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix331012-resume-isolation-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix331013-agent-context-pressure-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix331014-renderer-pressure-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix331015-web-transport-diagnostics-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix331016-xhr-terminal-correlation-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix331017-sse-control-trail-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix331018-preflight-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix331019-capability-resume-ui-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix33102-manual-page-filter-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix331020-generation-error-recovery-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix331021-agent-tool-intent-terminal-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix331022-manual-escalation-storage-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix331023-agent-shadow-storage-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix331024-generic-wrapper-midstep-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix331025-reasoning-generic-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix331026-generation-passthrough-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix331027-continuation-capability-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix331028-empty-pty-capability-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix331029-storage-pressure-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix33103-parent-fallback-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix331030-dom-fence-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix331031-transport-failure-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix331032-reasoning-intent-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix331033-capability-exposure-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix331034-run-command-status-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix33104-history-filter-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix33105-prompt-exposure-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix33106-dsml-eof-integration-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix33106-dsml-eof-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix33107-agent-lifecycle-mcp503-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix33108-lifecycle-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix33109-global-trace-stats-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix332-safe-dom-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix333-agent-stability-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix334-tool-storm-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix335-empty-stream-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix336-long-task-stability-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix337-attachment-json-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix338-agent-budget-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix339-hr-sim-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fix339-message-id-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "mcp-diagnostic-selftest",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "mcp-repair-selftest",
+      "passed": true,
+      "exit_code": 0
+    }
+  ],
+  "runtime_sha256": {
+    "_locales/en/messages.json": "e8dea0338ab6dbdae6b9fa218f249d86329e0752e04643bf517b62d5a1acc0b8",
+    "_locales/zh_CN/messages.json": "a6d3e85a263d15153c6143f17312214d05150e4da875b863c98b374e3d4685fa",
+    "background.js": "58a7affa5f8b492552ae2a35b58d028c6b41863c58a768a1d9d494b78bbd8aff",
+    "content-scripts/content.js": "a9b317dbf6d6ddaa7b0383906a803187ad579d102242d5606bc02a38a4afede5",
+    "content-scripts/main-world.js": "e63b16762734e524af680e9f4e40fc18e92990f2f26afecca60f98bf3a199d92",
+    "fix3-policy.js": "39915841f22a165e1cc395e17d4fdff5651050c2d70c2e3bc6291ac3b26f38c5",
+    "manifest.json": "6ef3aed55459a78f4b1900d4c04ba298b8ad9a575959fab76e3549e2272d07c4"
+  }
+}
